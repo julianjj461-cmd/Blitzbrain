@@ -361,7 +361,7 @@ luege:{name:'Wer lügt?',emoji:'🤥',hint:'Genau EINE Aussage über die Zahl is
   show();el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b)return;
    if(+b.dataset.v===ans){sfx('tap',k);if(++k>=N)done();else show()}else err(b)}}},
 wuerfel:{name:'Würfel-Netz',emoji:'🧊',hint:'Das Netz wird zum Würfel gefaltet. Welche Zahl liegt GEGENÜBER der umrandeten?',
- run(el,r,done,err){const N=4;let k=0,ans=0;
+ run(el,r,done,err){const N=3;let k=0,ans=0;
   const show=()=>{const v=shuffle([1,2,3,4,5,6],r),[A,B,C,D,E,F]=v,opp={[A]:F,[F]:A,[B]:D,[D]:B,[C]:E,[E]:C},q=v[r()*6|0],a=opp[q],
     o=shuffle([a,...shuffle(v.filter(x=>x!==q&&x!==a),r).slice(0,3)],r);ans=o.indexOf(a);
    const pos={[A]:[1,0],[B]:[0,1],[C]:[1,1],[D]:[2,1],[E]:[3,1],[F]:[1,2]};
@@ -370,7 +370,7 @@ wuerfel:{name:'Würfel-Netz',emoji:'🧊',hint:'Das Netz wird zum Würfel gefalt
   show();el.onpointerdown=e=>{const b=e.target.closest('.tile.txt');if(!b)return;
    if(+b.dataset.v===ans){sfx('tap',k);if(++k>=N)done();else show()}else err(b)}}},
 drehung:{name:'Dreh-Check',emoji:'🔄',hint:'Ist das rechte Muster nur GEDREHT oder GESPIEGELT?',
- run(el,r,done,err){const N=6;let k=0,a=0;
+ run(el,r,done,err){const N=5;let k=0,a=0;
   const rot=c=>c.map(i=>(i%3)*3+(2-(i/3|0))),mir=c=>c.map(i=>i-2*(i%3)+2),key=c=>[...c].sort((x,y)=>x-y).join(),rotN=(c,n)=>{while(n-->0)c=rot(c);return c};
   const draw=c=>`<div class="mp">${[...Array(9)].map((_,i)=>`<i class="${c.includes(i)?'on':''}"></i>`).join('')}</div>`;
   const show=()=>{let p,q;for(;;){p=shuffle([...Array(9).keys()],r).slice(0,5);const m=key(mir(p));
@@ -380,7 +380,7 @@ drehung:{name:'Dreh-Check',emoji:'🔄',hint:'Ist das rechte Muster nur GEDREHT 
   show();el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b)return;
    if(+b.dataset.v===a){sfx('tap',k);if(++k>=N)done();else show()}else err(b)}}},
 code:{name:'Zahlenschloss',emoji:'🔐',hint:'Knacke den 3-stelligen Code! ✔ = richtige Stelle · ↔ = Ziffer enthalten, aber falsche Stelle',
- run(el,r,done,err){const N=2;let k=0,ans=0;
+ run(el,r,done,err){const N=1;let k=0,ans=0;
   const all=[];for(let a=1;a<=6;a++)for(let b=1;b<=6;b++)for(let c=1;c<=6;c++)if(a!=b&&b!=c&&a!=c)all.push([a,b,c]);
   const fb=(g,s)=>{let p=0,w=0;g.forEach((d,i)=>{if(s[i]==d)p++;else if(s.includes(d))w++});return[p,w]},same=(f,g)=>f[0]==g[0]&&f[1]==g[1];
   const show=()=>{let sec,cl,cand;for(;;){sec=all[r()*all.length|0];cl=[];cand=all;
@@ -393,7 +393,7 @@ code:{name:'Zahlenschloss',emoji:'🔐',hint:'Knacke den 3-stelligen Code! ✔ =
   show();el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b)return;
    if(+b.dataset.v===ans){sfx('tap',k);if(++k>=N)done();else show()}else err(b)}}},
 weg:{name:'Kürzester Weg',emoji:'🗺️',hint:'Wie lang ist der kürzeste Weg von A nach F?',
- run(el,r,done,err){const N=3;let k=0,ans=0;
+ run(el,r,done,err){const N=2;let k=0,ans=0;
   const P={A:[30,85],B:[110,30],C:[110,140],D:[200,30],E:[200,140],F:[270,85]},ED=[['A','B'],['A','C'],['B','C'],['B','D'],['C','E'],['D','E'],['D','F'],['E','F'],['B','E']];
   const sp=W=>{const d={A:0},q=Object.keys(P),fin=new Set;for(;;){let u=null;q.forEach(n=>{if(!fin.has(n)&&d[n]!=null&&(u==null||d[n]<d[u]))u=n});if(u==null)break;fin.add(u);
     ED.forEach(([a,b],i)=>{const w=W[i];if(a==u&&(d[b]==null||d[u]+w<d[b]))d[b]=d[u]+w;if(b==u&&(d[a]==null||d[u]+w<d[a]))d[a]=d[u]+w})}return d.F};
@@ -416,7 +416,7 @@ gonogo:{name:'Go / No-Go',emoji:'🚦',hint:'Tippe NUR bei der Go-Form! Achtung:
   next();
   el.onpointerdown=e=>{const p=e.target.closest('.pad');if(!ready||!p)return;ready=false;clearTimeout(tm);
    if(cur.s==gs(cur.ph)){sfx('tap',i);gap()}else{err(p);gap()}}}},
-rhythmus:{name:'Takt-Tipper',emoji:'🥁',hint:'Schau dir den Takt an – dann tippe ihn im gleichen Tempo nach!',
+rhythmus:{name:'Takt-Tipper',emoji:'🥁',hint:'Schau dir den Takt an – dann tippe ihn im gleichen Tempo nach! Je genauer, desto weniger Strafzeit.',
  run(el,r,done,err){const N=2,Ts=[...Array(N)].map(()=>Math.round(470+r()*280));let k=0,T=0,taps=[],phase=0,tms=[];
   const lit=(p,on)=>{p.textContent=on?'●':'○';p.style.background=on?'#fff':'#3a2380';p.style.color=on?'#1a0b45':'#fff'};
   const round=()=>{tms.forEach(clearTimeout);tms=[];T=Ts[k];taps=[];phase=0;
@@ -425,21 +425,21 @@ rhythmus:{name:'Takt-Tipper',emoji:'🥁',hint:'Schau dir den Takt an – dann t
    for(let i=0;i<4;i++)tms.push(setTimeout(()=>{if(!live(el))return;lit(p,1);sfx('tap',i*2);tms.push(setTimeout(()=>lit(p,0),T*.4))},700+i*T));
    tms.push(setTimeout(()=>{if(!live(el))return;phase=1;h.textContent='Jetzt DU! 4× im selben Tempo tippen'},700+3*T+T*.7))};
   round();
-  el.onpointerdown=e=>{const p=e.target.closest('.pad');if(!p||phase!=1)return;const now=performance.now();lit(p,1);setTimeout(()=>lit(p,0),110);
-   if(taps.length&&Math.abs(now-taps[taps.length-1]-T)>T*.3){err(p);taps=[now];return}
-   taps.push(now);sfx('tap',taps.length*2);
-   if(taps.length>=4){phase=2;if(++k>=N)done();else round()}}}},
+  el.onpointerdown=e=>{const p=e.target.closest('.pad');if(!p||phase!=1)return;taps.push(performance.now());lit(p,1);setTimeout(()=>lit(p,0),110);sfx('tap',taps.length*2);
+   if(taps.length>=4){phase=2;let dev=0;for(let i=1;i<4;i++)dev+=Math.abs(taps[i]-taps[i-1]-T);const pen=Math.min(2500,Math.round(dev*.8)),h=el.querySelector('#rh');
+    h.textContent=dev<90?'🎯 Im Takt!':'Ø '+(dev/3/1000).toFixed(2).replace('.',',')+' s daneben';if(pen>=30)err(p,pen);
+    setTimeout(()=>{if(!live(el))return;if(++k>=N)done();else round()},900)}}}},
 fallen:{name:'Zahlenregen',emoji:'🌧️',hint:'Tippe 1 bis 6 der Reihe nach – bevor sie unten ankommen!',
  run(el,r,done,err){const N=6,perm=shuffle([0,1,2,3,4,5],r),y=[...Array(N)].map(()=>r()*.3),B=[];let nx=1,fin=false;
   el.innerHTML=`<div id="rg" style="position:relative;height:min(56vh,420px);overflow:hidden;border-radius:16px;background:rgba(255,255,255,.07)">${[...Array(N)].map((_,i)=>`<button class="tile" data-v="${i+1}" style="position:absolute;top:0;left:calc(${perm[i]}*16.66%);width:16.66%;aspect-ratio:1;font-size:clamp(20px,6vw,30px);background:#5a2fe0;border-radius:12px">${i+1}</button>`).join('')}</div>`;
   const rg=el.querySelector('#rg');[...rg.children].forEach(b=>B.push(b));let last=performance.now();
   const loop=()=>{if(fin||!live(el))return;const now=performance.now(),dt=Math.min(50,now-last);last=now;const H=rg.clientHeight||360;
-   B.forEach((b,i)=>{if(b.style.display=='none')return;y[i]+=dt/6800;if(y[i]*H>H-(b.offsetHeight||56)){y[i]=0;err(b)}b.style.top=(y[i]*H)+'px'});requestAnimationFrame(loop)};
+   B.forEach((b,i)=>{if(b.style.display=='none')return;y[i]+=dt/9000;if(y[i]*H>H-(b.offsetHeight||56)){y[i]=0;err(b)}b.style.top=(y[i]*H)+'px'});requestAnimationFrame(loop)};
   loop();
   el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b||b.style.display=='none')return;
    if(+b.dataset.v===nx){b.style.display='none';sfx('tap',nx);if(++nx>N){fin=true;done()}}else err(b)}}},
 balance:{name:'Balance-Akt',emoji:'🤹',hint:'Halte die Kugel in der Mitte! ◀ schiebt sie nach links, ▶ nach rechts.',
- run(el,r,done,err){const DUR=6500,acc=[...Array(14)].map(()=>(r()-.5)*5.2);let x=0,v=0,t=0,last=performance.now(),acu=0,fin=false;
+ run(el,r,done,err){const DUR=6500,acc=[...Array(14)].map(()=>(r()-.5)*3.6);let x=0,v=0,t=0,last=performance.now(),acu=0,fin=false;
   el.innerHTML=`<div class="c" id="bt2" style="font-weight:900;color:var(--yel)">noch 6,5 s</div><div id="trk" style="position:relative;height:84px;border-radius:42px;background:rgba(255,255,255,.12);margin:16px 0 22px;overflow:hidden"><div style="position:absolute;left:calc(50% - 2px);top:0;bottom:0;width:4px;background:#fff;opacity:.6"></div><span style="position:absolute;left:10px;top:28px;font-size:24px">⛔</span><span style="position:absolute;right:10px;top:28px;font-size:24px">⛔</span><div id="bl" style="position:absolute;top:9px;left:0;width:66px;height:66px;border-radius:50%;background:#fff;box-shadow:inset -6px -8px 0 rgba(0,0,0,.2)"></div></div><div class="grid g2" style="gap:14px"><button class="tile txt" data-d="-1" style="padding:48px 0;font-size:44px">◀</button><button class="tile txt" data-d="1" style="padding:48px 0;font-size:44px">▶</button></div>`;
   const bl=el.querySelector('#bl'),trk=el.querySelector('#trk'),tx=el.querySelector('#bt2'),place=()=>{bl.style.left=((x+1)/2*((trk.clientWidth||300)-66))+'px'};
   const step=()=>{v+=acc[Math.floor(t/600)%acc.length]/60;v*=.997;x+=v/60;t+=1000/60;if(Math.abs(x)>=1){err(bl);x=0;v=0}};
@@ -452,17 +452,19 @@ ziel:{name:'Zielscheibe',emoji:'🏹',hint:'Triff 8 Ziele – sie werden immer k
  run(el,r,done,err){const N=8,P=[...Array(N)].map((_,i)=>({x:r(),y:r(),s:84-i*5}));let k=0;
   const show=()=>{const p=P[k];el.innerHTML=`<div id="fld" style="position:relative;height:min(58vh,440px);border-radius:16px;background:rgba(255,255,255,.07)"><button id="tg" class="tile" style="position:absolute;left:calc((100% - ${p.s}px)*${p.x.toFixed(3)});top:calc((100% - ${p.s}px)*${p.y.toFixed(3)});width:${p.s}px;height:${p.s}px;aspect-ratio:1;border-radius:50%;background:#ff3d8b;font-size:${Math.round(p.s*.55)}px;padding:0;box-shadow:inset 0 0 0 5px #fff,0 4px 0 rgba(0,0,0,.3)">🎯</button></div>`};
   show();el.onpointerdown=e=>{if(e.target.closest('#tg')){sfx('tap',k);if(++k>=N)done();else show()}else if(e.target.closest('#fld'))err(null)}}},
-stop0:{name:'Stopp bei Null',emoji:'⏱️',hint:'Der Zähler läuft herunter – tippe EXAKT bei 0,00! (Am Ende ist er unsichtbar)',
+stop0:{name:'Stopp bei Null',emoji:'⏱️',hint:'Tippe so nah wie möglich bei 0,00! Je näher dran, desto weniger Strafzeit. (Am Ende ist der Zähler unsichtbar)',
  run(el,r,done,err){const N=3,Ts=[...Array(N)].map(()=>2200+Math.round(r()*1600));let k=0,t0=0,iv=0,busy=false;
   const fmt=x=>(x/1000).toFixed(2).replace('.',',');
+  const hit=(b,rem)=>{if(busy)return;busy=true;clearInterval(iv);const d=Math.abs(rem),pen=Math.min(2500,Math.round(d*2));
+   b.textContent=d<60?'🎯 Treffer!':fmt(d)+' s '+(rem>0?'zu früh':'zu spät');
+   if(pen>=30)err(b,pen);else sfx('tap',k*3);
+   setTimeout(()=>{if(!live(el))return;if(++k>=N)done();else round()},900)};
   const round=()=>{clearInterval(iv);busy=false;t0=performance.now();
-   el.innerHTML=`<div class="c mut" style="margin-bottom:8px">Treffe 0,00 (±0,2 s) · ${k+1}/${N}</div><button class="tile pad" id="sp" style="background:#3a2380;font-size:72px;font-variant-numeric:tabular-nums">…</button>`;
-   const b=el.querySelector('#sp'),upd=()=>{if(!live(el)){clearInterval(iv);return}const rem=Ts[k]-(performance.now()-t0);b.textContent=rem>1200?fmt(rem):'?,??';if(rem<-500){err(b);round()}};
+   el.innerHTML=`<div class="c mut" style="margin-bottom:8px">Näher an 0,00 = weniger Strafzeit · ${k+1}/${N}</div><button class="tile pad" id="sp" style="background:#3a2380;font-size:64px;font-variant-numeric:tabular-nums">…</button>`;
+   const b=el.querySelector('#sp'),upd=()=>{if(!live(el)){clearInterval(iv);return}const rem=Ts[k]-(performance.now()-t0);b.textContent=rem>1200?fmt(rem):'?,??';if(rem<-1200)hit(b,rem)};
    upd();iv=setInterval(upd,40)};
   round();
-  el.onpointerdown=e=>{const b=e.target.closest('.pad');if(!b||busy)return;const rem=Ts[k]-(performance.now()-t0);
-   if(Math.abs(rem)<=200){clearInterval(iv);busy=true;sfx('tap',k*3);b.textContent='✔ '+fmt(rem);if(++k>=N)done();else setTimeout(()=>{if(live(el))round()},500)}
-   else{err(b);round()}}}},
+  el.onpointerdown=e=>{const b=e.target.closest('.pad');if(!b||busy)return;hit(b,Ts[k]-(performance.now()-t0))}}},
 /* --- Gedächtnis --- */
 fehlt:{name:'Was fehlt?',emoji:'❓',hint:'Merke dir die 6 Symbole – dann: welches fehlt?',
  run(el,r,done,err){const N=3;let k=0,ans=0,sh=true;
@@ -470,7 +472,7 @@ fehlt:{name:'Was fehlt?',emoji:'❓',hint:'Merke dir die 6 Symbole – dann: wel
   const round=()=>{const s=shuffle(EM12,r),six=s.slice(0,6),gone=six[r()*6|0],rest=shuffle(six.filter(x=>x!==gone),r),o=shuffle([gone,...s.slice(6,9)],r);ans=o.indexOf(gone);sh=true;
    el.innerHTML=`${ttl('Merken! 👀')}<div class="grid g3">${shuffle(six,r).map(x=>cellH(x,44)).join('')}</div>`;
    setTimeout(()=>{if(!live(el))return;sh=false;
-    el.innerHTML=`${ttl('Welches Symbol fehlt jetzt?')}<div class="grid g3" style="margin-bottom:16px">${[...rest,'?'].map(x=>cellH(x,44)).join('')}</div><div class="grid" style="grid-template-columns:repeat(4,1fr)">${o.map((x,i)=>`<button class="tile txt" data-v="${i}" style="font-size:30px">${x}</button>`).join('')}</div>`},2000)};
+    el.innerHTML=`${ttl('Welches Symbol fehlt jetzt?')}<div class="grid g3" style="margin-bottom:16px">${[...rest,'?'].map(x=>cellH(x,44)).join('')}</div><div class="grid" style="grid-template-columns:repeat(4,1fr)">${o.map((x,i)=>`<button class="tile txt" data-v="${i}" style="font-size:30px">${x}</button>`).join('')}</div>`},2400)};
   round();el.onpointerdown=e=>{const b=e.target.closest('.tile.txt');if(!b||sh)return;
    if(+b.dataset.v===ans){sfx('tap',k);if(++k>=N)done();else round()}else err(b)}}},
 rueckwaerts:{name:'Rückwärts-Zahlen',emoji:'⏪',hint:'Merke dir die Ziffern – und tippe sie RÜCKWÄRTS ein!',
@@ -479,8 +481,8 @@ rueckwaerts:{name:'Rückwärts-Zahlen',emoji:'⏪',hint:'Merke dir die Ziffern �
   const round=()=>{inp=false;tms.forEach(clearTimeout);tms=[];const L=Ls[k];seq=[];while(seq.length<L){const d=1+(r()*9|0);if(d!==seq[seq.length-1])seq.push(d)}pos=0;
    el.innerHTML=`<div class="c mut" style="margin-bottom:6px">Merken … (${k+1}/${Ls.length})</div><div class="big" id="dg" style="font-size:120px;min-height:130px">&nbsp;</div>`;
    const dg=el.querySelector('#dg');
-   seq.forEach((d,i)=>{tms.push(setTimeout(()=>{if(live(el)){dg.textContent=d;sfx('tap',i)}},500+i*900));tms.push(setTimeout(()=>{if(live(el))dg.innerHTML='&nbsp;'},500+i*900+600))});
-   tms.push(setTimeout(()=>{if(!live(el))return;inp=true;pad()},500+L*900))};
+   seq.forEach((d,i)=>{tms.push(setTimeout(()=>{if(live(el)){dg.textContent=d;sfx('tap',i)}},500+i*1000));tms.push(setTimeout(()=>{if(live(el))dg.innerHTML='&nbsp;'},500+i*1000+700))});
+   tms.push(setTimeout(()=>{if(!live(el))return;inp=true;pad()},500+L*1000))};
   round();
   el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b||!inp)return;
    if(+b.dataset.v===seq[seq.length-1-pos]){pos++;sfx('tap',pos);const pg=el.querySelector('#pg');if(pg)pg.textContent='●'.repeat(pos)+'○'.repeat(seq.length-pos);
@@ -500,7 +502,7 @@ doppel:{name:'Doppelgänger',emoji:'👯',hint:'Welches Symbol war schon in der 
   const mk=()=>{if(!prev.length){common=null;return shuffle(EM12,r).slice(0,4)}common=prev[r()*4|0];return shuffle([common,...shuffle(EM12.filter(x=>!prev.includes(x)),r).slice(0,3)],r)};
   const grid=(set,t,btn)=>`${ttl(t)}<div class="grid g2" style="gap:12px">${set.map((x,i)=>btn?`<button class="tile txt" data-v="${i}" style="font-size:52px;padding:30px 0">${x}</button>`:`<div class="tile emo" style="${tileBox};aspect-ratio:2/1;font-size:52px">${x}</div>`).join('')}</div>`;
   const next=()=>{const nw=mk();ans=nw.indexOf(common);prev=nw;ask=true;el.innerHTML=grid(nw,'Welches war schon in der letzten Runde dabei?',true)};
-  prev=mk();el.innerHTML=grid(prev,'Merken! 👀',false);setTimeout(()=>{if(live(el))next()},2000);
+  prev=mk();el.innerHTML=grid(prev,'Merken! 👀',false);setTimeout(()=>{if(live(el))next()},2400);
   el.onpointerdown=e=>{const b=e.target.closest('.tile.txt');if(!b||!ask)return;
    if(+b.dataset.v===ans){sfx('tap',k);if(++k>=Rn){ask=false;done()}else next()}else err(b)}}}
 });
@@ -559,8 +561,8 @@ function play(cb){
  const el=$('#stg'),tm=$('#tm'),dots=[...document.querySelectorAll('.dots i')];
  let pen=0,si=0,live=true,ts=0;const gt={},t0=performance.now();
  (function tick(){if(!live)return;tm.textContent=f3(performance.now()-t0+pen);requestAnimationFrame(tick)})();
- const err=b=>{pen+=1500;sfx('bad');if(b){b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake')}
-  const p=document.createElement('div');p.className='pen';p.textContent='+1,5 s';document.body.append(p);setTimeout(()=>p.remove(),800);
+ const err=(b,ms=1500)=>{pen+=ms;sfx('bad');if(b){b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake')}
+  const p=document.createElement('div');p.className='pen';p.textContent=ms==1500?'+1,5 s':'+'+(ms/1000).toFixed(2).replace('.',',')+' s';document.body.append(p);setTimeout(()=>p.remove(),800);
   app.firstChild.classList.remove('flash');void app.firstChild.offsetWidth;app.firstChild.classList.add('flash')};
  const next=()=>{
   if(si>=S.stages.length){live=false;(cb||finish)(performance.now()-t0+pen,pen,gt);return}
@@ -586,7 +588,7 @@ function finish(t,pen,gt){
  let cm=flag?pick(CM[flag]):S.res.length>1&&rank==S.res.length-1?pick(CM.last):rank==0?pick(CM.lead):pick(CM.mid);
  sfx(flag=='rec'?'rec':flag?'win':rank==0?'win':'lose');if(flag||rank==0&&S.res.length>1)confetti(flag=='rec'?220:110);
  app.innerHTML=`<div class="scr"><div class="mid"><div class="c mut">${esc(n)}</div><div class="big">${f3(t)}</div>
- <div class="c mut">${pen?`davon ${f3(pen)} Strafzeit (${pen/1500} Fehler)`:'✨ Fehlerfrei!'}</div><div class="banner">${cm}</div>
+ <div class="c mut">${pen?`davon ${f3(pen)} Strafzeit`:'✨ Fehlerfrei!'}</div><div class="banner">${cm}</div>
  <div class="card" style="padding:10px">${Object.keys(gt).map(k=>`<div style="display:flex;justify-content:space-between;padding:3px 0"><span>${STG[k].emoji} ${STG[k].name}${gr.includes(k)?' 🏅 Spiel-Rekord!':''}</span><b>${f3(gt[k])}</b></div>`).join('')}</div>
  <div>${sorted.map((x,i)=>`<div class="rk ${i==0?'w':''}" style="margin-bottom:6px"><span>${i+1}.</span><b>${esc(x.n)}</b><span>${f3(x.t)}</span></div>`).join('')}</div></div>
  <button class="btn pink" id="nx">${more?'Weiter: '+esc(S.names[S.cur+1])+' ➜':S.code?'Weiter ➜':'Endergebnis 🏆'}</button></div>`;
@@ -858,8 +860,8 @@ function arcRun(k,seed){
  app.innerHTML=`<div class="scr play"><div class="hud"><span>${STG[k].emoji} ${STG[k].name}</span><span id="tm">0,000 s</span></div><div class="hint">${STG[k].hint}</div><div id="stg"></div></div>`;
  const el=$('#stg'),tm=$('#tm');let pen=0,live=true;const t0=performance.now();
  (function tick(){if(!live)return;tm.textContent=f3(performance.now()-t0+pen);requestAnimationFrame(tick)})();
- const err=b=>{pen+=1500;sfx('bad');if(b){b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake')}
-  const p=document.createElement('div');p.className='pen';p.textContent='+1,5 s';document.body.append(p);setTimeout(()=>p.remove(),800);
+ const err=(b,ms=1500)=>{pen+=ms;sfx('bad');if(b){b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake')}
+  const p=document.createElement('div');p.className='pen';p.textContent=ms==1500?'+1,5 s':'+'+(ms/1000).toFixed(2).replace('.',',')+' s';document.body.append(p);setTimeout(()=>p.remove(),800);
   app.firstChild.classList.remove('flash');void app.firstChild.offsetWidth;app.firstChild.classList.add('flash')};
  STG[k].run(el,mulberry(seed),()=>{live=false;arcDone(k,performance.now()-t0+pen,pen)},err);
 }
@@ -867,7 +869,7 @@ function arcDone(k,t,pen){
  const prev=DB.arc[k],rec=!prev||t<prev;if(rec){DB.arc[k]=Math.round(t);save()}
  sfx(rec?'rec':'win');if(rec)confetti(150);
  app.innerHTML=`<div class="scr"><div class="mid"><div class="c mut">${STG[k].emoji} ${STG[k].name}</div><div class="big">${f3(t)}</div>
- <div class="c mut">${pen?`davon ${f3(pen)} Strafzeit (${pen/1500} Fehler)`:'✨ Fehlerfrei!'}</div>
+ <div class="c mut">${pen?`davon ${f3(pen)} Strafzeit`:'✨ Fehlerfrei!'}</div>
  <div class="banner">${rec?'🏅 Neue Bestzeit!':'Bestzeit: '+f3(prev)}</div></div>
  <button class="btn pink" id="again">🔁 Nochmal</button>${bar('📋 Andere Spiele')}</div>`;
  $('#again').onclick=()=>arcIntro(k);$('#bt').onclick=arcade;
