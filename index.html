@@ -227,7 +227,7 @@ spiegel:{name:'Spiegelbild',emoji:'🪞',hint:'Welches Muster ist das SPIEGELBIL
   const show=()=>{let t,m;do{t=shuffle([...Array(9).keys()],r).slice(0,4+(r()*2|0));m=mir(t)}while(key(t)==key(m));
    let d;do{d=[...m];const i=r()*d.length|0;let n;do{n=r()*9|0}while(d.includes(n));d[i]=n}while(key(d)==key(t));
    const opts=shuffle([m,t,d],r);o=opts.indexOf(m);
-   el.innerHTML=`<div style="width:150px;margin:0 auto 18px">${draw(t)}</div><div class="grid g3">${opts.map((c,i)=>`<button class="tile txt mb" data-v="${i}">${draw(c)}</button>`).join('')}</div>`};
+   el.innerHTML=`<div style="position:relative;width:150px;margin:0 auto 18px">${draw(t)}<div style="position:absolute;left:calc(100% + 10px);top:-4px;bottom:-4px;width:6px;border-radius:3px;background:repeating-linear-gradient(#fff 0 10px,transparent 10px 15px)"></div><span style="position:absolute;left:calc(100% + 22px);top:50%;transform:translateY(-50%);font-size:20px;line-height:1">🪞</span></div><div class="grid g3">${opts.map((c,i)=>`<button class="tile txt mb" data-v="${i}">${draw(c)}</button>`).join('')}</div>`};
   show();el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b)return;
    if(+b.dataset.v===o){sfx('tap',k);if(++k>=N)done();else show()}else err(b)}}},
 /* --- Reaktion & Speed --- */
