@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>BLITZBRAIN</title>
+<style>
+:root{--pink:#ff3d8b;--yel:#ffd23f;--cyan:#27e1ff;--grn:#3dffa0;--red:#ff4d4d;--mut:#b9a9f5;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{height:100%;margin:0;touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}
+input,select,textarea{font-size:16px!important}
+body{background:radial-gradient(120% 80% at 50% 0,#3b1a8f,#120b2e 70%) fixed;color:#fff;font:600 16px system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden}
+#app{height:100%}
+.scr{max-width:480px;margin:0 auto;height:100%;padding:16px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;animation:in .25s}
+.play{animation:none}
+.tb{position:sticky;bottom:0;z-index:50;isolation:isolate;box-shadow:0 -14px 14px -4px #1a0f45;display:flex;gap:10px;margin-top:auto;padding:10px 0 max(6px,env(safe-area-inset-bottom));background:#1a0f45}.tb .btn{flex:1}
+@keyframes in{from{opacity:0;transform:translateY(12px)}}
+.logo{font:900 clamp(44px,15vw,64px)/.9 system-ui;margin:10px 0 0;text-align:center;letter-spacing:-2px;transform:rotate(-3deg)}
+.logo span{display:block;color:var(--yel);text-shadow:4px 4px 0 var(--pink)}
+.sub{text-align:center;color:var(--mut);margin:4px 0 8px}
+.btn{border:0;border-radius:20px;padding:18px;font:900 20px system-ui;color:#1a0b45;background:linear-gradient(180deg,var(--yel),#ffab2e);box-shadow:0 6px 0 #b66a00;touch-action:manipulation;width:100%}
+.btn,.ar,.dp{position:relative}.btn::after,.ar::after,.dp::after{content:'';position:absolute;left:0;right:0;top:0;bottom:-6px;border-radius:inherit}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 #b66a00}
+.btn.pink{background:linear-gradient(180deg,#ff6fa8,var(--pink));color:#fff;box-shadow:0 6px 0 #a00f4c}
+.btn.ghost{background:rgba(255,255,255,.12);color:#fff;box-shadow:0 5px 0 rgba(0,0,0,.3)}
+.btn.sm{padding:12px;font-size:15px;border-radius:16px}
+.row{display:flex;gap:10px}.row>*{flex:1}
+.pl{display:flex;gap:8px}
+.pl input{flex:1;min-width:0;border:2px solid rgba(255,255,255,.2);border-radius:16px;background:rgba(255,255,255,.1);color:#fff;font:700 18px system-ui;padding:14px;user-select:text}
+.pl button{width:52px;border:0;border-radius:16px;background:rgba(255,77,77,.3);color:#fff;font-size:20px}
+.card{background:rgba(255,255,255,.1);border-radius:20px;padding:14px}
+.big{font:900 clamp(44px,16vw,72px)/1 system-ui;text-align:center;font-variant-numeric:tabular-nums}
+.c{text-align:center}.mut{color:var(--mut)}
+.mid{flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px}
+.hud{display:flex;justify-content:space-between;align-items:center;font:900 20px system-ui}
+.hud #tm{font-size:30px;color:var(--yel);font-variant-numeric:tabular-nums}
+.dots{display:flex;gap:6px}.dots i{flex:1;height:8px;border-radius:5px;background:rgba(255,255,255,.2)}.dots i.on{background:var(--cyan);height:12px;margin-top:-2px}.dots i.dn{background:#fff}
+.hint{text-align:center;color:var(--mut);min-height:22px}
+#stg{flex:1;display:flex;flex-direction:column;justify-content:center;width:100%;position:relative}
+.grid{display:grid;gap:10px;width:100%}.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:repeat(2,1fr)}
+.tile{border:0;border-radius:16px;color:#fff;font:900 clamp(24px,8vw,36px) system-ui;aspect-ratio:1;box-shadow:0 5px 0 rgba(0,0,0,.3);touch-action:manipulation;padding:0;text-shadow:0 2px 0 rgba(0,0,0,.3)}
+.g3 .tile{aspect-ratio:1.15}.g2 .tile{aspect-ratio:2/1}
+.tile.sq{border-radius:10px;box-shadow:none}
+.tile.txt{aspect-ratio:auto;padding:22px 0;background:linear-gradient(180deg,#7a4dff,#5a2fe0)}
+.cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center}
+.ball{border-radius:50%;aspect-ratio:1;box-shadow:inset -6px -8px 0 rgba(0,0,0,.2)}
+.off{visibility:hidden}
+.hole{background:#3a2380;font-size:44px;box-shadow:inset 0 6px 0 rgba(0,0,0,.4);text-shadow:none}
+.mp{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;width:100%}.mp i{aspect-ratio:1;border-radius:4px;background:rgba(255,255,255,.15)}.mp i.on{background:#fff}
+.mb{padding:14px!important}.mb .mp{width:75%;margin:auto}
+.emo{background:rgba(255,255,255,.12);text-shadow:none}
+.ico{font-size:34px;text-align:center;margin-bottom:14px}
+.pad{width:100%;aspect-ratio:auto!important;height:40vh;font-size:34px}
+.word{font:900 clamp(46px,15vw,76px) system-ui;text-align:center;margin-bottom:8px;-webkit-text-stroke:2px rgba(0,0,0,.35)}
+.eq{font:900 clamp(40px,13vw,60px) system-ui;text-align:center;margin-bottom:24px}
+.shake{animation:sh .25s}@keyframes sh{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.flash{animation:fl .3s}@keyframes fl{0%{box-shadow:inset 0 0 0 100vmax rgba(255,77,77,.35)}}
+.pen{position:fixed;left:50%;top:40%;transform:translateX(-50%);font:900 36px system-ui;color:var(--red);pointer-events:none;animation:up .8s forwards;text-shadow:0 3px 0 #000}
+@keyframes up{to{transform:translate(-50%,-70px);opacity:0}}
+.cd{font:900 clamp(140px,50vw,220px) system-ui;text-align:center;color:var(--yel);text-shadow:8px 8px 0 var(--pink);animation:pop .5s}
+@keyframes pop{from{transform:scale(2);opacity:0}}
+.banner{font:900 26px system-ui;text-align:center;color:var(--yel);animation:pop .5s}
+.rk{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.1);font-weight:800}
+.rk.w{background:linear-gradient(90deg,#ffd23f,#ff9f1c);color:#2a1166}
+.rk b{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rk small{font-weight:700;opacity:.8}
+h3{margin:8px 0 6px;color:var(--cyan)}
+canvas{position:fixed;inset:0;pointer-events:none;z-index:9}
+</style></head><body>
+<div id="app"></div><canvas id="fx"></canvas>
+<script>
+/* ===== Hilfsfunktionen ===== */
+['gesturestart','gesturechange','gestureend'].forEach(e=>document.addEventListener(e,x=>x.preventDefault&&x.preventDefault()));
+document.addEventListener('touchmove',e=>{if(e.touches&&e.touches.length>1)e.preventDefault()},{passive:false});
+document.addEventListener('wheel',e=>{if(e.ctrlKey)e.preventDefault()},{passive:false});
+const $=s=>document.querySelector(s),app=$('#app');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const bar=(label='⬅ Zurück',id='bt')=>`<div class="tb"><button class="btn ghost sm" id="${id}">${label}</button></div>`;
+const f3=ms=>(ms/1000).toFixed(3).replace('.',',')+' s';
+const pick=a=>a[Math.random()*a.length|0];
+const today=()=>new Date().toISOString().slice(0,10);
+function mulberry(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function shuffle(a,r){a=[...a];for(let i=a.length-1;i>0;i--){const j=r()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a}
+
+/* ===== Speicher ===== */
+let DB={runs:[],names:['',''],mus:true,snd:true};
+try{Object.assign(DB,JSON.parse(localStorage.getItem('blitzbrain1')||'{}'))}catch(e){}
+const save=()=>{try{localStorage.setItem('blitzbrain1',JSON.stringify(DB))}catch(e){}};
+/* Online-Scoreboard: fest eingebaut. Der Publishable Key ist für öffentliche Apps gedacht (Zugriff regeln die Datenbank-Regeln). */
+DB.sb={url:'https://hiweloxyqbjemegabfdz.supabase.co',key:'sb_publishable_kCylj8u9r2rviN7ze1NGtA_Ho42EmxP'};
+
+/* ===== Audio ===== */
+let AC;
+function ac(){if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();return AC}
+function tone(f,d,type='square',v=.07,t=0,sl){try{const c=ac(),o=c.createOscillator(),g=c.createGain(),s=c.currentTime+t;o.type=type;o.frequency.setValueAtTime(f,s);if(sl)o.frequency.exponentialRampToValueAtTime(sl,s+d);g.gain.setValueAtTime(v,s);g.gain.exponentialRampToValueAtTime(.001,s+d);o.connect(g).connect(c.destination);o.start(s);o.stop(s+d+.02)}catch(e){}}
+function sfx(k,n=0){if(!DB.snd)return;
+ if(k=='tap')tone(420+n*45,.09,'square',.06);
+ if(k=='bad')tone(220,.3,'sawtooth',.1,0,50);
+ if(k=='ok'){tone(660,.1,'triangle',.1);tone(990,.15,'triangle',.1,.08)}
+ if(k=='cd')tone(440,.15,'square',.1);
+ if(k=='go'){tone(880,.35,'square',.1);tone(1320,.4,'square',.08,.1)}
+ if(k=='win')[523,659,784,1047].forEach((f,i)=>tone(f,.18,'triangle',.12,i*.1));
+ if(k=='rec')[523,659,784,1047,784,1047,1319].forEach((f,i)=>tone(f,.2,'square',.09,i*.09));
+ if(k=='lose')[400,350,300,200].forEach((f,i)=>tone(f,.25,'sawtooth',.08,i*.16,f*.8));}
+let st=0;setInterval(()=>{if(!DB.mus||!AC||document.hidden)return;
+ const a=[440,523,587,659,784,659,587,523],b=[110,87,98,131][st>>3&3];
+ tone(a[st%8]*(st%16<8?1:1.25),.12,'triangle',.03);if(st%4==0)tone(b,.3,'sine',.07);st++},170);
+
+/* ===== Konfetti ===== */
+const cv=$('#fx'),cx=cv.getContext('2d');let ps=[],run=false;
+function confetti(n=120){cv.width=innerWidth;cv.height=innerHeight;for(let i=0;i<n;i++)ps.push({x:innerWidth/2,y:innerHeight*.4,vx:(Math.random()-.5)*16,vy:-Math.random()*16-4,c:`hsl(${Math.random()*360},90%,60%)`,s:5+Math.random()*7,r:Math.random()*6});
+ if(!run){run=true;(function l(){cx.clearRect(0,0,cv.width,cv.height);ps=ps.filter(p=>p.y<cv.height+20);ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.4;p.r+=.2;cx.fillStyle=p.c;cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.6);cx.restore()});if(ps.length)requestAnimationFrame(l);else run=false})()}}
+
+/* ===== Mini-Games (alle seed-basiert: gleiche Aufgabe für alle) ===== */
+const STG={
+zahlen:{name:'Zahlenjagd',emoji:'🔢',hint:'Tippe 1 bis 12 in der richtigen Reihenfolge!',
+ run(el,r,done,err){const n=12;let k=1;
+  el.innerHTML='<div class="grid g3">'+shuffle([...Array(n)].map((_,i)=>i+1),r).map(v=>`<button class="tile" data-v="${v}" style="background:hsl(${r()*360|0},80%,55%)">${v}</button>`).join('')+'</div>';
+  el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b||b.classList.contains('off'))return;
+   if(+b.dataset.v===k){b.classList.add('off');sfx('tap',k);if(++k>n)done()}else err(b)}}},
+farbe:{name:'Farbtrick',emoji:'🎨',hint:'Tippe Farbe/Symbol der SCHRIFT – nicht das Wort!',
+ run(el,r,done,err){const C=[['ORANGE','#E69F00','▲'],['BLAU','#56B4E9','●'],['GRÜN','#009E73','■'],['GELB','#F0E442','★']],N=7;let k=0;
+  const q=[...Array(N)].map(()=>{const w=r()*4|0;let i=r()*4|0;if(i===w)i=(i+1)%4;return[w,i]});
+  const show=()=>{const[w,i]=q[k];el.innerHTML=`<div class="word" style="color:${C[i][1]}">${C[w][0]}</div><div class="ico" style="color:${C[i][1]}">${C[i][2]}</div><div class="grid g2">${C.map((c,j)=>`<button class="tile" data-v="${j}" style="background:${c[1]};color:#111;text-shadow:none">${c[2]}</button>`).join('')}</div>`};
+  show();el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b)return;
+   if(+b.dataset.v===q[k][1]){sfx('tap',k);if(++k>=N)done();else show()}else err(b)}}},
+anders:{name:'Der Andere',emoji:'👀',hint:'Finde das Feld mit dem leicht anderen Farbton!',
+ run(el,r,done,err){const sz=[3,4,5,6],dl=[22,16,12,9];let k=0,o=0;
+  const show=()=>{const n=sz[k],h=r()*360|0;o=r()*n*n|0;el.innerHTML=`<div class="grid" style="grid-template-columns:repeat(${n},1fr)">${[...Array(n*n)].map((_,i)=>`<button class="tile sq" data-v="${i}" style="background:hsl(${h},75%,${i===o?55+dl[k]:55}%)"></button>`).join('')}</div>`};
+  show();el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b)return;
+   if(+b.dataset.v===o){sfx('tap',k*2);if(++k>=4)done();else show()}else err(b)}}},
+gross:{name:'Groß nach Klein',emoji:'🫧',hint:'Tippe die Kugeln vom GRÖSSTEN zum kleinsten!',
+ run(el,r,done,err){const cells=shuffle([...Array(9).keys()],r).slice(0,7),sizes=shuffle([32,44,56,68,80,92,100],r),order=[...sizes].sort((a,b)=>b-a);let k=0;
+  el.innerHTML='<div class="grid g3">'+[...Array(9).keys()].map(c=>{const j=cells.indexOf(c);return j<0?'<div></div>':`<div class="cell"><button class="tile ball" data-v="${sizes[j]}" style="width:${sizes[j]}%;background:hsl(${j*50},85%,60%)"></button></div>`}).join('')+'</div>';
+  el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b||b.classList.contains('off'))return;
+   if(+b.dataset.v===order[k]){b.classList.add('off');sfx('tap',k);if(++k>=7)done()}else err(b)}}},
+rechnen:{name:'Blitzrechnen',emoji:'🧮',hint:'Wähle das richtige Ergebnis!',
+ run(el,r,done,err){const N=6;let k=0,v=0;
+  const show=()=>{const a=2+r()*12|0,b=2+r()*9|0,t=r()*3|0,m=b%8+2,A=Math.min(a,9);
+   let ex;if(t==0){ex=a+' + '+b;v=a+b}else if(t==1){ex=(a+b)+' − '+b;v=a}else{ex=A+' × '+m;v=A*m}
+   const o=shuffle([v,v+1+(r()*3|0),v-1-(r()*3|0)],r);
+   el.innerHTML=`<div class="eq">${ex} = ?</div><div class="grid g3">${o.map(x=>`<button class="tile txt" data-v="${x}">${x}</button>`).join('')}</div>`};
+  show();el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b)return;
+   if(+b.dataset.v===v){sfx('tap',k);if(++k>=N)done();else show()}else err(b)}}}
+};
+
+Object.assign(STG,{
+maulwurf:{name:'Maulwurf',emoji:'🐹',hint:'Tippe jedes Mal den Maulwurf – 8 Treffer!',
+ run(el,r,done,err){const N=8;let k=0,l=-1;const seq=[];
+  for(let i=0;i<N;i++){let x;do{x=r()*9|0}while(x===l);seq.push(x);l=x}
+  const show=()=>{el.innerHTML='<div class="grid g3">'+[...Array(9)].map((_,i)=>`<button class="tile hole" data-v="${i}" style="${i===seq[k]?'background:#8a5a2b':''}">${i===seq[k]?'🐹':''}</button>`).join('')+'</div>'};
+  show();el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b)return;
+   if(+b.dataset.v===seq[k]){sfx('tap',k);if(++k>=N)done();else show()}else err(b)}}},
+vielfach:{name:'Außenseiter',emoji:'🧠',hint:'Welche Zahl ist KEIN Vielfaches?',
+ run(el,r,done,err){const N=6;let k=0,o=0;
+  const show=()=>{const m=3+(r()*5|0),nums=shuffle([2,3,4,5,6,7,8,9,10,11,12],r).slice(0,6).map(q=>m*q);o=r()*6|0;nums[o]+=1+(r()*(m-1)|0);
+   el.innerHTML=`<div class="c mut">Eine Zahl ist KEIN Vielfaches von</div><div class="eq" style="margin-bottom:12px">${m}</div><div class="grid g3">${nums.map((x,i)=>`<button class="tile txt" data-v="${i}">${x}</button>`).join('')}</div>`};
+  show();el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b)return;
+   if(+b.dataset.v===o){sfx('tap',k);if(++k>=N)done();else show()}else err(b)}}},
+muster:{name:'Muster-Match',emoji:'🧩',hint:'Welches Muster ist identisch mit dem oberen?',
+ run(el,r,done,err){const N=5;let k=0,o=0;
+  const draw=c=>`<div class="mp">${[...Array(9)].map((_,i)=>`<i class="${c.includes(i)?'on':''}"></i>`).join('')}</div>`;
+  const show=()=>{const t=shuffle([...Array(9).keys()],r).slice(0,4+(r()*2|0)).sort(),alts=[t];
+   while(alts.length<3){const a=[...t],i=r()*a.length|0;let n;do{n=r()*9|0}while(a.includes(n));a[i]=n;a.sort();if(!alts.some(x=>x.join()==a.join()))alts.push(a)}
+   o=r()*3|0;const opts=alts.slice(1);opts.splice(o,0,t);
+   el.innerHTML=`<div style="width:150px;margin:0 auto 18px">${draw(t)}</div><div class="grid g3">${opts.map((c,i)=>`<button class="tile txt mb" data-v="${i}">${draw(c)}</button>`).join('')}</div>`};
+  show();el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b)return;
+   if(+b.dataset.v===o){sfx('tap',k);if(++k>=N)done();else show()}else err(b)}}},
+emoji:{name:'Emoji-Detektiv',emoji:'🕵️',hint:'Finde das eine Emoji, das anders ist!',
+ run(el,r,done,err){const P=[['🙂','🙃'],['😀','😃'],['🐶','🐕'],['🔔','🔕'],['⭐','🌟'],['😠','😡'],['😮','😯']],sz=[3,4,5,6];let k=0,o=0;
+  const show=()=>{const n=sz[k],[a,b]=shuffle(P[r()*P.length|0],r);o=r()*n*n|0;
+   el.innerHTML=`<div class="grid" style="grid-template-columns:repeat(${n},1fr);gap:6px">${[...Array(n*n)].map((_,i)=>`<button class="tile emo" data-v="${i}" style="font-size:${n>4?22:30}px">${i===o?b:a}</button>`).join('')}</div>`};
+  show();el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b)return;
+   if(+b.dataset.v===o){sfx('tap',k*2);if(++k>=4)done();else show()}else err(b)}}},
+pfeile:{name:'Pfeil-Reflex',emoji:'🧭',hint:'Tippe die Pfeilrichtung – bei 🔄 die ENTGEGENGESETZTE!',
+ run(el,r,done,err){const N=9,A=['⬆️','➡️','⬇️','⬅️'],pos={1:0,5:1,7:2,3:3};let k=0;
+  const q=[...Array(N)].map(()=>[r()*4|0,r()<.35]);
+  const show=()=>{const[d,inv]=q[k];el.innerHTML=`<div class="word">${A[d]}</div><div class="banner" style="min-height:34px;margin-bottom:12px">${inv?'🔄 ENTGEGENGESETZT!':''}</div><div class="grid g3">${[...Array(9)].map((_,i)=>i in pos?`<button class="tile txt" data-v="${pos[i]}">${A[pos[i]]}</button>`:'<div></div>').join('')}</div>`};
+  show();el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b)return;const[d,inv]=q[k];
+   if(+b.dataset.v===(inv?(d+2)%4:d)){sfx('tap',k);if(++k>=N)done();else show()}else err(b)}}},
+zaehlen:{name:'Zähl-Profi',emoji:'🍌',hint:'Wie viele 🍌 siehst du? Den Rest ignorieren!',
+ run(el,r,done,err){const N=4;let k=0,v=0;
+  const show=()=>{v=5+(r()*7|0);const set=new Set(shuffle([...Array(30).keys()],r).slice(0,v)),o=shuffle([v,v+1,v-1],r);
+   el.innerHTML='<div class="grid" style="grid-template-columns:repeat(6,1fr);gap:2px;font-size:30px;text-align:center;margin-bottom:16px">'+[...Array(30)].map((_,i)=>`<div>${set.has(i)?'🍌':r()<.55?'🍇':r()<.5?'🍓':''}</div>`).join('')+`</div><div class="grid g3">${o.map(x=>`<button class="tile txt" data-v="${x}">${x}</button>`).join('')}</div>`};
+  show();el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b)return;
+   if(+b.dataset.v===v){sfx('tap',k*2);if(++k>=N)done();else show()}else err(b)}}}
+});
+
+/* Farbbasierte Spiele raus – Farben sind nur noch Deko, nie spielentscheidend */
+delete STG.farbe;delete STG.anders;
+Object.assign(STG,{
+/* --- Logik --- */
+reihe:{name:'Zahlenreihe',emoji:'📈',hint:'Welche Zahl kommt als Nächstes?',
+ run(el,r,done,err){const N=5;let k=0,v=0;
+  const show=()=>{const t=r()*3|0,a=2+(r()*9|0),d=2+(r()*6|0);let s;
+   if(t==0){s=[0,1,2,3].map(i=>a+d*i);v=a+d*4}else if(t==1){s=[0,1,2,3].map(i=>a*2**i);v=a*16}else{s=[0,1,3,6].map(x=>a+x*d);v=a+10*d}
+   const o=shuffle([v,v+1+(r()*3|0),v-1-(r()*3|0)],r);
+   el.innerHTML=`<div class="eq" style="font-size:clamp(26px,9vw,40px)">${s.join(' · ')} · ?</div><div class="grid g3">${o.map(x=>`<button class="tile txt" data-v="${x}">${x}</button>`).join('')}</div>`};
+  show();el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b)return;
+   if(+b.dataset.v===v){sfx('tap',k);if(++k>=N)done();else show()}else err(b)}}},
+wahr:{name:"Stimmt's?",emoji:'⚖️',hint:'Stimmt die Rechnung? Blitzschnell entscheiden!',
+ run(el,r,done,err){const N=8;let k=0,ok=true;
+  const show=()=>{const a=3+(r()*9|0),b=3+(r()*9|0),t=r()*2|0,real=t?a*b:a+b;ok=r()<.5;const sh=ok?real:real+(r()<.5?-1:1)*(1+(r()*3|0));
+   el.innerHTML=`<div class="eq" style="font-size:clamp(32px,10vw,48px)">${a} ${t?'×':'+'} ${b} = ${sh}</div><div class="grid g2"><button class="tile txt" data-v="1">✔ STIMMT</button><button class="tile txt" data-v="0">✘ FALSCH</button></div>`};
+  show();el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b)return;
+   if(+b.dataset.v===(ok?1:0)){sfx('tap',k);if(++k>=N)done();else show()}else err(b)}}},
+duell:{name:'Größer-Duell',emoji:'⚔️',hint:'Tippe den Term mit dem GRÖßEREN Ergebnis!',
+ run(el,r,done,err){const N=7;let k=0,big=0;
+  const mk=()=>{const t=r()*3|0,a=3+(r()*9|0),b=3+(r()*9|0);return t==0?[a+' + '+(b+a),a*2+b]:t==1?[a+' × '+b,a*b]:[(a*b)+' − '+b,a*b-b]};
+  const show=()=>{let x,y;do{x=mk();y=mk()}while(x[1]==y[1]);big=x[1]>y[1]?0:1;
+   el.innerHTML=`<div class="grid g2" style="gap:16px">${[x,y].map((c,i)=>`<button class="tile txt" data-v="${i}" style="padding:40px 0">${c[0]}</button>`).join('')}</div>`};
+  show();el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b)return;
+   if(+b.dataset.v===big){sfx('tap',k);if(++k>=N)done();else show()}else err(b)}}},
+aussen:{name:'Passt nicht',emoji:'🚫',hint:'Welches Symbol gehört NICHT zu den anderen?',
+ run(el,r,done,err){const N=6,C=[['🐶','🐱','🐭','🐰','🦊','🐻'],['🍎','🍌','🍇','🍓','🍍','🍊'],['🚗','🚌','🚲','✈️','🚂','🚢'],['⚽','🏀','🎾','🏈','🎱','🏐'],['🔨','🔧','✂️','📏','🪛','🪚'],['☀️','🌧️','❄️','⛈️','🌪️','🌈']];let k=0,o='';
+  const show=()=>{const ci=r()*6|0,cj=(ci+1+(r()*5|0))%6,t=shuffle(C[ci],r).slice(0,3);o=C[cj][r()*6|0];
+   const all=shuffle([...t,o],r);el.innerHTML=`<div class="grid g2">${all.map(x=>`<button class="tile emo" data-v="${x}" style="aspect-ratio:1.3;font-size:56px">${x}</button>`).join('')}</div>`};
+  show();el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b)return;
+   if(b.dataset.v===o){sfx('tap',k*2);if(++k>=N)done();else show()}else err(b)}}},
+rang:{name:'Rechen-Rangliste',emoji:'📊',hint:'Tippe die Terme vom KLEINSTEN zum GRÖßTEN Ergebnis!',
+ run(el,r,done,err){const vals=shuffle([...Array(20).keys()].map(i=>i+4),r).slice(0,6);let k=0;
+  const T=vals.map(v=>{const a=1+(r()*(v-2)|0);return[r()<.5?(v+a)+' − '+a:a+' + '+(v-a),v]}),order=[...T].sort((x,y)=>x[1]-y[1]);
+  el.innerHTML='<div class="grid g3">'+T.map(c=>`<button class="tile txt" data-v="${c[1]}" style="padding:36px 0">${c[0]}</button>`).join('')+'</div>';
+  el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b||b.classList.contains('off'))return;
+   if(+b.dataset.v===order[k][1]){b.classList.add('off');sfx('tap',k);if(++k>=6)done()}else err(b)}}},
+spiegel:{name:'Spiegelbild',emoji:'🪞',hint:'Welches Muster ist das SPIEGELBILD (links ↔ rechts)?',
+ run(el,r,done,err){const N=5;let k=0,o=0;
+  const draw=c=>`<div class="mp">${[...Array(9)].map((_,i)=>`<i class="${c.includes(i)?'on':''}"></i>`).join('')}</div>`,key=c=>[...c].sort((a,b)=>a-b).join(),mir=c=>c.map(i=>i-2*(i%3)+2);
+  const show=()=>{let t,m;do{t=shuffle([...Array(9).keys()],r).slice(0,4+(r()*2|0));m=mir(t)}while(key(t)==key(m));
+   let d;do{d=[...m];const i=r()*d.length|0;let n;do{n=r()*9|0}while(d.includes(n));d[i]=n}while(key(d)==key(t));
+   const opts=shuffle([m,t,d],r);o=opts.indexOf(m);
+   el.innerHTML=`<div style="width:150px;margin:0 auto 18px">${draw(t)}</div><div class="grid g3">${opts.map((c,i)=>`<button class="tile txt mb" data-v="${i}">${draw(c)}</button>`).join('')}</div>`};
+  show();el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b)return;
+   if(+b.dataset.v===o){sfx('tap',k);if(++k>=N)done();else show()}else err(b)}}},
+/* --- Reaktion & Speed --- */
+blitz:{name:'Blitzreflex',emoji:'⚡',hint:'Warten … sobald „JETZT“ erscheint: SOFORT tippen! Zu früh = Strafe.',
+ run(el,r,done,err){const N=3;let k=0,go=false,tm;
+  const arm=()=>{go=false;el.innerHTML='<button class="tile pad" style="background:#3a2380">… warten …</button>';
+   tm=setTimeout(()=>{go=true;const b=el.firstChild;b.textContent='⚡ JETZT! ⚡';b.style.background='#fff';b.style.color='#1a0b45';b.style.fontSize='52px'},700+r()*1500)};
+  arm();el.onpointerdown=e=>{const b=e.target.closest('.pad');if(!b)return;
+   if(!go){clearTimeout(tm);err(b);arm()}else{sfx('tap',k*3);if(++k>=N)done();else arm()}}}},
+sprint:{name:'Daumen-Sprint',emoji:'👍',hint:'Hämmere 20× auf den Button – so schnell du kannst!',
+ run(el,r,done,err){const N=20;let k=0;
+  el.innerHTML=`<div class="big" id="spn">${N}</div><button class="tile pad" style="background:linear-gradient(180deg,#ff6fa8,#ff3d8b);margin-top:12px">TIPP!</button>`;
+  el.onpointerdown=e=>{if(!e.target.closest('.pad'))return;k++;sfx('tap',k%12);$('#spn').textContent=N-k;if(k>=N)done()}}},
+stern:{name:'Sternenfänger',emoji:'⭐',hint:'Tippe 8× den ⭐ – aber NIE die 💣!',
+ run(el,r,done,err){const N=8;let k=0,cur='s',tm;
+  const next=()=>{clearTimeout(tm);if(k>=N){done();return}cur=r()<.4?'b':'s';const p=r()*9|0;
+   el.innerHTML='<div class="grid g3">'+[...Array(9)].map((_,i)=>i==p?`<button class="tile hole" style="background:#5a2fe0">${cur=='s'?'⭐':'💣'}</button>`:'<div></div>').join('')+'</div>';
+   if(cur=='b')tm=setTimeout(next,650)};
+  next();el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b)return;
+   if(cur=='s'){sfx('tap',k);k++;next()}else{err(b);next()}}}}
+});
+
+/* ===== Baukasten für schnelle Spieltypen ===== */
+/* mc: Frage + Antwortauswahl (Optionen werden pro Frage gemischt) */
+const mc=(name,emoji,hint,N,gen,cols=3)=>({name,emoji,hint,run(el,r,done,err){let k=0,ans=0;
+ const show=()=>{const g=gen(r),w=[...new Set(g.w.map(String))].filter(x=>x!==String(g.a)),o=shuffle([String(g.a),...w],r);ans=o.indexOf(String(g.a));
+  el.innerHTML=`<div class="eq" style="font-size:clamp(28px,9vw,44px)">${g.q}</div><div class="grid g${cols}">${o.map((x,i)=>`<button class="tile txt" data-v="${i}" style="font-size:clamp(20px,6.5vw,30px)">${x}</button>`).join('')}</div>`};
+ show();el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b)return;
+  if(+b.dataset.v===ans){sfx('tap',k);if(++k>=N)done();else show()}else err(b)}}});
+/* yn: zwei feste Buttons (Muskelgedächtnis!) */
+const yn=(name,emoji,hint,N,L,gen)=>({name,emoji,hint,run(el,r,done,err){let k=0,a=0;
+ const show=()=>{const g=gen(r);a=g.a;el.innerHTML=`<div class="word" style="-webkit-text-stroke:0;margin-bottom:20px">${g.q}</div><div class="grid g2" style="gap:14px">${L.map((x,i)=>`<button class="tile txt" data-v="${i}" style="padding:44px 0;font-size:clamp(20px,6.5vw,30px)">${x}</button>`).join('')}</div>`};
+ show();el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b)return;
+  if(+b.dataset.v===a){sfx('tap',k);if(++k>=N)done();else show()}else err(b)}}});
+const rom=n=>{let s='';[[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']].forEach(([v,t])=>{while(n>=v){s+=t;n-=v}});return s};
+const H=m=>{m=((m%1440)+1440)%1440;return String(m/60|0).padStart(2,'0')+':'+String(m%60).padStart(2,'0')};
+const ALPHA='ABCDEFGHIJKLMNOPQRSTUVWXYZ',DAYS=['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
+const ANTI=[['kalt','heiß'],['klein','groß'],['hell','dunkel'],['schnell','langsam'],['laut','leise'],['alt','jung'],['voll','leer'],['hoch','tief'],['nah','fern'],['dick','dünn'],['stark','schwach'],['früh','spät'],['leicht','schwer'],['reich','arm'],['offen','zu'],['oben','unten'],['hart','weich'],['nass','trocken'],['gut','schlecht'],['sauber','schmutzig'],['süß','sauer'],['vorne','hinten']];
+const WORDS=['BÜRO','KAFFEE','MAUS','TASTE','PAPIER','DRUCKER','CHEF','PAUSE','POST','LAPTOP','AKTE','MEETING','KANTINE','PROJEKT','FORMULAR'];
+const PRIMES=[11,13,17,19,23,29,31,37,41,43,47,53],COMP=[21,27,33,39,49,51,57,63,69,77,87,91];
+const ANIM=['🐶','🐱','🐭','🐰','🦊','🐻','🐼','🐸','🐵','🦁','🐯','🐮'],THING=['🚗','🏠','⚽','📱','💡','🔑','📚','✂️','🪑','🎸','⌚','🔨'];
+const SYM=['▲','●','■','★','◆','✚'];
+
+Object.assign(STG,{
+/* --- Logik & Wissen (Auswahl) --- */
+rest:mc('Rest-Rechner','➗','Welcher Rest bleibt bei der Division?',6,r=>{const b=3+(r()*6|0),q=2+(r()*7|0),m=r()*b|0;
+ return{q:`${b*q+m} ÷ ${b} → Rest?`,a:m,w:[m+1,m+2,m-1].filter(x=>x>=0)}}),
+quer:mc('Quersumme','➕','Addiere alle Ziffern der Zahl!',6,r=>{const n=1000+(r()*8999|0),s=String(n).split('').reduce((a,c)=>a+ +c,0);
+ return{q:`${n}`,a:s,w:[s+1,s-1,s+2]}}),
+prim:mc('Primzahl-Jäger','🔍','Welche Zahl ist eine Primzahl?',6,r=>({q:'Primzahl?',a:PRIMES[r()*PRIMES.length|0],w:shuffle(COMP,r).slice(0,2)})),
+alpha:mc('Buchstaben-Sprung','🔤','Springe im Alphabet weiter!',6,r=>{const s=r()*17|0,n=2+(r()*5|0);
+ return{q:`${ALPHA[s]} + ${n}`,a:ALPHA[s+n],w:[ALPHA[s+n+1],ALPHA[s+n-1],ALPHA[s+n+2]]}},2),
+uhr:mc('Uhr-Rechner','🕒','Welche Uhrzeit ist es dann?',6,r=>{const t=(8+(r()*10|0))*60+(r()*12|0)*5,d=15+(r()*15|0)*5;
+ return{q:`${H(t)} + ${d} Min`,a:H(t+d),w:[H(t+d+10),H(t+d-10),H(t+d+20)]}},2),
+tage:mc('Wochentag-Rechner','📅','Welcher Wochentag ist es dann?',6,r=>{const i=r()*7|0,n=2+(r()*12|0);
+ return{q:`${DAYS[i]} + ${n} Tage`,a:DAYS[(i+n)%7],w:[DAYS[(i+n+1)%7],DAYS[(i+n+6)%7],DAYS[(i+n+2)%7]]}},2),
+rom:mc('Römer-Rätsel','🏛️','Welche Zahl steckt hinter der römischen Zahl?',6,r=>{const n=6+(r()*33|0);
+ return{q:rom(n),a:n,w:[n+1,n-1,n+(r()<.5?2:-2)]}}),
+bin:mc('Binär-Code','💾','Wandle die Binärzahl in eine normale Zahl um!',6,r=>{const n=3+(r()*13|0);
+ return{q:n.toString(2),a:n,w:[n+1,n-1,n+2]}}),
+analog:mc('Gegenteil-Blitz','↔️','Welches Wort ist das Gegenteil?',6,r=>{const i=r()*ANTI.length|0,d=r()*2|0;
+ return{q:ANTI[i][d],a:ANTI[i][1-d],w:shuffle(ANTI.filter((_,x)=>x!==i).flat(),r).slice(0,3)}},2),
+anagr:mc('Buchstabensalat','🥗','Welches Wort steckt im Durcheinander?',6,r=>{const w=WORDS[r()*WORDS.length|0];let s;do{s=shuffle([...w],r).join('')}while(s==w);
+ return{q:s,a:w,w:shuffle(WORDS.filter(x=>x!==w),r).slice(0,3)}},2),
+folge:mc('Symbol-Folge','🔁','Welches Symbol kommt als Nächstes?',6,r=>{const P=[[0,1],[0,0,1],[0,1,2]][r()*3|0],S=shuffle(SYM,r),f=i=>S[P[i%P.length]];
+ return{q:[0,1,2,3,4].map(f).join(' ')+' ?',a:f(5),w:S.filter(x=>x!==f(5)).slice(0,3)}}),
+waage:mc('Obst-Mathe','🍎','Rechne mit den Werten!',6,r=>{const F=shuffle(['🍎','🍌','🍇','🍓','🍒','🍍'],r),va=2+(r()*5|0),vb=1+(r()*5|0),x=1+(r()*3|0),y=1+(r()*3|0),a=x*va+y*vb;
+ return{q:`${F[0]}=${va} · ${F[1]}=${vb}<br>${F[0].repeat(x)}${F[1].repeat(y)} = ?`,a,w:[a+1,a-1,a+2]}}),
+/* --- Ja/Nein-Blitz (feste Buttons) --- */
+gerade:yn('Gerade/Ungerade','🎲','Gerade oder ungerade? Blitzschnell!',12,['GERADE','UNGERADE'],r=>{const n=10+(r()*90|0);return{q:n,a:n%2}}),
+tier:yn('Tier oder Ding','🐾','Tier oder Gegenstand?',12,['🐾 TIER','📦 DING'],r=>{const t=r()<.5;return{q:(t?ANIM:THING)[r()*12|0],a:t?0:1}}),
+fuenfzig:yn('Über oder unter 50','⚖️','Ist die Zahl kleiner oder größer als 50?',12,['UNTER 50','ÜBER 50'],r=>{let n=10+(r()*81|0);if(n==50)n=51;return{q:n,a:n>50?1:0}}),
+/* --- Speed & Gedächtnis (eigene Mechanik) --- */
+numpad:{name:'Ziffern-Blitz',emoji:'⌨️',hint:'Tippe die angezeigte Ziffer auf dem Ziffernblock!',
+ run(el,r,done,err){const N=14;let k=0,v=0;
+  const show=()=>{v=1+(r()*9|0);el.innerHTML=`<div class="word" style="-webkit-text-stroke:0;margin-bottom:12px">${v}</div><div class="grid g3">${[7,8,9,4,5,6,1,2,3].map(x=>`<button class="tile txt" data-v="${x}" style="padding:26px 0">${x}</button>`).join('')}</div>`};
+  show();el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b)return;
+   if(+b.dataset.v===v){sfx('tap',k%10);if(++k>=N)done();else show()}else err(b)}}},
+filter:{name:'Zahlen-Filter',emoji:'🎯',hint:'Tippe ALLE Zahlen, die zur Regel passen!',
+ run(el,r,done,err){const T=[['GERADE Zahlen',x=>x%2==0],['durch 5 teilbare Zahlen',x=>x%5==0],['Zahlen unter 30',x=>x<30]],[lab,f]=T[r()*3|0];let nums,left;
+  do{nums=shuffle([...Array(90).keys()].map(i=>i+10),r).slice(0,12);left=nums.filter(f).length}while(left<4||left>6);
+  el.innerHTML=`<div class="c" style="font-weight:900;margin-bottom:10px;color:var(--yel)">Tippe alle: ${lab}</div><div class="grid g3">${nums.map(x=>`<button class="tile txt" data-v="${x}" style="padding:20px 0">${x}</button>`).join('')}</div>`;
+  el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b||b.classList.contains('off'))return;
+   if(f(+b.dataset.v)){b.classList.add('off');sfx('tap',left);if(--left<=0)done()}else err(b)}}},
+schritt:{name:'Schritt-Jagd',emoji:'🪜',hint:'Tippe die Vielfachen aufsteigend – Ablenker meiden!',
+ run(el,r,done,err){const s=[3,4,6,7][r()*4|0],M=[...Array(8)].map((_,i)=>s*(i+1)),D=[];let k=0;
+  while(D.length<4){const x=2+(r()*s*8|0);if(x%s&&!D.includes(x))D.push(x)}
+  el.innerHTML=`<div class="c" style="font-weight:900;margin-bottom:10px;color:var(--yel)">Vielfache von ${s}: ${M[0]}, ${M[1]}, ${M[2]} …</div><div class="grid g3">${shuffle([...M,...D],r).map(x=>`<button class="tile txt" data-v="${x}" style="padding:20px 0">${x}</button>`).join('')}</div>`;
+  el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b||b.classList.contains('off'))return;
+   if(+b.dataset.v===M[k]){b.classList.add('off');sfx('tap',k);if(++k>=8)done()}else err(b)}}},
+paare:{name:'Memory-Paare',emoji:'🃏',hint:'Finde alle 6 Paare!',
+ run(el,r,done,err){const E=['🐶','🚗','🍕','⚽','🎸','🌵','🦊','🚀','🍩','🎲'],p6=shuffle(E,r).slice(0,6),cards=shuffle([...p6,...p6],r);let open=[],found=0,lock=false;
+  el.innerHTML='<div class="grid" style="grid-template-columns:repeat(4,1fr)">'+cards.map((c,i)=>`<button class="tile hole" data-v="${i}" style="aspect-ratio:1;font-size:34px"></button>`).join('')+'</div>';
+  const B=[...el.querySelectorAll('.tile')];
+  el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b||lock)return;const i=+b.dataset.v;if(open.includes(i)||b.classList.contains('hit'))return;
+   b.textContent=cards[i];b.style.background='#5a2fe0';open.push(i);sfx('tap',open.length);
+   if(open.length==2){const[a,c]=open;
+    if(cards[a]==cards[c]){B[a].classList.add('hit');B[c].classList.add('hit');open=[];if(++found>=6)done()}
+    else{lock=true;setTimeout(()=>{[a,c].forEach(j=>{B[j].textContent='';B[j].style.background=''});open=[];lock=false},650)}}}}},
+merke:{name:'Merk-Mich',emoji:'🧠',hint:'Merke dir die hellen Felder – dann tippe sie an!',
+ run(el,r,done,err){let k=0,set=[],hit=new Set(),sh=true;
+  const draw=()=>{el.innerHTML='<div class="grid g3">'+[...Array(9)].map((_,i)=>`<button class="tile hole" data-v="${i}" style="${sh&&set.includes(i)?'background:#fff':''}"></button>`).join('')+'</div>'};
+  const round=()=>{set=shuffle([...Array(9).keys()],r).slice(0,4+k);hit=new Set();sh=true;draw();setTimeout(()=>{sh=false;draw()},1300+k*300)};
+  round();el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b||sh)return;const i=+b.dataset.v;if(hit.has(i))return;
+   if(set.includes(i)){hit.add(i);b.style.background='#fff';sfx('tap',hit.size);if(hit.size>=set.length){if(++k>=2)done();else round()}}else err(b)}}}
+});
+
+/* ===== Spiellogik ===== */
+let S={names:[],seed:0,stages:[],cur:0,res:[]};
+const names=()=>DB.names;
+function home(){S.code=null;S.room=null;
+ app.innerHTML=`<div class="scr"><h1 class="logo">BLITZ<span>BRAIN</span></h1><p class="sub">⚔️ Lokal-Duell · 1 Handy · 0 Gnade</p>
+ <div class="c mut">Wer spielt mit?</div>
+ <div id="pl" style="display:flex;flex-direction:column;gap:8px"></div>
+ <button class="btn ghost sm" id="add">＋ Spieler hinzufügen</button>
+ <button class="btn pink" id="go">LOS GEHT'S ⚡</button>${bar('⬅ Hauptmenü')}</div>`;
+ const pl=()=>{$('#pl').innerHTML=DB.names.map((n,i)=>`<div class="pl"><input data-i="${i}" maxlength="14" placeholder="Spieler ${i+1}" value="${esc(n)}" autocomplete="off">${DB.names.length>1?`<button data-x="${i}">✕</button>`:''}</div>`).join('')};
+ pl();
+ $('#pl').oninput=e=>{if(e.target.dataset.i!=null){DB.names[+e.target.dataset.i]=e.target.value;save()}};
+ $('#pl').onclick=e=>{const x=e.target.dataset.x;if(x!=null){DB.names.splice(+x,1);save();pl()}};
+ $('#add').onclick=()=>{ac();DB.names.push('');save();pl();$('#pl').lastChild.querySelector('input').focus()};
+ $('#bt').onclick=menu;
+ $('#go').onclick=()=>{ac();S.names=DB.names.map((n,i)=>(n.trim()||'Spieler '+(i+1)));newRound(true)};
+}
+function newRound(fresh){
+ if(fresh){S.seed=(Math.random()*1e9)|0;S.rd=(S.rd||0)+1;draft();return}
+ S.cur=0;S.res=[];pass();
+}
+/* Spiele-Wahl: jeder Spieler bekommt privat 4 zufällige Spiele und wählt eins (max. 5 Picks).
+   Bereits gewählte Spiele fehlen im Angebot der Nächsten; was zuvor gewählt wurde, sieht niemand.
+   Wer anfängt, rotiert jede Runde. */
+function draft(){
+ const n=S.names.length,K=Math.min(n,5),order=[],off=(S.rd-1)%n;
+ const view=()=>{const i=order.length;
+  if(i>=K){S.stages=order.slice();S.cur=0;S.res=[];pass();return}
+  const who=S.names[(off+i)%n];
+  app.innerHTML=`<div class="scr"><div class="mid"><div class="c mut">Spiele-Wahl ${i+1}/${K} · geheim 🤫</div><div class="c mut">Handy weitergeben an</div><div class="big" style="font-size:clamp(40px,13vw,60px);color:var(--cyan)">${esc(who)}</div><div class="c mut">Du wählst 1 von 4 Spielen.<br>Die anderen sehen nicht, was du nimmst.</div></div><button class="btn pink" id="ok">ICH BIN'S – SPIELE ZEIGEN</button>${bar('⬅ Abbrechen')}</div>`;
+  $('#bt').onclick=home;
+  $('#ok').onclick=()=>{ac();const pool=shuffle(Object.keys(STG).filter(k=>!order.includes(k)),Math.random).slice(0,4);
+   app.innerHTML=`<div class="scr"><div class="big" style="font-size:clamp(34px,11vw,52px);color:var(--cyan)">${esc(who)}</div><div class="c">Wähle dein Spiel!</div><div class="grid g2" style="gap:12px">${pool.map(k=>`<button class="card dp" data-k="${k}" style="border:0;color:#fff;text-align:center;padding:16px 8px;font:inherit;background:linear-gradient(180deg,#7a4dff,#5a2fe0);box-shadow:0 5px 0 rgba(0,0,0,.3)"><div style="font-size:44px">${STG[k].emoji}</div><b>${STG[k].name}</b><div class="mut" style="font-size:13px;margin-top:4px">${STG[k].hint}</div></button>`).join('')}</div>${bar('⬅ Abbrechen')}</div>`;
+   $('#bt').onclick=home;
+   app.querySelectorAll('.dp').forEach(b=>b.onclick=()=>{sfx('ok');order.push(b.dataset.k);view()})}};
+ view();
+}
+function pass(){
+ const lead=S.res.length?[...S.res].sort((a,b)=>a.t-b.t)[0]:null;
+ app.innerHTML=`<div class="scr"><div class="mid"><div class="c mut">${S.code?'Challenge '+S.code+' · du spielst als':'Handy weitergeben an'}</div><div class="big" style="font-size:clamp(40px,13vw,60px);color:var(--cyan)">${esc(S.names[S.cur])}</div>
+ ${lead?`<div class="c">👑 Führt: <b>${esc(lead.n)}</b> mit ${f3(lead.t)}</div>`:''}
+ <div class="card">${S.stages.map((k,i)=>`<div style="padding:6px 0"><b>${i+1}. ${STG[k].emoji} ${STG[k].name}</b><br><span class="mut">${STG[k].hint}</span></div>`).join('')}<div class="mut c" style="margin-top:6px">Fehler kosten +1,5 s. Zeit läuft über alle ${S.stages.length} Spiele.</div></div></div>
+ <button class="btn pink" id="rdy">BEREIT! 🔥</button>${bar('⬅ Abbrechen')}</div>`;
+ $('#rdy').onclick=()=>{ac();countdown()};$('#bt').onclick=()=>S.code?fernChallenge():home();
+}
+function countdown(cb){
+ let n=3;const t=()=>{if(n==0){sfx('go');play(cb);return}
+  app.innerHTML=`<div class="scr"><div class="mid"><div class="cd">${n}</div></div></div>`;sfx('cd');n--;setTimeout(t,800)};t();
+}
+function play(cb){
+ app.innerHTML=`<div class="scr play"><div class="hud"><span>${esc(S.names[S.cur])}</span><span id="tm">0,000 s</span></div><div class="dots">${S.stages.map(()=>'<i></i>').join('')}</div><div class="hint" id="hint"></div><div id="stg"></div></div>`;
+ const el=$('#stg'),tm=$('#tm'),dots=[...document.querySelectorAll('.dots i')];
+ let pen=0,si=0,live=true,ts=0;const gt={},t0=performance.now();
+ (function tick(){if(!live)return;tm.textContent=f3(performance.now()-t0+pen);requestAnimationFrame(tick)})();
+ const err=b=>{pen+=1500;sfx('bad');if(b){b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake')}
+  const p=document.createElement('div');p.className='pen';p.textContent='+1,5 s';document.body.append(p);setTimeout(()=>p.remove(),800);
+  app.firstChild.classList.remove('flash');void app.firstChild.offsetWidth;app.firstChild.classList.add('flash')};
+ const next=()=>{
+  if(si>=S.stages.length){live=false;(cb||finish)(performance.now()-t0+pen,pen,gt);return}
+  dots.forEach((d,i)=>d.className=i<si?'dn':i==si?'on':'');
+  const g=STG[S.stages[si]];$('#hint').textContent=g.emoji+' '+g.hint;
+  g.run(el,mulberry(S.seed*31+si*7919+1),()=>{const now=performance.now()-t0+pen;gt[S.stages[si]]=Math.round(now-ts);ts=now;si++;sfx('ok');next()},err)};
+ next();
+}
+const CM={rec:['🌍 NEUER ALLZEIT-REKORD! Das Handy bebt!','🚀 REKORD! Legende. Gehaltserhöhung fällig.','👑 Allzeit-Bestzeit – unfassbar!'],
+ day:['🔥 Tagesrekord! Heute bist du der Chef.','⚡ Neue Tagesbestzeit!'],
+ pb:['📈 Persönliche Bestzeit! Du wirst besser.','💪 Neuer Eigenrekord!'],
+ lead:['😎 Du führst – noch.','🏁 Platz 1! Die anderen schwitzen.'],
+ last:['🐌 Das Faultier hat angerufen.','🥔 Bist du mit dem Daumen im Home-Office?','☕ Erst Kaffee, dann Duell?','🙈 Autsch. Revanche?'],
+ mid:['👍 Solide. Aber nicht legendär.','🤏 Knapp dran!','🎯 Da geht noch was!']};
+function finish(t,pen,gt){
+ const n=S.names[S.cur],d=today(),R=DB.runs,mn=a=>Math.min(Infinity,...a.map(x=>x.t));
+ const Rc=R.filter(x=>(x.c||3)===Object.keys(gt).length),flag=t<mn(Rc)?'rec':t<mn(Rc.filter(x=>x.d===d))?'day':t<mn(Rc.filter(x=>x.n===n))?'pb':'';
+ const gr=Object.keys(gt).filter(k=>gt[k]<Math.min(Infinity,...R.map(x=>x.g&&x.g[k]!=null?x.g[k]:Infinity)));
+ R.push({n,t:Math.round(t),d,g:gt,c:Object.keys(gt).length});if(R.length>500)R.shift();save();
+ if(!S.code)sbSend({n,t,pen},gt,'DUELL-RUNDE').catch(()=>{});
+ S.res.push({n,t,pen,flag});
+ const sorted=[...S.res].sort((a,b)=>a.t-b.t),rank=sorted.findIndex(x=>x.n===n&&x.t===t),more=S.cur<S.names.length-1;
+ let cm=flag?pick(CM[flag]):S.res.length>1&&rank==S.res.length-1?pick(CM.last):rank==0?pick(CM.lead):pick(CM.mid);
+ sfx(flag=='rec'?'rec':flag?'win':rank==0?'win':'lose');if(flag||rank==0&&S.res.length>1)confetti(flag=='rec'?220:110);
+ app.innerHTML=`<div class="scr"><div class="mid"><div class="c mut">${esc(n)}</div><div class="big">${f3(t)}</div>
+ <div class="c mut">${pen?`davon ${f3(pen)} Strafzeit (${pen/1500} Fehler)`:'✨ Fehlerfrei!'}</div><div class="banner">${cm}</div>
+ <div class="card" style="padding:10px">${Object.keys(gt).map(k=>`<div style="display:flex;justify-content:space-between;padding:3px 0"><span>${STG[k].emoji} ${STG[k].name}${gr.includes(k)?' 🏅 Spiel-Rekord!':''}</span><b>${f3(gt[k])}</b></div>`).join('')}</div>
+ <div>${sorted.map((x,i)=>`<div class="rk ${i==0?'w':''}" style="margin-bottom:6px"><span>${i+1}.</span><b>${esc(x.n)}</b><span>${f3(x.t)}</span></div>`).join('')}</div></div>
+ <button class="btn pink" id="nx">${more?'Weiter: '+esc(S.names[S.cur+1])+' ➜':S.code?'Weiter ➜':'Endergebnis 🏆'}</button></div>`;
+ $('#nx').onclick=()=>{S.cur++;more?pass():S.code?remoteEnd():board()};
+}
+function agree(names,title,onAll,onBack){
+ if(names.length<2){onAll();return}
+ const ok=new Set();
+ const draw=()=>{app.innerHTML=`<div class="scr"><div class="mid"><div class="big" style="font-size:clamp(30px,10vw,44px)">${title}</div><div class="c mut">Alle müssen zustimmen – jeder tippt auf seinen Namen.</div>
+  <div id="ag" style="display:flex;flex-direction:column;gap:10px;width:100%">${names.map((n,i)=>`<button class="btn ${ok.has(i)?'pink':'ghost'}" data-i="${i}">${ok.has(i)?'✔ '+esc(n)+' ist dabei':'○ '+esc(n)}</button>`).join('')}</div>
+  <div class="c mut">${ok.size}/${names.length} bereit</div></div>${bar('⬅ Zurück')}</div>`;
+  $('#bt').onclick=onBack;
+  app.querySelectorAll('#ag .btn').forEach(b=>b.onclick=()=>{const i=+b.dataset.i;ok.has(i)?ok.delete(i):ok.add(i);sfx('ok');draw();
+   if(ok.size==names.length)setTimeout(()=>{if(ok.size==names.length&&document.getElementById('ag'))onAll()},700)})};
+ draw()}
+function board(){
+ const s=[...S.res].sort((a,b)=>a.t-b.t),w=s[0],med=['🥇','🥈','🥉'];
+ sfx('win');confetti(160);
+ const roast=s.length>1?`${esc(s[s.length-1].n)}: ${pick(['Revanche ist Pflicht!','trainiert ab sofort Daumenyoga.','gibt dem Handy die Schuld.','zahlt die nächste Runde Kaffee.'])}`:'';
+ app.innerHTML=`<div class="scr"><div class="c" style="font-size:54px">👑</div><div class="big" style="font-size:clamp(34px,11vw,52px);color:var(--yel)">${esc(w.n)}</div><div class="c mut">gewinnt mit ${f3(w.t)}</div>
+ <div>${s.map((x,i)=>`<div class="rk ${i==0?'w':''}" style="margin-bottom:6px"><span>${med[i]||i+1+'.'}</span><b>${esc(x.n)}</b><small>${i?'+'+((x.t-w.t)/1000).toFixed(3).replace('.',',')+' s':''}</small><span>${f3(x.t)}</span></div>`).join('')}</div>
+ <div class="c mut">${roast}</div>
+ <button class="btn pink" id="r1">🔁 Nochmal spielen</button>
+ <div class="row"><button class="btn ghost sm" id="rc">🏆 Bestenlisten</button><button class="btn ghost sm" id="mn">🏠 Hauptmenü</button></div></div>`;
+ $('#r1').onclick=()=>agree(S.names,'Nochmal spielen?',()=>newRound(true),board);$('#rc').onclick=()=>bestenlisten(board);$('#mn').onclick=menu;
+}
+/* ===== 1v1-Duell: zwei Spieler, jede Runde ein anderes Spiel ===== */
+let V=null;
+const h2hKey=(a,b)=>[a,b].map(x=>x.trim().toLowerCase()).sort().join('|');
+function h2hAdd(a,b,w){DB.h2h=DB.h2h||{};const k=h2hKey(a,b),e=DB.h2h[k]||(DB.h2h[k]={n:{},w:{},d:0});
+ e.n[a.toLowerCase()]=a;e.n[b.toLowerCase()]=b;if(w){const l=w.toLowerCase();e.w[l]=(e.w[l]||0)+1}else e.d++;save()}
+function h2hLine(a,b){const e=DB.h2h&&DB.h2h[h2hKey(a,b)];if(!e)return'';const x=e.w[a.toLowerCase()]||0,y=e.w[b.toLowerCase()]||0;
+ return `<div class="card c">📊 Bilanz gesamt<br><b>${esc(a)} ${x} : ${y} ${esc(b)}</b>${e.d?` · ${e.d}× unentschieden`:''}</div>`}
+function duelStats(){
+ const L=Object.values(DB.h2h||{}).map(e=>{const k=Object.keys(e.n);return{a:e.n[k[0]],b:e.n[k[1]]||'?',x:e.w[k[0]]||0,y:e.w[k[1]]||0,d:e.d}}).sort((p,q)=>(q.x+q.y+q.d)-(p.x+p.y+p.d));
+ app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">📊 Duell-Bilanz</h2><div class="mut">Wer hat wie oft gegen wen gewonnen (auf diesem Handy gespeichert).</div>
+ ${L.length?L.map(r=>`<div class="rk" style="flex-wrap:wrap"><b>${esc(r.a)}</b><span>${r.x} : ${r.y}</span><b>${esc(r.b)}</b>${r.d?`<small style="width:100%">${r.d}× unentschieden</small>`:''}</div>`).join(''):'<div class="c mut">Noch keine Duelle gespielt.</div>'}${bar()}</div>`;
+ $('#bt').onclick=duelHub;
+}
+function duelHub(){
+ app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🥊 1v1-Duell</h2><div class="mut">Zwei Spieler, jede Runde ein anderes Spiel – wer schneller ist, holt den Punkt.</div>
+ <div class="mid"><button class="btn pink" id="h1" style="padding:24px">📱 EIN HANDY<br><small style="font-weight:700;opacity:.9">Reihum am selben Gerät</small></button>
+ <button class="btn" id="h2" style="padding:24px">🌍 ONLINE · 2 HANDYS<br><small style="font-weight:700;opacity:.8">Jeder am eigenen Handy, gleicher Start</small></button><button class="btn ghost sm" id="h3">📊 Duell-Bilanz</button></div>${bar('⬅ Hauptmenü')}</div>`;
+ $('#h1').onclick=duelSetup;$('#h2').onclick=()=>duelOnline();$('#h3').onclick=duelStats;$('#bt').onclick=menu;
+}
+function duelSetup(){
+ let n=DB.vr||5;const nm=DB.vn||[DB.names[0]||'',DB.names[1]||''];
+ app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🥊 1v1-Duell</h2><div class="mut">Zwei Spieler, ein Handy. Jede Runde ein anderes Spiel – wer schneller ist, holt den Punkt.</div>
+ <div class="pl"><input id="v1" maxlength="14" placeholder="Spieler 1" value="${esc(nm[0])}" autocomplete="off"></div>
+ <div class="pl"><input id="v2" maxlength="14" placeholder="Spieler 2" value="${esc(nm[1])}" autocomplete="off"></div>
+ <div class="c mut">Wie viele Runden?</div>
+ <div class="row" id="vr">${[1,3,5,7,10].map(r=>`<button class="btn ghost sm" data-r="${r}"></button>`).join('')}</div>
+ <button class="btn pink" id="go">LOS GEHT'S ⚡</button>${bar()}</div>`;
+ const mark=()=>app.querySelectorAll('#vr .btn').forEach(b=>{const on=+b.dataset.r===n;b.textContent=(on?'✔ ':'')+b.dataset.r;b.style.outline=on?'3px solid #fff':'none'});mark();
+ $('#vr').onclick=e=>{const r=e.target.dataset.r;if(r){n=+r;sfx('ok');mark()}};
+ $('#bt').onclick=duelHub;
+ $('#go').onclick=()=>{ac();let a=$('#v1').value.trim()||'Spieler 1',b=$('#v2').value.trim()||'Spieler 2';if(a.toLowerCase()===b.toLowerCase())b+=' 2';
+  DB.vn=[a,b];DB.vr=n;save();V={names:[a,b],rounds:n};duelStart()};
+}
+function duelStart(){
+ V.games=shuffle(Object.keys(STG),Math.random).slice(0,V.rounds);V.rec=0;V.i=0;V.sc=[0,0];V.tot=[0,0];V.hist=[];duelRound();
+}
+function duelRound(){V.seed=(Math.random()*1e9)|0;V.k=V.games[V.i];V.first=V.i%2;V.t=[null,null];duelTurn(0)}
+function duelTurn(j){
+ const p=j==0?V.first:1-V.first,G=STG[V.k],N=V.names;
+ app.innerHTML=`<div class="scr"><div class="c mut">Runde ${V.i+1}/${V.rounds} · ${esc(N[0])} <b>${V.sc[0]} : ${V.sc[1]}</b> ${esc(N[1])}</div>
+ <div class="mid">${j==1?`<div class="card c">${esc(N[V.first])} hat <b>${f3(V.t[V.first])}</b> vorgelegt</div>`:''}
+ <div class="big" style="font-size:80px">${G.emoji}</div><div class="big" style="font-size:clamp(30px,10vw,44px);color:var(--cyan)">${G.name}</div>
+ <div class="card c">${G.hint}<div class="mut" style="margin-top:6px">Fehler: +1,5 s</div></div>
+ <div class="c mut">Handy an</div><div class="big" style="font-size:clamp(36px,12vw,54px);color:var(--yel)">${esc(N[p])}</div></div>
+ <button class="btn pink" id="rdy">BEREIT! 🔥</button>${bar('⬅ Abbrechen')}</div>`;
+ $('#bt').onclick=menu;
+ $('#rdy').onclick=()=>{ac();S.names=N;S.seed=V.seed;S.stages=[V.k];S.cur=p;S.code=null;S.room=null;
+  countdown(t=>{V.t[p]=t;j==0?duelTurn(1):duelResult()})};
+}
+function duelResult(){
+ const N=V.names,[a,b]=V.t,win=a<b?0:b<a?1:-1,diff=Math.abs(a-b);
+ if(win>=0)V.sc[win]++;V.tot[0]+=a;V.tot[1]+=b;V.hist.push({k:V.k,t:[a,b],win});
+ sfx(win>=0?'win':'ok');if(win>=0)confetti(80);
+ const cm=win<0?'🤝 Gleichstand – kein Punkt!':diff<300?'😮 Knapper geht\'s nicht!':diff>3000?'💥 Deutlicher Sieg!':pick(['⚡ Sauber gewonnen!','😎 Souverän.','🔥 Verdient!']);
+ const last=V.i+1>=V.rounds;
+ app.innerHTML=`<div class="scr"><div class="c mut">Runde ${V.i+1}/${V.rounds} · ${STG[V.k].emoji} ${STG[V.k].name}</div>
+ <div class="mid"><div class="banner">${cm}</div>
+ <div style="width:100%">${[0,1].map(i=>`<div class="rk ${win===i?'w':''}" style="margin-bottom:6px"><span>${win===i?'🏆':'•'}</span><b>${esc(N[i])}</b><span>${f3(V.t[i])}</span></div>`).join('')}</div>
+ <div class="big" style="font-size:clamp(34px,11vw,50px)">${V.sc[0]} : ${V.sc[1]}</div><div class="c mut">${esc(N[0])} · ${esc(N[1])}</div></div>
+ <button class="btn pink" id="nx">${last?'Endergebnis 🏆':'Nächste Runde ➜'}</button></div>`;
+ $('#nx').onclick=()=>{if(last)duelEnd();else{V.i++;duelRound()}};
+}
+function duelEnd(){
+ const N=V.names,[x,y]=V.sc,win=x>y?0:y>x?1:V.tot[0]<V.tot[1]?0:V.tot[1]<V.tot[0]?1:-1;
+ if(!V.rec){V.rec=1;h2hAdd(N[0],N[1],win>=0?N[win]:null)}
+ sfx('win');confetti(win>=0?200:60);
+ app.innerHTML=`<div class="scr"><div class="c" style="font-size:54px">${win>=0?'👑':'🤝'}</div><div class="big" style="font-size:clamp(34px,11vw,52px);color:var(--yel)">${win>=0?esc(N[win]):'Unentschieden'}</div>
+ <div class="c mut">${win>=0?'gewinnt das Duell':'Absolut gleichauf!'}${x==y&&win>=0?' (schnellere Gesamtzeit)':''}</div>
+ <div class="big" style="font-size:clamp(40px,13vw,60px)">${x} : ${y}</div><div class="c mut">${esc(N[0])} · ${esc(N[1])}<br>Gesamtzeit ${f3(V.tot[0])} · ${f3(V.tot[1])}</div>${h2hLine(N[0],N[1])}
+ <div class="card" style="padding:10px">${V.hist.map(h=>`<div style="display:flex;justify-content:space-between;gap:8px;padding:3px 0"><span>${STG[h.k].emoji} ${STG[h.k].name}</span><span>${h.win===0?'🏆 ':''}${f3(h.t[0])} | ${h.win===1?'🏆 ':''}${f3(h.t[1])}</span></div>`).join('')}</div>
+ <button class="btn pink" id="r1">🔁 Revanche</button><button class="btn" id="r2">⚙️ Andere Einstellungen</button>${bar('🏠 Hauptmenü')}</div>`;
+ $('#r1').onclick=()=>agree(N,'Revanche?',duelStart,duelEnd);$('#r2').onclick=duelSetup;$('#bt').onclick=menu;
+}
+
+/* ===== Online-1v1: zwei Handys, gleicher Start, jede Runde ein anderes Spiel (Supabase: rooms + picks + results) ===== */
+let DU=null,duT=0;
+const duStop=()=>{clearInterval(duT);duT=0};
+const duCode=c=>{c=String(c).trim().toUpperCase().replace(/^DUELL-/,'');return c.length==4?'1'+c:c};
+function duelOnline(pre=''){duStop();DU=null;
+ let n=DB.vr||5;
+ app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🌍 1v1 Online</h2><div class="mut">Jeder spielt am eigenen Handy. Der Start ist für beide gleichzeitig.</div>
+ ${nameField()}
+ <h3 style="margin:4px 0 0">Neues Duell eröffnen</h3>
+ <div class="c mut">Wie viele Runden?</div>
+ <div class="row" id="vr">${[1,3,5,7,10].map(r=>`<button class="btn ghost sm" data-r="${r}"></button>`).join('')}</div>
+ <button class="btn pink" id="dmk">✨ Duell eröffnen</button>
+ <h3 style="margin:8px 0 0">Einem Duell beitreten</h3>
+ <div class="pl"><input id="dcd" maxlength="9" placeholder="Duell-Code, z. B. K7P2" value="${esc(pre)}" autocomplete="off" autocapitalize="characters" style="text-transform:uppercase;letter-spacing:2px"></div>
+ <button class="btn" id="djn">▶ Beitreten</button><div class="hint" id="er"></div>${bar()}</div>`;
+ const mark=()=>app.querySelectorAll('#vr .btn').forEach(b=>{const on=+b.dataset.r===n;b.textContent=(on?'✔ ':'')+b.dataset.r;b.style.outline=on?'3px solid #fff':'none'});mark();
+ $('#vr').onclick=e=>{const r=e.target.dataset.r;if(r){n=+r;DB.vr=n;save();sfx('ok');mark()}};
+ $('#bt').onclick=duelHub;
+ $('#dmk').onclick=async()=>{ac();const v=getName();$('#er').textContent='Eröffne Duell …';try{await duCreate(v,n)}catch(e){$('#er').textContent='❌ Duell konnte nicht erstellt werden. Sind die Raum-Tabellen in Supabase angelegt?'}};
+ $('#djn').onclick=async()=>{ac();const v=getName(),c=$('#dcd').value;if(c.trim().length<4){$('#er').textContent='❌ Bitte den Duell-Code eingeben.';return}
+  $('#er').textContent='Trete bei …';try{await duJoin(duCode(c),v)}catch(e){$('#er').textContent=e.nf?'❌ Duell nicht gefunden.':e.full?'❌ In diesem Duell sind schon zwei Spieler.':e.dup?'❌ Dieser Name ist im Duell schon vergeben.':'❌ Beitritt nicht möglich (Internet?).'}};
+}
+async function duCreate(name,rounds,nc,base,n){
+ for(let i=0;i<6;i++){const code=nc||'1'+[...Array(4)].map(()=>RMCH[Math.random()*RMCH.length|0]).join('');
+  const g=shuffle(Object.keys(STG),Math.random).slice(0,rounds);
+  try{await api('POST','rooms',{code,seed:(Math.random()*2e9)|0,size:2,host:name,stages:{g,r:0}},'return=minimal')}catch(e){if(e.status==409){if(nc)return nc;continue}throw e}
+  await api('POST','picks',{code,name},'return=minimal');duEnter(code,name,{base,n});return code}
+ throw new Error('Code')}
+async function duJoin(code,name,rejoin,x){
+ const rm=await api('GET',`rooms?code=eq.${encodeURIComponent(code)}&select=*`);if(!rm||!rm[0])throw Object.assign(new Error('nf'),{nf:true});
+ const pk=await api('GET',`picks?code=eq.${encodeURIComponent(code)}&select=name`);
+ if(!pk.some(q=>q.name===name)){if(pk.length>=2)throw Object.assign(new Error('full'),{full:true});await api('POST','picks',{code,name},'return=minimal')}
+ else if(!rejoin)throw Object.assign(new Error('dup'),{dup:true});
+ duEnter(code,name,x)}
+function duEnter(code,name,x){duStop();DU={code,name,room:null,rows:[],res:[],phase:'',ticking:false,playing:false,played:{},seen:{},adv:{},starting:false,base:(x&&x.base)||code,n:(x&&x.n)||1};duTick();duT=setInterval(duTick,1200)}
+const duTimes=()=>{const T={};(DU.res||[]).forEach(x=>{const m=/-R(\d+)$/.exec(x.code);if(!m)return;const i=+m[1];(T[i]=T[i]||{});if(T[i][x.name]==null||x.total_ms<T[i][x.name])T[i][x.name]=x.total_ms});return T};
+function duStats(){const T=duTimes(),r=DU.room,N=(r.stages&&r.stages.g||[]).length,P=DU.rows.map(x=>x.name),sc={},tot={},hist=[];P.forEach(p=>{sc[p]=0;tot[p]=0});
+ for(let i=1;i<=N;i++){const t=T[i]||{};if(P.length<2||!P.every(p=>t[p]!=null))break;
+  const a=t[P[0]],b=t[P[1]],w=a<b?P[0]:b<a?P[1]:null;if(w)sc[w]++;P.forEach(p=>tot[p]+=t[p]);hist.push({i,k:r.stages.g[i-1],t,w})}
+ return{T,N,P,sc,tot,hist}}
+async function duPatch(R,body){await api('PATCH',`rooms?code=eq.${DU.code}&stages->>r=eq.${R}`,body,'return=minimal')}
+async function duTick(){
+ if(!DU||DU.playing||DU.ticking)return;const D=DU;
+ if(DU.phase&&!document.getElementById('du')){duStop();DU=null;return}
+ D.ticking=true;
+ try{const[rm,pk,rs]=await Promise.all([api('GET',`rooms?code=eq.${D.code}&select=*`),api('GET',`picks?code=eq.${D.code}&select=name&order=created_at.asc`),api('GET',`results?code=like.${D.code}-R*&select=code,name,total_ms&limit=100`)]);
+  if(DU!==D||D.playing)return;D.room=rm[0];D.rows=pk;D.res=rs;D.err=false;
+  const r=DU.room,st=r.stages||{g:[],r:0},R=st.r,host=r.host===D.name,S2=duStats(),me=D.name;
+  let ph;
+  if(R==0){ph='lobby';
+   if(host&&pk.length>=2&&!D.starting){D.starting=true;duPatch(0,{stages:{g:st.g,r:1},start_at:new Date(Date.now()+6000).toISOString()}).catch(()=>{D.starting=false})}}
+  else{const mine=S2.T[R]&&S2.T[R][me]!=null||D.played[R],both=S2.P.length>=2&&S2.P.every(p=>S2.T[R]&&S2.T[R][p]!=null);
+   if(!mine){ph=Date.parse(r.start_at)-Date.now()<-1500?'late'+R:'count'+R}
+   else if(both){ph=R>=S2.N?'end':'result'+R;if(!D.seen[R])D.seen[R]=Date.now();
+    if(R<S2.N&&host&&!D.adv[R]&&Date.now()-D.seen[R]>=4500){D.adv[R]=true;duPatch(R,{stages:{g:st.g,r:R+1},start_at:new Date(Date.now()+7000).toISOString()}).catch(()=>{D.adv[R]=false})}}
+   else ph='wait'+R}
+  if(ph!==D.phase){D.phase=ph;duRender()}else duUpdate();
+ }catch(e){if(DU===D){D.err=true;duUpdate()}}
+ finally{D.ticking=false}}
+function duCount(startMs){duStop();let last=-1,iv=0;const D=DU,r=D.room,R=r.stages.r,g=r.stages.g[R-1];
+ const tk=()=>{if(DU!==D){clearInterval(iv);return}const rem=startMs-Date.now();
+  if(rem<=0){clearInterval(iv);D.playing=true;S.names=[D.name];S.seed=(r.seed+R*101)|0;S.stages=[g];S.cur=0;S.code=null;S.room=null;sfx('go');
+   play(async(t,pen)=>{D.played[R]=true;D.playing=false;
+    app.innerHTML=`<div class="scr" id="du"><div class="mid"><div class="c mut">Runde ${R}/${r.stages.g.length}</div><div class="big">${f3(t)}</div><div class="c mut">Sende Zeit …</div></div></div>`;
+    for(let i=0;i<4;i++){try{await sbSend({n:D.name,t:Math.max(500,t),pen},{},`${D.code}-R${R}`);break}catch(e){await new Promise(z=>setTimeout(z,1200))}}
+    if(DU===D){D.phase='';duT=setInterval(duTick,1200);duTick()}});return}
+  const n=Math.ceil(rem/1000);if(n!==last){last=n;app.innerHTML=`<div class="scr" id="du"><div class="mid"><div class="c mut">Runde ${R}/${r.stages.g.length} · ${STG[g].emoji} ${STG[g].name}</div><div class="c mut">Gemeinsamer Start in …</div><div class="cd">${n}</div></div></div>`;sfx('cd')}};
+ tk();iv=setInterval(tk,100)}
+function duRender(){const r=DU.room,ph=DU.phase,N=(r.stages.g||[]).length,S2=duStats(),me=DU.name,host=r.host===me,R=r.stages.r,show=DU.code.slice(1),
+ tb='<div class="tb"><button class="btn ghost sm" id="bt">⬅ Duell verlassen</button></div>',
+ head=`<div class="c mut">1v1 · Code <b style="color:var(--yel);letter-spacing:2px;font-size:20px">${esc(show)}</b> · ${N} Runde${N>1?'n':''}</div>`,
+ score=()=>S2.P.length>1?`<div class="c mut">${esc(S2.P[0])} <b>${S2.sc[S2.P[0]]} : ${S2.sc[S2.P[1]]}</b> ${esc(S2.P[1])}</div>`:'';
+ if(ph.startsWith('count')){duCount(Date.parse(r.start_at));return}
+ if(ph=='lobby'){
+  app.innerHTML=`<div class="scr" id="du">${head}<div class="mid"><div class="big" style="font-size:clamp(30px,10vw,44px)">Warte auf Gegner …</div><div class="c mut">Gib deinem Gegner diesen Code:</div><div class="big" style="font-size:clamp(40px,13vw,60px);color:var(--yel);letter-spacing:4px">${esc(show)}</div><div id="plist"></div><div class="hint" id="rms"></div><button class="btn" id="inv">📤 Code teilen</button></div>${tb}</div>`;
+  $('#inv').onclick=()=>shareTxt(`🥊 BLITZBRAIN 1v1! Code: ${show}${lnk('DUELL-'+show)}\nUnter „1v1-Duell“ → „Online“ → „Beitreten“ eingeben.`,$('#inv'))}
+ else if(ph.startsWith('late')){
+  app.innerHTML=`<div class="scr" id="du">${head}<div class="mid"><div class="big" style="font-size:clamp(28px,9vw,40px)">Runde ${R} läuft schon</div><div class="c mut">Du hast den gemeinsamen Start verpasst.</div></div><button class="btn pink" id="go">▶ Trotzdem mitspielen</button>${tb}</div>`;
+  $('#go').onclick=()=>{ac();duCount(Date.now()+3500)}}
+ else if(ph.startsWith('wait')){
+  const mine=S2.T[R]&&S2.T[R][me];
+  app.innerHTML=`<div class="scr" id="du">${head}<div class="mid">${mine!=null?`<div class="big">${f3(mine)}</div>`:''}<div class="c mut">Warte auf deinen Gegner …</div><div class="hint" id="rms"></div></div>${tb}</div>`}
+ else if(ph.startsWith('result')){
+  const h=S2.hist.find(x=>x.i==R)||{t:{},w:null};
+  sfx(h.w===me?'win':h.w?'lose':'ok');if(h.w===me)confetti(80);
+  app.innerHTML=`<div class="scr" id="du">${head}<div class="c mut">Runde ${R}/${N} · ${STG[h.k||r.stages.g[R-1]].emoji} ${STG[h.k||r.stages.g[R-1]].name}</div>
+  <div class="mid"><div class="banner">${h.w===me?'🏆 Punkt für dich!':h.w?'😬 Punkt für '+esc(h.w):'🤝 Gleichstand – kein Punkt!'}</div>
+  <div style="width:100%">${S2.P.map(p=>`<div class="rk ${h.w===p?'w':''}" style="margin-bottom:6px"><span>${h.w===p?'🏆':'•'}</span><b>${esc(p)}</b><span>${f3(h.t[p]||0)}</span></div>`).join('')}</div>
+  <div class="big" style="font-size:clamp(34px,11vw,50px)">${S2.sc[S2.P[0]]} : ${S2.sc[S2.P[1]]}</div><div class="c mut">${esc(S2.P[0])} · ${esc(S2.P[1])}</div><div class="hint" id="rms">Nächste Runde startet gleich …</div></div>
+  <button class="btn ghost sm" id="dskip" style="display:none">Weiter (falls es hängt)</button>${tb}</div>`;
+  $('#dskip').onclick=async()=>{try{await duPatch(R,{stages:{g:r.stages.g,r:R+1},start_at:new Date(Date.now()+7000).toISOString()});DU.adv[R]=true}catch(e){}}}
+ else if(ph=='end'){
+  const[x,y]=[S2.sc[S2.P[0]],S2.sc[S2.P[1]]],t0=S2.tot[S2.P[0]],t1=S2.tot[S2.P[1]],w=x>y?S2.P[0]:y>x?S2.P[1]:t0<t1?S2.P[0]:t1<t0?S2.P[1]:null;
+  if(!DU.rec){DU.rec=1;h2hAdd(me,S2.P.find(q=>q!==me)||'?',w)}
+  sfx(w===me?'rec':w?'lose':'win');confetti(w===me?220:50);
+  app.innerHTML=`<div class="scr" id="du"><div class="c" style="font-size:54px">${w?'👑':'🤝'}</div><div class="big" style="font-size:clamp(34px,11vw,52px);color:var(--yel)">${w?esc(w):'Unentschieden'}</div>
+  <div class="c mut">${w?(w===me?'Du gewinnst das Duell!':'gewinnt das Duell'):'Absolut gleichauf!'}${x==y&&w?' (schnellere Gesamtzeit)':''}</div>
+  <div class="big" style="font-size:clamp(40px,13vw,60px)">${x} : ${y}</div><div class="c mut">${esc(S2.P[0])} · ${esc(S2.P[1])}<br>Gesamtzeit ${f3(t0)} · ${f3(t1)}</div>${h2hLine(me,S2.P.find(q=>q!==me)||'?')}
+  <div class="card" style="padding:10px">${S2.hist.map(h=>`<div style="display:flex;justify-content:space-between;gap:8px;padding:3px 0"><span>${STG[h.k].emoji} ${STG[h.k].name}</span><span>${h.w===S2.P[0]?'🏆 ':''}${f3(h.t[S2.P[0]])} | ${h.w===S2.P[1]?'🏆 ':''}${f3(h.t[S2.P[1]])}</span></div>`).join('')}</div>
+  <button class="btn pink" id="rv">🔁 Revanche (beide müssen zustimmen)</button><div class="hint" id="rer"></div>${tb}</div>`;
+  $('#rv').onclick=async()=>{ac();const er=$('#rer');er.textContent='Verbinde …';
+   try{const nc='1'+(DU.base.slice(1)+(DU.n+1)).slice(0,7),x={base:DU.base,n:DU.n+1},nm=DU.name,N2=N;duStop();
+    await duCreate(nm,N2,nc,x.base,x.n);if(DU&&DU.code!==nc||!DU)await duJoin(nc,nm,true,x)}
+   catch(e){const el=document.getElementById('rer');if(el)el.textContent='⚠️ Revanche nicht möglich (Internet?).'}}}
+ $('#bt').onclick=()=>{duStop();DU=null;duelOnline()};
+ duUpdate()}
+function duUpdate(){if(!DU||!DU.room)return;const pl=document.getElementById('plist');
+ if(pl)pl.innerHTML=DU.rows.map(x=>`<div class="rk"><b>${esc(x.name)}</b><span>✔ dabei</span></div>`).join('')+`<div class="mut c" style="font-size:13px;margin-top:6px">${DU.rows.length}/2 dabei</div>`;
+ const sk=document.getElementById('dskip');if(sk&&DU.phase.startsWith('result')){const R=DU.room.stages.r;sk.style.display=DU.seen[R]&&Date.now()-DU.seen[R]>11000?'':'none'}
+ const st=document.getElementById('rms');if(st&&DU.err)st.textContent='⚠️ Verbindung wackelt …'}
+
+/* ===== Rekorde: lokal (dieses Gerät) oder online (alle Spieler, gleiche Supabase-Tabelle) ===== */
+let ONL=[],ONLERR='';
+const RR=()=>ONL;
+async function sbAll(){const r=await fx(DB.sb.url+'/rest/v1/results?select=code,name,total_ms,games,created_at&order=created_at.desc&limit=1000',{headers:{apikey:DB.sb.key}});if(!r.ok)throw new Error(r.status);
+ return(await r.json()).reverse().filter(x=>x.code!=='ARCADE-SOLO').map(x=>({n:x.name,t:x.total_ms,d:String(x.created_at).slice(0,10),g:x.games||{},c:Object.keys(x.games||{}).length})).filter(x=>x.c>0)}
+const srcBar=()=>ONLERR?'<div class="mut">'+ONLERR+'</div>':'';
+async function bestenlisten(back=menu){
+ app.innerHTML='<div class="scr"><div id="rl" class="mid"><div class="c mut">Lade Bestenlisten …</div></div><button class="btn ghost sm" id="bk">⬅ Zurück</button></div>';
+ $('#bk').onclick=back;
+ try{ONL=await sbAll();ONLERR=''}catch(e){ONL=[];ONLERR='⚠️ Bestenlisten nicht erreichbar (Internet?).'}
+ if(document.getElementById('rl'))gboard(back);
+}
+function gboard(back){
+ const R=RR(),best=k=>{const m={};R.forEach(x=>{const t=x.g&&x.g[k];if(t!=null&&(!(x.n in m)||t<m[x.n].t))m[x.n]={n:x.n,t}});return Object.values(m).sort((a,b)=>a.t-b.t)};
+ const all=Object.keys(STG).map(k=>({k,b:best(k)})),cnt={},med=['🥇','🥈','🥉'];
+ all.forEach(g=>{if(g.b.length)cnt[g.b[0].n]=(cnt[g.b[0].n]||0)+1});
+ const champ=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,5);
+ all.sort((a,b)=>(b.b.length>0)-(a.b.length>0));
+ app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🎮 Bestenlisten pro Spiel</h2>${srcBar()}<div class="mut">Online-Bestzeiten aller Spieler pro Mini-Game (inkl. Strafzeit)</div>
+ <h3>👑 Meiste Spiel-Rekorde</h3>${champ.length?champ.map(([n,c],i)=>`<div class="rk"><span>${i+1}.</span><b>${esc(n)}</b><span>${c} 🏅</span></div>`).join(''):'<div class="mut">Noch keine Daten – spielt eine Runde!</div>'}
+ <h3>Alle Spiele</h3>${all.map(g=>`<div class="card" style="padding:12px"><b>${STG[g.k].emoji} ${STG[g.k].name}</b>${g.b.length?g.b.slice(0,5).map((x,i)=>`<div class="rk${i==0?' w':''}" style="margin-top:6px;padding:8px 12px"><span>${med[i]||i+1+'.'}</span><b>${esc(x.n)}</b><span>${f3(x.t)}</span></div>`).join(''):'<div class="mut" style="margin-top:4px">Noch nicht gespielt</div>'}</div>`).join('')}
+ <div class="tb"><button class="btn ghost sm" id="bt">⬅ Zurück</button><button class="btn ghost sm" id="rt">🔄 Aktualisieren</button></div></div>`;
+ $('#rt').onclick=()=>bestenlisten(back);$('#bt').onclick=back;
+}
+/* ===== Startmenü & Arcade ===== */
+function menu(){S.code=null;S.room=null;
+ app.innerHTML=`<div class="scr"><h1 class="logo">BLITZ<span>BRAIN</span></h1><p class="sub">${Object.keys(STG).length} Mini-Games · Duell gegen Freunde</p>
+ <div class="mid"><button class="btn pink" id="m1" style="padding:20px">⚔️ LOKAL-DUELL<br><small style="font-weight:700;opacity:.9">Ein Handy, reihum – auch offline</small></button>
+ <button class="btn" id="m4" style="padding:20px;background:linear-gradient(180deg,#b9ff6b,#8be02e);box-shadow:0 6px 0 #4c8a0e">🥊 1v1-DUELL<br><small style="font-weight:700;opacity:.8">Zu zweit · jede Runde ein anderes Spiel</small></button>
+ <button class="btn" id="m3" style="padding:20px;background:linear-gradient(180deg,#6ff0ff,#27e1ff);box-shadow:0 6px 0 #0a7f94">🌍 ONLINE-DUELL<br><small style="font-weight:700;opacity:.8">Jeder am eigenen Handy, gleiche Aufgaben</small></button>
+ <button class="btn" id="m2" style="padding:20px">🕹️ ARCADE<br><small style="font-weight:700;opacity:.8">Solo – jedes Spiel einzeln üben</small></button></div>
+ <div class="tb"><button class="btn ghost sm" id="rec">🏆 Bestenlisten</button><button class="btn ghost sm" id="mus" style="flex:0 0 64px" aria-label="Musik"></button><button class="btn ghost sm" id="snd" style="flex:0 0 64px" aria-label="Sound"></button></div></div>`;
+ const lab=()=>{$('#mus').textContent=DB.mus?'🎵':'🔕';$('#snd').textContent=DB.snd?'🔊':'🔇'};lab();
+ $('#m1').onclick=()=>{ac();home()};$('#m3').onclick=()=>{ac();fern()};$('#m2').onclick=()=>{ac();arcade()};$('#m4').onclick=()=>{ac();duelHub()};
+ $('#rec').onclick=()=>{ac();bestenlisten(menu)};
+ $('#mus').onclick=()=>{ac();DB.mus=!DB.mus;save();lab()};
+ $('#snd').onclick=()=>{ac();DB.snd=!DB.snd;save();lab();sfx('ok')};
+}
+function arcade(){
+ if(!DB.arc)DB.arc={};
+ app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🕹️ Arcade</h2><div class="mut">Tippe ein Spiel an und teste es solo. Die Bestzeit pro Spiel wird gespeichert.</div>
+ <div class="pl"><input id="an" maxlength="14" placeholder="Dein Name (für Online-Rekorde)" value="${esc(DB.fname||'')}" autocomplete="off"></div>
+ <div class="grid g2" style="gap:10px;padding-bottom:12px">${Object.keys(STG).map(k=>`<button class="card ar" data-k="${k}" style="border:0;color:#fff;text-align:center;padding:12px 6px;font:inherit;background:linear-gradient(180deg,#7a4dff,#5a2fe0);box-shadow:0 4px 0 rgba(0,0,0,.3)"><div style="font-size:34px">${STG[k].emoji}</div><b>${STG[k].name}</b><div class="mut" style="font-size:12px;margin-top:2px">${DB.arc[k]?'🏅 '+f3(DB.arc[k]):'noch nicht gespielt'}</div></button>`).join('')}</div>
+ <div class="tb"><button class="btn ghost sm" id="bt">⬅ Zurück</button></div></div>`;
+ $('#an').oninput=e=>{DB.fname=e.target.value.trim();save()};
+ const t0=performance.now();app.querySelectorAll('.ar').forEach(b=>b.onclick=e=>{const r=$('.tb').getBoundingClientRect();if(performance.now()-t0<400||(e.clientY&&e.clientY>=r.top-6))return;sfx('ok');arcIntro(b.dataset.k)});
+ $('#bt').onclick=menu;
+}
+function arcIntro(k){
+ app.innerHTML=`<div class="scr"><div class="mid"><div class="big" style="font-size:90px">${STG[k].emoji}</div><div class="big" style="font-size:clamp(34px,11vw,50px);color:var(--cyan)">${STG[k].name}</div>
+ <div class="card c">${STG[k].hint}<div class="mut" style="margin-top:6px">Fehler: +1,5 s${DB.arc&&DB.arc[k]?' · Bestzeit: '+f3(DB.arc[k]):''}</div></div></div>
+ <button class="btn pink" id="rdy">BEREIT! 🔥</button>${bar('⬅ Andere Spiele')}</div>`;
+ $('#bt').onclick=arcade;
+ $('#rdy').onclick=()=>{ac();const seed=(Math.random()*1e9)|0;let n=3;
+  const t=()=>{if(n==0){sfx('go');arcRun(k,seed);return}app.innerHTML=`<div class="scr"><div class="mid"><div class="cd">${n}</div></div></div>`;sfx('cd');n--;setTimeout(t,800)};t()};
+}
+function arcRun(k,seed){
+ app.innerHTML=`<div class="scr play"><div class="hud"><span>${STG[k].emoji} ${STG[k].name}</span><span id="tm">0,000 s</span></div><div class="hint">${STG[k].hint}</div><div id="stg"></div></div>`;
+ const el=$('#stg'),tm=$('#tm');let pen=0,live=true;const t0=performance.now();
+ (function tick(){if(!live)return;tm.textContent=f3(performance.now()-t0+pen);requestAnimationFrame(tick)})();
+ const err=b=>{pen+=1500;sfx('bad');if(b){b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake')}
+  const p=document.createElement('div');p.className='pen';p.textContent='+1,5 s';document.body.append(p);setTimeout(()=>p.remove(),800);
+  app.firstChild.classList.remove('flash');void app.firstChild.offsetWidth;app.firstChild.classList.add('flash')};
+ STG[k].run(el,mulberry(seed),()=>{live=false;arcDone(k,performance.now()-t0+pen,pen)},err);
+}
+function arcDone(k,t,pen){
+ const prev=DB.arc[k],rec=!prev||t<prev;if(rec){DB.arc[k]=Math.round(t);save()}
+ sfx(rec?'rec':'win');if(rec)confetti(150);
+ app.innerHTML=`<div class="scr"><div class="mid"><div class="c mut">${STG[k].emoji} ${STG[k].name}</div><div class="big">${f3(t)}</div>
+ <div class="c mut">${pen?`davon ${f3(pen)} Strafzeit (${pen/1500} Fehler)`:'✨ Fehlerfrei!'}</div>
+ <div class="banner">${rec?'🏅 Neue Bestzeit!':'Bestzeit: '+f3(prev)}</div></div>
+ <button class="btn pink" id="again">🔁 Nochmal</button>${bar('📋 Andere Spiele')}</div>`;
+ $('#again').onclick=()=>arcIntro(k);$('#bt').onclick=arcade;
+}
+/* ===== Online-Duell: gleicher Code = gleiche Aufgaben auf jedem Handy, Ergebnis per Chat teilen ===== */
+const enc=(seed,idx)=>(seed.toString(36).padStart(6,'0')+idx.map(i=>i.toString(36).padStart(2,'0')).join('')).toUpperCase().match(/.{1,4}/g).join('-');
+const dec=c=>{c=String(c).toLowerCase().replace(/[^0-9a-z]/g,'');const n=(c.length-6)/2,K=Object.keys(STG).length;if(!(Number.isInteger(n)&&n>=1&&n<=5))return null;
+ const seed=parseInt(c.slice(0,6),36),idx=[];for(let i=0;i<n;i++)idx.push(parseInt(c.slice(6+2*i,8+2*i),36));
+ if(idx.some(i=>!(i>=0&&i<K))||new Set(idx).size!=n)return null;return{seed,idx}};
+const lnk=code=>/^https?:/.test(location.href)?'\n'+location.href.split('#')[0]+'#'+code:'';
+const shareTxt=(text,b)=>{const ok=()=>{if(b){const o=b.textContent;b.textContent='✔ Kopiert!';setTimeout(()=>b.textContent=o,1500)}};
+ if(navigator.share){navigator.share({text}).catch(()=>{});return}
+ if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(ok,()=>prompt('Text kopieren:',text));else prompt('Text kopieren:',text)};
+const nameField=()=>`<div class="pl"><input id="fn" maxlength="14" placeholder="Dein Name" value="${esc(DB.fname||'')}" autocomplete="off"></div>`;
+const getName=()=>{const v=$('#fn').value.trim()||'Spieler';DB.fname=v;save();return v};
+function fern(pre=''){S.code=null;S.room=null;
+ if(/^RAUM-/i.test(pre))return fernRoom(pre.slice(5));if(pre)return fernChallenge(pre);
+ app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🌍 Online-Duell</h2><div class="mut">Jeder spielt am eigenen Handy – mit denselben Aufgaben.</div>
+ <div class="mid"><button class="btn pink" id="a1" style="padding:24px">🏠 RAUM<br><small style="font-weight:700;opacity:.9">Geheime Spiele-Wahl, gemeinsamer Countdown</small></button>
+ <button class="btn" id="a2" style="padding:24px">⚡ SCHNELL-CHALLENGE<br><small style="font-weight:700;opacity:.8">Gleicher Code, jeder spielt wann er will</small></button></div>${bar('⬅ Hauptmenü')}</div>`;
+ $('#a1').onclick=()=>fernRoom();$('#a2').onclick=()=>fernChallenge();$('#bt').onclick=menu;
+}
+function fernRoom(pre=''){S.code=null;S.room=null;
+ app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🏠 Raum</h2><div class="mut">Jeder wählt heimlich 1 von 4 Spielen, dann startet der Countdown für alle gleichzeitig.</div>
+ ${nameField()}
+ <h3 style="margin:4px 0 0">Neuen Raum eröffnen</h3>
+ <div class="row"><select id="rsz" style="border:2px solid rgba(255,255,255,.2);border-radius:16px;background:rgba(255,255,255,.1);color:#fff;font:700 16px system-ui;padding:12px"><option value="2">2 Spieler</option><option value="3" selected>3 Spieler</option><option value="4">4 Spieler</option><option value="5">5 Spieler</option></select><button class="btn pink sm" id="rmk">✨ Raum eröffnen</button></div>
+ <h3 style="margin:8px 0 0">Raum beitreten</h3>
+ <div class="pl"><input id="rcd" maxlength="9" placeholder="Raum-Code, z. B. K7P2" value="${esc(pre)}" autocomplete="off" autocapitalize="characters" style="text-transform:uppercase;letter-spacing:2px"></div>
+ <button class="btn" id="rjn">▶ Raum beitreten</button><div class="hint" id="er"></div>${bar()}</div>`;
+ $('#rmk').onclick=async()=>{ac();const v=getName();$('#er').textContent='Eröffne Raum …';try{await roomCreate(v,+$('#rsz').value)}catch(e){$('#er').textContent='❌ Raum konnte nicht erstellt werden. Ist die Raum-Tabelle in Supabase angelegt?'}};
+ $('#rjn').onclick=async()=>{ac();const v=getName(),c=$('#rcd').value;if(c.trim().length<4){$('#er').textContent='❌ Bitte den Raum-Code eingeben.';return}$('#er').textContent='Trete bei …';try{await roomJoin(c,v)}catch(e){$('#er').textContent=e.nf?'❌ Raum nicht gefunden.':e.full?'❌ Der Raum ist schon voll.':'❌ Beitritt nicht möglich (Internet?).'}};
+ $('#bt').onclick=()=>fern();
+}
+function fernChallenge(pre=''){S.code=null;S.room=null;
+ app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">⚡ Schnell-Challenge</h2><div class="mut">Gleicher Code, jeder spielt wann er will. Die Zeiten kommen ins gemeinsame Scoreboard.</div>
+ ${nameField()}
+ <button class="btn pink" id="mk">✨ Neue Challenge erstellen</button>
+ <div class="c mut">oder Code von einem Freund eingeben</div>
+ <div class="pl"><input id="cd" maxlength="24" placeholder="XXXX-XXXX-XXXX" value="${esc(pre)}" autocomplete="off" autocapitalize="characters" style="text-transform:uppercase;letter-spacing:2px"></div>
+ <button class="btn" id="jn">▶ Mit Code mitspielen</button><div class="hint" id="er"></div>
+ <button class="btn ghost sm" id="vw">📊 Scoreboard zu diesem Code ansehen</button>${bar()}</div>`;
+ $('#mk').onclick=()=>{ac();const v=getName();fernIntro(v,enc((Math.random()*2e9)|0,shuffle(Object.keys(STG).map((_,i)=>i),Math.random).slice(0,3)),true)};
+ $('#jn').onclick=()=>{ac();const v=getName(),c=$('#cd').value;if(!dec(c)){$('#er').textContent='❌ Dieser Code ist ungültig.';return}fernIntro(v,c,false)};
+ $('#vw').onclick=()=>{const d=dec($('#cd').value);if(!d){$('#er').textContent='❌ Bitte oben den Code eingeben.';return}sbView(enc(d.seed,d.idx))};
+ $('#bt').onclick=()=>fern();
+}
+function fernIntro(name,code,create){
+ const d=dec(code),K=Object.keys(STG);S.names=[name];S.seed=d.seed;S.stages=d.idx.map(i=>K[i]);S.cur=0;S.res=[];S.code=enc(d.seed,d.idx);
+ if(!create){pass();return}
+ app.innerHTML=`<div class="scr"><div class="mid"><div class="c mut">Deine Challenge</div><div class="big" style="font-size:clamp(28px,9vw,40px);color:var(--yel);letter-spacing:2px">${S.code}</div>
+ <div class="c mut">Schick den Code (oder Link) an deine Freunde. Wer ihn eingibt, spielt exakt dieselben Aufgaben.</div>
+ <div class="card">${S.stages.map(k=>`${STG[k].emoji} ${STG[k].name}`).join('<br>')}</div></div>
+ <button class="btn" id="sc">📤 Code teilen</button><button class="btn pink" id="go2">Ich spiele jetzt ➜</button>${bar()}</div>`;
+ $('#sc').onclick=()=>shareTxt(`⚡ BLITZBRAIN-Challenge! Code: ${S.code}${lnk(S.code)}\nUnter „Online-Duell“ eingeben und meine Zeit schlagen.`,$('#sc'));$('#go2').onclick=pass;$('#bt').onclick=()=>fernChallenge();
+}
+/* ===== Online-Scoreboard (Supabase, nur REST – kein Server von mir nötig) ===== */
+const SQL=`create table public.results (
+  id bigint generated always as identity primary key,
+  code text not null check (char_length(code) between 8 and 30),
+  name text not null check (char_length(name) between 1 and 14),
+  total_ms integer not null check (total_ms between 500 and 3600000),
+  pen_ms integer not null default 0 check (pen_ms >= 0),
+  games jsonb not null default '{}',
+  created_at timestamptz not null default now()
+);
+create index on public.results (code, total_ms);
+alter table public.results enable row level security;
+create policy "alle duerfen lesen" on public.results for select to anon using (true);
+create policy "alle duerfen eintragen" on public.results for insert to anon with check (true);`;
+const sbOk=()=>!!(DB.sb&&DB.sb.url&&DB.sb.key);
+async function sbSend(r,g,code){const res=await fx(DB.sb.url+'/rest/v1/results',{method:'POST',headers:{apikey:DB.sb.key,'Content-Type':'application/json',Prefer:'return=minimal'},
+ body:JSON.stringify({code,name:r.n,total_ms:Math.round(r.t),pen_ms:Math.round(r.pen||0),games:g})});if(!res.ok)throw new Error(res.status)}
+async function sbGet(code){const r=await fx(`${DB.sb.url}/rest/v1/results?code=eq.${encodeURIComponent(code)}&select=name,total_ms,pen_ms,games&order=total_ms.asc&limit=200`,{headers:{apikey:DB.sb.key}});if(!r.ok)throw new Error(r.status);return r.json()}
+const fx=(u,o={})=>{const c=new AbortController(),t=setTimeout(()=>c.abort(),8000);return fetch(u,{...o,signal:c.signal}).finally(()=>clearTimeout(t))};
+let sbT=0;
+function sbRender(code,ks0){clearInterval(sbT);
+ const d=dec(code),K=Object.keys(STG),ks=ks0||(d?d.idx.map(i=>K[i]):[]);
+ const draw=async()=>{if(!document.getElementById('sbv')){clearInterval(sbT);return}
+  try{const rows=await sbGet(code),el=document.getElementById('sbv');if(!el)return;
+   const best={};rows.forEach(x=>{if(!best[x.name]||x.total_ms<best[x.name].total_ms)best[x.name]=x});
+   const L=Object.values(best).sort((a,b)=>a.total_ms-b.total_ms),win={};
+   ks.forEach(k=>{rows.forEach(x=>{const t=x.games&&x.games[k];if(t!=null&&(!win[k]||t<win[k].t))win[k]={n:x.name,t}})});
+   el.innerHTML=(L.length?L.map((x,i)=>`<div class="rk${i==0?' w':''}" style="margin-bottom:6px;flex-wrap:wrap"><span>${['🥇','🥈','🥉'][i]||i+1+'.'}</span><b>${esc(x.name)}</b><span>${f3(x.total_ms)}</span><small style="width:100%">${ks.map(k=>STG[k].emoji+' '+f3((x.games||{})[k]||0)).join(' · ')}</small></div>`).join(''):'Noch keine Ergebnisse.')
+    +(L.length?'<h3>⚡ Spiel-Sieger</h3>'+ks.map(k=>win[k]?`<div style="padding:3px 0;text-align:left">${STG[k].emoji} ${STG[k].name}: <b>${esc(win[k].n)}</b> ${f3(win[k].t)}</div>`:'').join(''):'')
+    +`<div class="mut c" style="margin-top:8px;font-size:13px">${L.length} Spieler · aktualisiert sich automatisch</div>`;
+  }catch(e){const el=document.getElementById('sbv');if(el)el.textContent='⚠️ Scoreboard nicht erreichbar.'}};
+ draw();sbT=setInterval(draw,5000)}
+function sbView(code){
+ app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">📊 Scoreboard</h2><div class="mut">Code ${code}</div><div id="sbv" class="c mut">Lade …</div>${bar()}</div>`;
+ $('#bt').onclick=()=>fernChallenge();sbRender(code);
+}
+/* ===== Raum-Modus: geheime Spiele-Wahl auf dem eigenen Handy + gemeinsamer Countdown (Supabase-Tabellen rooms & picks) ===== */
+const api=async(method,path,body,prefer)=>{const r=await fx(DB.sb.url+'/rest/v1/'+path,{method,headers:{apikey:DB.sb.key,'Content-Type':'application/json',...(prefer?{Prefer:prefer}:{})},body:body?JSON.stringify(body):undefined});
+ if(!r.ok){const e=new Error('HTTP '+r.status);e.status=r.status;throw e}const t=await r.text();return t?JSON.parse(t):null};
+const RMCH='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let RM=null,rmT=0;
+const rmStop=()=>{clearInterval(rmT);rmT=0};
+async function roomCreate(name,size){
+ for(let i=0;i<6;i++){const code=[...Array(4)].map(()=>RMCH[Math.random()*RMCH.length|0]).join('');
+  try{await api('POST','rooms',{code,seed:(Math.random()*2e9)|0,size,host:name},'return=minimal')}catch(e){if(e.status==409)continue;throw e}
+  await api('POST','picks',{code,name},'return=minimal');roomEnter(code,name);return}
+ throw new Error('Code')}
+async function roomJoin(code,name,x){code=code.trim().toUpperCase().replace(/^RAUM-/,'');
+ const rm=await api('GET',`rooms?code=eq.${encodeURIComponent(code)}&select=*`);if(!rm||!rm[0])throw Object.assign(new Error('nf'),{nf:true});
+ const pk=await api('GET',`picks?code=eq.${encodeURIComponent(code)}&select=name,game`);
+ if(!pk.some(x=>x.name===name)){if(!rm[0].stages&&pk.length>=rm[0].size)throw Object.assign(new Error('full'),{full:true});await api('POST','picks',{code,name},'return=minimal')}
+ roomEnter(code,name,x)}
+function roomEnter(code,name,x){rmStop();RM={code,name,phase:'',room:null,rows:[],pool:null,ticking:false,...(x||{})};rmTick();rmT=setInterval(rmTick,1500)}
+async function roomRematch(){const x=S.rm,er=document.getElementById('rer');if(!x)return;if(er)er.textContent='Verbinde …';
+ const nc=x.base+(x.n+1);
+ try{try{await api('POST','rooms',{code:nc,seed:(Math.random()*2e9)|0,size:x.size,host:x.name},'return=minimal')}catch(e){if(e.status!==409)throw e}
+  await roomJoin(nc,x.name,{base:x.base,n:x.n+1,lobby:true})}
+ catch(e){const el=document.getElementById('rer');if(el)el.textContent='⚠️ Revanche nicht möglich (Internet?).'}}
+async function rmReveal(){const st=RM.rows.filter(x=>x.game).sort((a,b)=>String(a.picked_at).localeCompare(String(b.picked_at))).map(x=>x.game);
+ if(!st.length)return null;await api('PATCH',`rooms?code=eq.${RM.code}`,{stages:st},'return=minimal');return st}
+async function rmTick(){
+ if(!RM||RM.ticking)return;
+ if(RM.phase&&!document.getElementById('rm')){rmStop();RM=null;return}
+ RM.ticking=true;
+ try{const[rm,rows]=await Promise.all([api('GET',`rooms?code=eq.${RM.code}&select=*`),api('GET',`picks?code=eq.${RM.code}&select=name,game,picked_at&order=created_at.asc`)]);
+  if(!RM)return;RM.room=rm[0];RM.rows=rows;RM.err=false;
+  const r=RM.room,me=rows.find(x=>x.name===RM.name)||{};
+  if(r.host===RM.name&&!r.stages&&rows.length>=r.size&&rows.every(x=>x.game)){const st=await rmReveal();if(st)r.stages=st}
+  let ph=r.start_at?'count':r.stages?'reveal':me.game?'wait':'pick';
+  if(RM.lobby){if(rows.length>=r.size)RM.lobby=false;else if(ph=='pick')ph='lobby'}
+  if(ph=='count'&&Date.parse(r.start_at)-Date.now()<-1500)ph='late';
+  if(ph!==RM.phase){RM.phase=ph;rmRender()}else rmUpdate();
+ }catch(e){if(RM){RM.err=true;rmUpdate()}}
+ finally{if(RM)RM.ticking=false}}
+function rmUpdate(){if(!RM)return;const pl=document.getElementById('plist');
+ if(pl){const lb=RM.phase=='lobby';pl.innerHTML=RM.rows.map(x=>`<div class="rk"><b>${esc(x.name)}</b><span>${lb?'✔ dabei':x.game?'✔ gewählt':'⏳ wählt …'}</span></div>`).join('')+`<div class="mut c" style="font-size:13px;margin-top:6px">${lb?RM.rows.length+'/'+RM.room.size+' dabei':RM.rows.filter(x=>x.game).length+'/'+RM.room.size+' gewählt'}</div>`}
+ const st=document.getElementById('rms');if(st&&RM.err)st.textContent='⚠️ Verbindung wackelt …'}
+function rmCount(startMs){rmStop();let last=-1,iv=0;const r=RM.room,nm=RM.name,code=RM.code,bs=RM.base||code,nn=RM.n||1;
+ const tk=()=>{const rem=startMs-Date.now();
+  if(rem<=0){clearInterval(iv);RM=null;S.rm={base:bs,n:nn,size:r.size,name:nm};S.names=[nm];S.seed=r.seed;S.stages=r.stages;S.cur=0;S.res=[];S.code='RAUM-'+code;S.room=true;sfx('go');play();return}
+  const n=Math.ceil(rem/1000);if(n!==last){last=n;app.innerHTML=`<div class="scr" id="rm"><div class="mid"><div class="c mut">Gemeinsamer Start in …</div><div class="cd">${n}</div></div></div>`;sfx('cd')}};
+ tk();iv=setInterval(tk,100)}
+function rmRender(){const r=RM.room,host=r.host===RM.name,ph=RM.phase;
+ if(ph=='count'){rmCount(Date.parse(r.start_at));return}
+ const tb='<div class="tb"><button class="btn ghost sm" id="bt">⬅ Raum verlassen</button></div>',
+  head=`<div class="c mut">Raum <b style="color:var(--yel);letter-spacing:2px;font-size:20px">${RM.code}</b> · ${r.size} Spieler</div>`,
+  inv=`<button class="btn ghost sm" id="inv">📤 Raum-Code teilen</button>`;
+ if(ph=='lobby'){
+  app.innerHTML=`<div class="scr" id="rm">${head}<div class="mid"><div class="big" style="font-size:clamp(30px,10vw,44px)">🔁 Revanche</div><div class="c mut">Warte, bis alle Mitspieler zugestimmt haben …<br>Danach gibt es eine neue Spielauswahl.</div><div id="plist"></div><div class="hint" id="rms"></div>
+  ${host?'<button class="btn ghost sm" id="skip">Ohne die Wartenden weiter</button>':''}${inv}</div>${tb}</div>`;
+  if(host)$('#skip').onclick=()=>{RM.lobby=false;RM.phase='';rmTick()}}
+ else if(ph=='pick'){
+  if(!RM.pool){const taken=RM.rows.filter(x=>x.game).map(x=>x.game);RM.pool=shuffle(Object.keys(STG).filter(k=>!taken.includes(k)),Math.random).slice(0,4)}
+  app.innerHTML=`<div class="scr" id="rm">${head}<div class="big" style="font-size:clamp(30px,10vw,44px);color:var(--cyan)">${esc(RM.name)}</div><div class="c">Wähle dein Spiel – die anderen sehen es nicht! 🤫</div>
+  <div class="grid g2" style="gap:12px">${RM.pool.map(k=>`<button class="card dp" data-k="${k}" style="border:0;color:#fff;text-align:center;padding:16px 8px;font:inherit;background:linear-gradient(180deg,#7a4dff,#5a2fe0);box-shadow:0 5px 0 rgba(0,0,0,.3)"><div style="font-size:44px">${STG[k].emoji}</div><b>${STG[k].name}</b><div class="mut" style="font-size:13px;margin-top:4px">${STG[k].hint}</div></button>`).join('')}</div>
+  <div class="hint" id="rms"></div><div id="plist"></div>${inv}${tb}</div>`;
+  app.querySelectorAll('.dp').forEach(b=>b.onclick=async()=>{const k=b.dataset.k;
+   try{await api('PATCH',`picks?code=eq.${RM.code}&name=eq.${encodeURIComponent(RM.name)}`,{game:k,picked_at:new Date().toISOString()},'return=minimal');sfx('ok');
+    RM.rows=RM.rows.map(x=>x.name===RM.name?{...x,game:k}:x);RM.phase='wait';rmRender()}
+   catch(e){sfx('bad');if(e.status==409){RM.pool=null;RM.phase='';await rmTick();const st=document.getElementById('rms');if(st)st.textContent='Das Spiel war gerade vergeben – neue Auswahl!'}else{const st=document.getElementById('rms');if(st)st.textContent='⚠️ Wahl konnte nicht gesendet werden.'}}})}
+ else if(ph=='wait'){
+  app.innerHTML=`<div class="scr" id="rm">${head}<div class="mid"><div class="big" style="font-size:clamp(34px,11vw,52px)">✔ Gewählt!</div><div class="c mut">Warte auf die anderen … deine Wahl bleibt geheim.</div><div id="plist"></div><div class="hint" id="rms"></div>
+  ${host?'<button class="btn ghost sm" id="force">Jetzt aufdecken (ohne die Wartenden)</button>':''}${inv}</div>${tb}</div>`;
+  if(host)$('#force').onclick=async()=>{try{const st=await rmReveal();if(st){RM.room.stages=st;RM.phase='';await rmTick()}}catch(e){}}}
+ else{
+  app.innerHTML=`<div class="scr" id="rm">${head}<div class="mid"><div class="big" style="font-size:clamp(30px,10vw,44px);color:var(--cyan)">Das sind eure Spiele!</div>
+  <div class="card">${r.stages.map((k,i)=>`<div style="padding:6px 0"><b>${i+1}. ${STG[k].emoji} ${STG[k].name}</b><br><span class="mut">${STG[k].hint}</span></div>`).join('')}<div class="mut c" style="margin-top:6px">Fehler kosten +1,5 s. Zeit läuft über alle ${r.stages.length} Spiele.</div></div>
+  <div id="plist"></div><div class="hint" id="rms"></div></div>
+  ${ph=='late'?'<button class="btn pink" id="go">▶ Trotzdem mitspielen</button>':host?'<button class="btn pink" id="go">🚀 Gemeinsamen Countdown starten</button>':'<div class="hint">Warte, bis der Host den Countdown startet …</div>'}${tb}</div>`;
+  if($('#go'))$('#go').onclick=async()=>{if(ph=='late'){rmStop();rmCount(Date.now()+3500);return}
+   const at=new Date(Date.now()+6000).toISOString();try{await api('PATCH',`rooms?code=eq.${RM.code}`,{start_at:at},'return=minimal');RM.room.start_at=at;RM.phase='count';rmRender()}catch(e){const st=document.getElementById('rms');if(st)st.textContent='⚠️ Start konnte nicht gesendet werden.'}}}
+ if($('#inv'))$('#inv').onclick=()=>shareTxt(`⚡ BLITZBRAIN-Raum! Code: ${RM.code}${lnk('RAUM-'+RM.code)}\nUnter „Online-Duell“ → „Raum beitreten“ eingeben.`,$('#inv'));
+ $('#bt').onclick=()=>{rmStop();RM=null;fernRoom()};
+ rmUpdate()}
+function remoteEnd(){
+ const r=S.res[0],g=(DB.runs[DB.runs.length-1]||{}).g||{},code=S.code,on=sbOk();
+ const txt=`⚡ BLITZBRAIN – ${r.n}: ${f3(r.t)}${r.pen?' (inkl. '+f3(r.pen)+' Strafzeit)':' – fehlerfrei!'}\n${S.stages.map(k=>`${STG[k].emoji} ${STG[k].name}: ${f3(g[k]||0)}`).join('\n')}\nChallenge-Code: ${code}${lnk(code)}\nSchlag meine Zeit! 😏`;
+ sfx('win');
+ app.innerHTML=`<div class="scr"><div class="mid" style="justify-content:flex-start"><div class="c mut">${esc(r.n)} · Code ${code}</div><div class="big">${f3(r.t)}</div>
+ ${on?'<h3>📊 Scoreboard</h3><div id="sbv" class="c mut">Sende Zeit …</div>':`<div class="banner" style="font-size:20px">Teile deine Zeit mit den Freunden!</div><div class="card" style="white-space:pre-line">${esc(txt)}</div><div class="c mut" style="font-size:14px"></div>`}</div>
+ <button class="btn pink" id="sh">📤 Ergebnis teilen</button><button class="btn" id="again">${S.room?'🔁 Revanche (alle müssen zustimmen)':'🔁 Nochmal versuchen'}</button><div class="hint" id="rer"></div>
+ <div class="row"><button class="btn ghost sm" id="cp">📋 Code teilen</button><button class="btn ghost sm" id="mn">🏠 Menü</button></div></div>`;
+ $('#sh').onclick=()=>shareTxt(txt,$('#sh'));
+ $('#cp').onclick=()=>shareTxt(`⚡ BLITZBRAIN-Challenge! Code: ${code}${lnk(code)}\nUnter „Online-Duell“ eingeben und meine Zeit schlagen.`,$('#cp'));
+ $('#again').onclick=()=>{if(S.room)return roomRematch();S.cur=0;S.res=[];pass()};$('#mn').onclick=menu;
+ if(on){const up=()=>sbSend(r,g,code).then(()=>sbRender(code,S.room?S.stages:null),()=>{const el=document.getElementById('sbv');if(el){el.innerHTML='⚠️ Zeit konnte nicht gesendet werden. <button class="btn ghost sm" id="rt">Nochmal senden</button>';$('#rt').onclick=()=>{el.textContent='Sende Zeit …';up()}}});up()}
+}
+menu();
+try{const h=decodeURIComponent((location.hash||'').slice(1));if(h&&/^DUELL-[A-Z0-9]{4}$/i.test(h))duelOnline(h.slice(6).toUpperCase());else if(h&&(dec(h)||/^RAUM-[A-Z0-9]{4,8}$/i.test(h)))fern(h)}catch(e){}
+</script></body></html>
