@@ -575,7 +575,7 @@ function pass(){
  ${lead?`<div class="c">👑 Führt: <b>${esc(lead.n)}</b> mit ${f3(lead.t)}</div>`:''}
  <div class="card">${S.stages.map((k,i)=>`<div style="padding:6px 0"><b>${i+1}. ${STG[k].emoji} ${STG[k].name}</b><br><span class="mut">${STG[k].hint}</span></div>`).join('')}<div class="mut c" style="margin-top:6px">Fehler kosten +1,5 s. Zeit läuft über alle ${S.stages.length} Spiele.</div></div></div>
  <button class="btn pink" id="rdy">BEREIT! 🔥</button>${bar('⬅ Abbrechen')}</div>`;
- $('#rdy').onclick=()=>{ac();countdown()};$('#bt').onclick=()=>S.daily&&S.code?daily():S.code?fernChallenge():home();
+ $('#rdy').onclick=()=>{ac();countdown()};$('#bt').onclick=()=>S.daily&&S.code?daily():S.code?(S.fi?friendsScreen():fernChallenge()):home();
 }
 function countdown(cb){
  let n=3;const t=()=>{if(n==0){sfx('go');play(cb);return}
@@ -1119,7 +1119,7 @@ function ibBanner(){
 setInterval(async()=>{if(DB.acct&&!isBusy()){const n=IB.length;await ibLoad();const f=document.getElementById('fr');if(f&&IB.length!=n&&!document.activeElement.matches('input'))frDraw()}},6000);
 const pyTxt=p=>/^DUELL-/.test(p)?'🥊 lädt dich zum 1v1-Duell ein':/^RAUM-/.test(p)?'🌍 lädt dich in einen Raum ein':'⚡ schickt dir eine Challenge';
 async function joinPayload(p){ac();NBK=menu;const nm=DB.acct.name,msg=t=>{const m=document.getElementById('fm');if(m)m.textContent=t};
- try{if(/^DUELL-[A-Z0-9]{4}$/i.test(p)){const pk=await api('GET',`picks?code=eq.${duCode(p.slice(6))}&select=name`);if(!pk.length)throw Object.assign(new Error('nf'),{nf:true});await duJoin(duCode(p.slice(6)),nm,true)}else if(/^RAUM-/i.test(p))await roomJoin(p,nm);else fern(p)}
+ try{if(/^DUELL-[A-Z0-9]{4}$/i.test(p)){const pk=await api('GET',`picks?code=eq.${duCode(p.slice(6))}&select=name`);if(!pk.length)throw Object.assign(new Error('nf'),{nf:true});await duJoin(duCode(p.slice(6)),nm,true)}else if(/^RAUM-/i.test(p))await roomJoin(p,nm);else if(dec(p)){S.fi=1;fernIntro(nm,p,false)}else fern(p)}
  catch(e){msg(e.nf?'❌ Diese Einladung ist abgelaufen oder das Spiel gibt es nicht mehr.':e.full?'❌ Dort ist schon alles voll.':'❌ Beitritt nicht möglich – versuch es nochmal.')}}
 async function friendsScreen(back=menu){if(!DB.acct){loginScreen(()=>friendsScreen(back));return}
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">👥 Freunde</h2><div id="fr" class="c mut">Lade …</div><div class="tb"><button class="btn ghost sm" id="bt">⬅ Zurück</button></div></div>`;
@@ -1199,7 +1199,7 @@ async function inviteFriends(payload,what){ac();if(!DB.acct)return;const old=doc
 function onboard(i=0){const P=[['⚡','Schnell sein!','Mini-Spiele, die du so schnell wie möglich löst. Jeder Fehler kostet +1,5 s – die niedrigste Zeit gewinnt.'],['👥','Gemeinsam spielen','Ranked gegen Zufallsgegner, 1v1-Duelle oder Party mit einem Handy oder online. Mit Freunden: Einladung direkt ins Postfach oder per Code.'],['📅','Jeden Tag dabei','Die Tagesaufgabe gibt jeden Tag 3 neue Spiele. Spiel täglich für eine 🔥 Serie und schalte Farbthemen frei.']],[e,t,x]=P[i];
  app.innerHTML=`<div class="scr"><div class="mid"><div class="big pop" style="font-size:90px">${e}</div><div class="big" style="font-size:clamp(30px,10vw,42px);color:var(--yel)">${t}</div><div class="c mut" style="font-size:17px">${x}</div><div class="dots" style="width:120px;margin-top:8px">${P.map((_,j)=>`<i class="${j==i?'on':j<i?'dn':''}"></i>`).join('')}</div></div><button class="btn pink" id="on">${i<2?'Weiter ➜':'Los geht’s 🚀'}</button><button class="btn ghost sm" id="os">Überspringen</button></div>`;
  const end=()=>{DB.seen=1;save();menu()};$('#on').onclick=()=>{ac();i<2?onboard(i+1):end()};$('#os').onclick=end}
-function menu(){NBK=null;setTimeout(installNudge,1200);applyTheme();avLoad();ibLoad();S.code=null;S.room=null;S.daily=false;
+function menu(){NBK=null;S.fi=false;setTimeout(installNudge,1200);applyTheme();avLoad();ibLoad();S.code=null;S.room=null;S.daily=false;
  app.innerHTML=`<div class="scr"><h1 class="logo">BLITZ<span>BRAIN</span></h1><div class="sub" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="white-space:nowrap">${POOL().length} Mini-Games</span><button class="btn ghost sm" id="ac" style="flex:none;width:auto;padding:6px 12px;font-size:13px"></button></div>
  <div class="mid" style="gap:10px"><button class="btn glow" id="mr" style="padding:13px;background:linear-gradient(180deg,#ffb347,#ff7a18);box-shadow:0 6px 0 #a24a00;color:#fff">🏆 RANKED<br><small style="font-weight:700;opacity:.9">Zufälliger Gegner · 3 Spiele · Elo</small></button><button class="btn" id="m4" style="padding:13px;background:linear-gradient(180deg,#b9ff6b,#8be02e);box-shadow:0 6px 0 #4c8a0e">🥊 1v1-DUELL<br><small style="font-weight:700;opacity:.8">Mit Freund (online) oder an einem Handy</small></button>
  <button class="btn pink" id="m1" style="padding:13px">👥 PARTY<br><small style="font-weight:700;opacity:.9">Ein Handy, Online-Raum oder Challenge</small></button>
@@ -1292,7 +1292,7 @@ const nameField=()=>`<div class="card c" style="padding:10px">👤 Angemeldet al
 const getName=()=>DB.acct.name;
 const hubBtn=(id,e,t,sb,st)=>`<button class="btn" id="${id}" style="display:flex;align-items:center;gap:14px;padding:18px 16px;text-align:left;${st||''}"><span style="font-size:40px;flex:none">${e}</span><span style="flex:1;min-width:0"><b style="display:block;font-size:20px">${t}</b><small style="font-weight:700;opacity:.85">${sb}</small></span><span style="font-size:26px;opacity:.55;flex:none">›</span></button>`;
 const lgDot=r=>{const c=r>=1250?'#5ce1ff':r>=1100?'#ffd23f':r>=950?'#cfd6e0':'#cd7f32';return`<span style="color:${c};font-size:13px">◆</span> `};
-function partyHub(){S.code=null;S.room=null;
+function partyHub(){S.code=null;S.room=null;S.fi=false;
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">👥 Party</h2><div class="mut">Für Gruppen – jede Runde wird anders.</div>
  <div class="mid" style="justify-content:flex-start;padding-top:6px">${hubBtn('p1','⚔️','Ein Handy','Party-Runde, Handy wandert reihum – auch offline','background:linear-gradient(180deg,#ff7ab8,#ff3d96);box-shadow:0 6px 0 #a1155c;color:#fff')}${hubBtn('p2','🏠','Online-Raum','Jeder am eigenen Handy, gemeinsamer Countdown','background:linear-gradient(180deg,#6ff0ff,#27e1ff);box-shadow:0 6px 0 #0a7f94')}${hubBtn('p3','⚡','Schnell-Challenge','Gleicher Code, jeder spielt, wann er will','')}</div>${bar('⬅ Hauptmenü')}</div>`;
  $('#p1').onclick=()=>{ac();home()};$('#p2').onclick=()=>{ac();fernRoom()};$('#p3').onclick=()=>{ac();fernChallenge()};$('#bt').onclick=menu}
@@ -1315,7 +1315,7 @@ function fernRoom(pre=''){S.code=null;S.room=null;if(needAcct(fernRoom,pre))retu
  $('#rjn').onclick=async()=>{ac();const v=getName(),c=$('#rcd').value;if(c.trim().length<4){$('#er').textContent='❌ Bitte den Raum-Code eingeben.';return}$('#er').textContent='Trete bei …';try{await roomJoin(c,v)}catch(e){$('#er').textContent=e.auth?'❌ Anmeldung ungültig – im Hauptmenü unter 👤 neu anmelden.':e.nf?'❌ Raum nicht gefunden.':e.full?'❌ Der Raum ist voll oder die Runde läuft schon.':'❌ Beitritt nicht möglich (Internet oder Server pausiert?).'}};
  $('#bt').onclick=()=>(NBK||fern)();
 }
-function fernChallenge(pre=''){S.code=null;S.room=null;if(needAcct(fernChallenge,pre))return;
+function fernChallenge(pre=''){S.code=null;S.room=null;S.fi=false;if(needAcct(fernChallenge,pre))return;
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">⚡ Schnell-Challenge</h2><div class="mut">Gleicher Code, jeder spielt wann er will. Die Zeiten kommen ins gemeinsame Scoreboard.</div>
  ${nameField()}
  <button class="btn pink" id="mk">✨ Neue Challenge erstellen</button>
@@ -1332,7 +1332,7 @@ let FDW='';
 async function fdStart(who){if(!who||!DB.acct)return;const code=enc((Math.random()*2e9)|0,shuffle(Object.keys(STG).map((_,i)=>i).filter(i=>!OFF.includes(Object.keys(STG)[i])),Math.random).slice(0,3));
  const m=document.getElementById('fh');if(m)m.textContent='Sende Fernduell …';
  try{const r=await rpc('send_invite',{p_name:DB.acct.name,p_pin:DB.acct.pin,p_to:who,p_payload:code});if(r!=='ok'){if(m)m.textContent='❌ Fernduell nicht möglich ('+r+').';return}
-  DB.fd=[{c:code,w:who,t:Date.now()},...(DB.fd||[])].slice(0,8);save();FDW=who;NBK=()=>friendsScreen();fernIntro(DB.acct.name,code,true)}
+  DB.fd=[{c:code,w:who,t:Date.now()},...(DB.fd||[])].slice(0,8);save();FDW=who;S.fi=1;NBK=()=>friendsScreen();fernIntro(DB.acct.name,code,true)}
  catch(e){if(m)m.textContent='⚠️ Server nicht erreichbar.'}}
 async function fdDraw(){const el=document.getElementById('fr');if(!el)return;const L=(DB.fd||[]).filter(x=>Date.now()-x.t<7*864e5);if(!L.length)return;
  let box=document.getElementById('fdl');if(!box){box=document.createElement('div');box.id='fdl';box.className='card';box.style.cssText='padding:12px';el.prepend(box)}
@@ -1499,11 +1499,11 @@ function remoteEnd(){
  sfx('win');
  app.innerHTML=`<div class="scr"><div class="mid" style="justify-content:flex-start"><div class="c mut">${dly?'📅 Tagesaufgabe · '+esc(r.n):esc(r.n)+' · Code '+code}</div><div class="big">${f3(r.t)}</div>${sk?`<div class="banner pop" style="font-size:20px">${streakTxt(sk)}</div>`:''}
  ${on?'<h3>📊 '+(dly?'Heutiges Scoreboard':'Scoreboard')+'</h3><div id="sbv" class="c mut">Sende Zeit …</div>':`<div class="banner" style="font-size:20px">Teile deine Zeit mit den Freunden!</div><div class="card" style="white-space:pre-line">${esc(txt)}</div><div class="c mut" style="font-size:14px"></div>`}${rateBox(S.stages)}</div>
- <div class="row"><button class="btn pink" id="sh" style="flex:2">📤 Ergebnis teilen</button><button class="btn ghost" id="shi" aria-label="Als Bild teilen">🖼️ Bild</button></div><button class="btn" id="again">${S.room?'🔁 Revanche (alle müssen zustimmen)':'🔁 Nochmal versuchen'}</button><div class="hint" id="rer"></div>
+ <div class="row"><button class="btn pink" id="sh" style="flex:2">📤 Ergebnis teilen</button><button class="btn ghost" id="shi" aria-label="Als Bild teilen">🖼️ Bild</button></div><button class="btn" id="again">${S.room?'🔁 Revanche (alle müssen zustimmen)':'🔁 Nochmal versuchen'}</button>${S.fi&&!S.room?'<button class="btn ghost" id="fri">👥 Zu den Freunden</button>':''}<div class="hint" id="rer"></div>
  <div class="row"><button class="btn ghost sm" id="cp">${dly?'🏅 Tages-Scoreboard':'📋 Code teilen'}</button><button class="btn ghost sm" id="mn">🏠 Menü</button></div></div>`;
  countUp();bindRate();$('#sh').onclick=()=>shareTxt(txt,$('#sh'));$('#shi').onclick=()=>shareImg({name:r.n,sub:dly?'📅 Tagesaufgabe':'⚡ Challenge',big:f3(r.t),lines:[r.pen?'inkl. '+f3(r.pen)+' Strafzeit':'✨ Fehlerfrei!',...S.stages.map(k=>STG[k].emoji+' '+STG[k].name+': '+f3(g[k]||0))]});
  $('#cp').onclick=dly?()=>sbView(code,daily,1):()=>shareTxt(`⚡ BLITZBRAIN-Challenge! Code: ${code}${lnk(code)}\nUnter „Party“ → „Schnell-Challenge“ eingeben und meine Zeit schlagen.`,$('#cp'));
- $('#again').onclick=()=>{if(S.room)return roomRematch();if(dly)S.seed=(Math.random()*1e9)|0;S.cur=0;S.res=[];pass()};$('#mn').onclick=menu;
+ $('#again').onclick=()=>{if(S.room)return roomRematch();if(dly)S.seed=(Math.random()*1e9)|0;S.cur=0;S.res=[];pass()};$('#mn').onclick=menu;if($('#fri'))$('#fri').onclick=()=>friendsScreen();
  if(on){const up=()=>sbSend(r,g,code).then(()=>sbRender(code,S.room?S.stages:null),()=>{const el=document.getElementById('sbv');if(el){el.innerHTML='⚠️ Zeit konnte nicht gesendet werden. <button class="btn ghost sm" id="rt">Nochmal senden</button>';$('#rt').onclick=()=>{el.textContent='Sende Zeit …';up()}}});up()}
 }
 DB.vis=(DB.vis||0)+1;save();
@@ -1514,7 +1514,7 @@ setTimeout(()=>{if(DB.notif&&DB.acct)pushOn()},5000);
 try{const h=decodeURIComponent((location.hash||'').slice(1));if(h&&/^DUELL-[A-Z0-9]{4}$/i.test(h))duelOnline(h.slice(6).toUpperCase());else if(h&&(dec(h)||/^RAUM-[A-Z0-9]{4,8}$/i.test(h)))fern(h)}catch(e){}
 try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&location.hostname.endsWith('github.io'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-10-2';let updPend=null,updT=0;
+const BBV='2026-11-10-3';let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;font-weight:800;text-align:center';
