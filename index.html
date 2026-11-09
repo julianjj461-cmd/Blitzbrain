@@ -661,7 +661,7 @@ function duelStats(){
    Object.values(by).forEach(m=>{const ns=Object.keys(m);if(ns.length!==2)return;const[a,b]=ns.sort((p,q)=>p.toLowerCase()<q.toLowerCase()?-1:1),k=a.toLowerCase()+'|'+b.toLowerCase(),e=pairs[k]||(pairs[k]={a,b,x:0,y:0,d:0});
     if(m[a]===2||m[b]===2)e.d++;else if(m[a]===1)e.x++;else if(m[b]===1)e.y++});
    const O=Object.values(pairs).sort((p,q)=>(q.x+q.y+q.d)-(p.x+p.y+p.d));
-   if(box())box().innerHTML=O.length?O.map(row).join(''):'<div class="c mut">Noch keine Online-Duelle.</div>'}
+   if(box())box().innerHTML=O.length?O.map(row).join(''):'<div class="c mut">Noch keine Online-1v1-Duelle.</div>'}
   catch(e){if(box())box().textContent='⚠️ Online-Bilanz nicht erreichbar (Internet oder Server pausiert?).'}})();
 }
 function duelHub(){
@@ -1016,7 +1016,7 @@ function arcDone(k,t,pen){
  <button class="btn pink" id="again">🔁 Nochmal</button>${bar('📋 Andere Spiele')}</div>`;
  countUp();bindRate();$('#again').onclick=()=>arcIntro(k);$('#bt').onclick=arcade;
 }
-/* ===== Online-Duell: gleicher Code = gleiche Aufgaben auf jedem Handy, Ergebnis per Chat teilen ===== */
+/* ===== Online-Challenge: gleicher Code = gleiche Aufgaben auf jedem Handy, Ergebnis per Chat teilen ===== */
 const enc=(seed,idx)=>(seed.toString(36).padStart(6,'0')+idx.map(i=>i.toString(36).padStart(2,'0')).join('')).toUpperCase().match(/.{1,4}/g).join('-');
 const dec=c=>{c=String(c).toLowerCase().replace(/[^0-9a-z]/g,'');const n=(c.length-6)/2,K=Object.keys(STG).length;if(!(Number.isInteger(n)&&n>=1&&n<=5))return null;
  const seed=parseInt(c.slice(0,6),36),idx=[];for(let i=0;i<n;i++)idx.push(parseInt(c.slice(6+2*i,8+2*i),36));
@@ -1209,7 +1209,7 @@ function remoteEnd(){
  const txt=`⚡ BLITZBRAIN – ${r.n}: ${f3(r.t)}${r.pen?' (inkl. '+f3(r.pen)+' Strafzeit)':' – fehlerfrei!'}\n${S.stages.map(k=>`${STG[k].emoji} ${STG[k].name}: ${f3(g[k]||0)}`).join('\n')}${dly?'\n📅 Tagesaufgabe – spiel mit und schlag meine Zeit! 😏':`\nChallenge-Code: ${code}${lnk(code)}\nSchlag meine Zeit! 😏`}`;
  sfx('win');
  app.innerHTML=`<div class="scr"><div class="mid" style="justify-content:flex-start"><div class="c mut">${dly?'📅 Tagesaufgabe · '+esc(r.n):esc(r.n)+' · Code '+code}</div><div class="big">${f3(r.t)}</div>${sk?`<div class="banner pop" style="font-size:20px">${streakTxt(sk)}</div>`:''}
- ${on?'<h3>📊 Scoreboard</h3><div id="sbv" class="c mut">Sende Zeit …</div>':`<div class="banner" style="font-size:20px">Teile deine Zeit mit den Freunden!</div><div class="card" style="white-space:pre-line">${esc(txt)}</div><div class="c mut" style="font-size:14px"></div>`}${rateBox(S.stages)}</div>
+ ${on?'<h3>📊 '+(dly?'Heutiges Scoreboard':'Scoreboard')+'</h3><div id="sbv" class="c mut">Sende Zeit …</div>':`<div class="banner" style="font-size:20px">Teile deine Zeit mit den Freunden!</div><div class="card" style="white-space:pre-line">${esc(txt)}</div><div class="c mut" style="font-size:14px"></div>`}${rateBox(S.stages)}</div>
  <button class="btn pink" id="sh">📤 Ergebnis teilen</button><button class="btn" id="again">${S.room?'🔁 Revanche (alle müssen zustimmen)':'🔁 Nochmal versuchen'}</button><div class="hint" id="rer"></div>
  <div class="row"><button class="btn ghost sm" id="cp">${dly?'🏅 Tages-Scoreboard':'📋 Code teilen'}</button><button class="btn ghost sm" id="mn">🏠 Menü</button></div></div>`;
  countUp();bindRate();$('#sh').onclick=()=>shareTxt(txt,$('#sh'));
