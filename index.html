@@ -833,6 +833,7 @@ async function duTick(){
 function duCount(startMs){duStop();let last=-1,iv=0;const D=DU,r=D.room,R=r.stages.r,g=r.stages.g[R-1];
  const tk=()=>{if(DU!==D){clearInterval(iv);return}const rem=startMs-Date.now();
   if(rem<=0){clearInterval(iv);D.playing=true;S.names=[D.name];S.seed=(r.seed+R*101)|0;S.stages=[g];S.cur=0;S.code=null;S.room=null;sfx('go');
+   {let sh=0;const pi=setInterval(async()=>{if(DU!==D||!D.playing){clearInterval(pi);return}try{const rs=await api('GET',`results?code=eq.${D.code}-R${R}&select=name&limit=5`),o=Array.isArray(rs)&&rs.find(x=>x.name!==D.name);if(o&&!sh){sh=1;const b=document.createElement('div');b.style.cssText='position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:9999;background:var(--yel);color:#1a0b4b;font-weight:900;padding:8px 16px;border-radius:14px;pointer-events:none;box-shadow:0 4px 0 #0004';b.textContent='⚡ '+o.name+' ist schon fertig!';document.body.append(b);setTimeout(()=>{try{b.remove()}catch(e){}},4000)}}catch(e){}},2500)}
    play(async(t,pen)=>{D.played[R]=true;D.playing=false;
     app.innerHTML=`<div class="scr" id="du"><div class="mid"><div class="c mut">Runde ${R}/${r.stages.g.length}</div><div class="big">${f3(t)}</div><div class="c mut">Sende Zeit …</div></div></div>`;
     for(let i=0;i<4;i++){try{await sbSend({n:D.name,t:Math.max(500,t),pen},{},`${D.code}-R${R}`);break}catch(e){await new Promise(z=>setTimeout(z,1200))}}
@@ -912,6 +913,14 @@ async function bestenlisten(back=menu){
  if(document.getElementById('rl'))gboard(back);
 }
 let GTAB=0;
+const SEA0=Date.parse('2026-11-08T23:00:00Z'),SEAL=28*864e5;
+function seasonInfo(){const n=Math.max(0,Math.floor((Date.now()-SEA0)/SEAL)),a=SEA0+n*SEAL,b=a+SEAL;return{n:n+1,a,b,left:Math.max(1,Math.ceil((b-Date.now())/864e5)),pa:a-SEAL,has:n>=1,fd:new Date(b).toLocaleDateString('de-DE')}}
+async function seasonDraw(){const el=document.getElementById('ssn');if(!el)return;const S0=seasonInfo(),med=['🥇','🥈','🥉'];
+ const line=L=>L.slice(0,3).map((x,i)=>`${med[i]} ${esc(x.n)} (${x.c})`).join(' · ');
+ el.innerHTML=`<b>🗓️ Saison ${S0.n}</b> <span class="mut">· noch ${S0.left} Tag${S0.left>1?'e':''} (bis ${S0.fd})</span><div class="mut" id="ssc" style="margin-top:4px">Lade …</div>`;
+ try{const cur=await rpc('season_top',{p_from:new Date(S0.a).toISOString(),p_to:new Date(S0.b).toISOString()});let h=Array.isArray(cur)&&cur.length?'Aktuell vorn: '+line(cur):'Noch keine Zeiten in dieser Saison.';
+  if(S0.has){const pv=await rpc('season_top',{p_from:new Date(S0.pa).toISOString(),p_to:new Date(S0.a).toISOString()});if(Array.isArray(pv)&&pv.length){h+=`<br><b style="color:var(--yel)">Letzte Saison:</b> `+line(pv);if(DB.acct&&skey(pv[0].n)===skey(DB.acct.name)){const k='s'+(S0.n-1);DB.ssn=DB.ssn||{};if(!DB.ssn[k]){DB.ssn[k]=1;DB.ssw=(DB.ssw||0)+1;save()}}}}
+  const e=document.getElementById('ssc');if(e)e.innerHTML=h}catch(e){const x=document.getElementById('ssc');if(x)x.textContent='Saison-Daten gerade nicht erreichbar.'}}
 function gboard(back){
  const FSet=FF&&DB.acct?new Set([...FR.map(f=>skey(f.n)),skey(DB.acct.name)]):null,flt=a=>FSet?a.filter(x=>FSet.has(skey(x.n))):a;
  const R=flt(RR()),best=k=>{const m={};R.forEach(x=>{const t=x.g&&x.g[k];if(t!=null&&(!(x.n in m)||t<m[x.n].t))m[x.n]={n:x.n,t}});return Object.values(m).sort((a,b)=>a.t-b.t)};
@@ -926,7 +935,7 @@ function gboard(back){
  ${DB.acct?`<button class="btn ghost sm" id="gf">${FF?'👥 Nur Freunde – tippen für Alle':'🌍 Alle Spieler – tippen für Freunde'}</button>`:''}<div id="gc"></div>
  <div class="tb"><button class="btn ghost sm" id="bt">⬅ Zurück</button><button class="btn ghost sm" id="rt">🔄 Aktualisieren</button></div></div>`;
  const tabs=()=>[0,1].forEach(i=>{const b=$('#g'+i);b.className='btn sm'+(GTAB==i?'':' ghost');b.style.flex='1'});
- const champs=()=>{$('#gc').innerHTML=`<h3 style="margin:8px 0 2px">🏆 Wochen-Champion</h3><div class="mut">Meiste Bestzeiten der letzten 7 Tage</div>
+ const champs=()=>{$('#gc').innerHTML=`<div class="card" id="ssn" style="padding:12px;margin-top:8px"></div><h3 style="margin:12px 0 2px">🏆 Wochen-Champion</h3><div class="mut">Meiste Bestzeiten der letzten 7 Tage</div>
   ${wk.length?pod(wk.slice(0,3))+wk.slice(3,5).map(([n,c],i)=>row(i+3,n+(TM[n]?' · '+TM[n]:''),0,c+' 🏅')).join(''):'<div class="mut" style="margin-top:6px">Diese Woche noch keine Zeiten – wer holt sich die Krone?</div>'}
   <h3 style="margin:16px 0 2px">👑 Gesamt-Rekordhalter</h3><div class="mut">Meiste Spiele mit Bestzeit aller Zeiten</div>
   ${champ.length?champ.map(([n,c],i)=>row(i,n+(TM[n]?' · '+TM[n]:''),0,c+' 🏅')).join(''):'<div class="mut" style="margin-top:6px">Noch keine Daten – spielt eine Runde!</div>'}
@@ -934,12 +943,13 @@ function gboard(back){
   ${tmAll.length?tmAll.map(([n,c],i)=>row(i,n,0,c+' 🏅')).join(''):'<div class="mut" style="margin-top:6px">Noch keine Teams – trag dein Team unter 👤 Profil ein.</div>'}
   ${tmWk.length?'<div class="mut" style="margin-top:10px">Diese Woche:</div>'+tmWk.slice(0,3).map(([n,c],i)=>row(i,n,0,c+' 🏅')).join(''):''}`};
  const games=q=>{q=(q||'').trim().toLowerCase();const el=document.getElementById('gc');if(!el)return;
-  const items=all.map(g=>{const nm=STG[g.k].name.toLowerCase().includes(q),L=g.b.map((x,i)=>({...x,i})),sel=q&&!nm?L.filter(x=>x.n.toLowerCase().includes(q)):L;return{g,sel,show:!q||nm||sel.length}}).filter(x=>x.show);
-  el.innerHTML=`<div class="pl" style="margin-top:6px"><input id="nf" maxlength="14" placeholder="🔍 Spiel oder Spieler suchen" value="${esc(q)}" autocomplete="off" autocapitalize="off"></div>
-  ${items.length?items.filter(x=>x.g.b.length||q).map(({g,sel})=>{const w=g.b[0];return`<details class="card" style="padding:12px;margin-top:10px"${q?' open':''}><summary style="cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:8px"><b>${STG[g.k].emoji} ${STG[g.k].name}</b><span class="mut">${w?'🥇 '+esc(w.n)+' · '+f3(w.t):'–'}</span></summary>${sel.length?sel.slice(0,10).map(x=>row(x.i,x.n,x.t)).join(''):'<div class="mut" style="margin-top:6px">Noch nicht gespielt</div>'}</details>`}).join(''):'<div class="mut" style="margin-top:10px">Nichts gefunden.</div>'}
+  const DK=new Set(dayInfo().idx.map(i=>Object.keys(STG)[i]));
+  const items=all.map(g=>{const nm=STG[g.k].name.toLowerCase().includes(q),L=g.b.map((x,i)=>({...x,i})),sel=q&&!nm?L.filter(x=>x.n.toLowerCase().includes(q)):L;return{g,sel,show:!q||nm||sel.length}}).filter(x=>x.show).sort((a,b)=>DK.has(b.g.k)-DK.has(a.g.k));
+  el.innerHTML=`<div class="mut" style="margin-top:6px">⭐ = heute in der Tagesaufgabe</div><div class="pl" style="margin-top:6px"><input id="nf" maxlength="14" placeholder="🔍 Spiel oder Spieler suchen" value="${esc(q)}" autocomplete="off" autocapitalize="off"></div>
+  ${items.length?items.filter(x=>x.g.b.length||q).map(({g,sel})=>{const w=g.b[0];return`<details class="card" style="padding:12px;margin-top:10px"${q?' open':''}><summary style="cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:8px"><b>${DK.has(g.k)?'⭐ ':''}${STG[g.k].emoji} ${STG[g.k].name}</b><span class="mut">${w?'🥇 '+esc(w.n)+' · '+f3(w.t):'–'}</span></summary>${sel.length?sel.slice(0,10).map(x=>row(x.i,x.n,x.t)).join(''):'<div class="mut" style="margin-top:6px">Noch nicht gespielt</div>'}</details>`}).join(''):'<div class="mut" style="margin-top:10px">Nichts gefunden.</div>'}
   ${!q&&items.some(x=>!x.g.b.length)?`<details class="card" style="padding:12px;margin-top:10px"><summary style="cursor:pointer;list-style:none"><b>🕳️ Noch nicht gespielt (${items.filter(x=>!x.g.b.length).length})</b></summary><div class="mut" style="margin-top:8px;line-height:1.7">${items.filter(x=>!x.g.b.length).map(x=>STG[x.g.k].emoji+' '+STG[x.g.k].name).join(' · ')}</div></details>`:''}<div style="height:14px;flex:none"></div>`;
   const inp=document.getElementById('nf');inp.oninput=e=>{const pos=e.target.selectionStart;games(e.target.value);const n=document.getElementById('nf');n.focus();try{n.setSelectionRange(pos,pos)}catch(_){}}};
- const show=()=>{tabs();GTAB?games(''):champs()};
+ const show=()=>{tabs();GTAB?games(''):(champs(),seasonDraw())};
  $('#g0').onclick=()=>{GTAB=0;show()};$('#g1').onclick=()=>{GTAB=1;show()};show();
  if($('#gf'))$('#gf').onclick=()=>{FF=!FF;gboard(back)};
  $('#rt').onclick=()=>bestenlisten(back);$('#bt').onclick=back;
@@ -1053,9 +1063,9 @@ const THM={std:{n:'Standard',e:'🟣',u:0,v:['#5a2fe0','#7a4dff','#3a2380','#2a1
  nacht:{n:'Nacht',e:'🌑',u:30,v:['#55556a','#7a7a95','#3a3a4a','#22222d','#14141b','#2a2a35','#0b0b10']}};
 const BDG=[['🎮','Neuling','Das erste Spiel gespielt',c=>c.runs>=1],['🔟','Stammspieler','25 Runden gespielt',c=>c.runs>=25],['💯','Dauerbrenner','100 Runden gespielt',c=>c.runs>=100],['✨','Makellos','Eine Runde ohne Fehler',c=>c.clean],
  ['🔥','3 Tage Serie','Tagesaufgabe 3 Tage in Folge',c=>c.streak>=3],['🌟','7 Tage Serie','Tagesaufgabe 7 Tage in Folge',c=>c.streak>=7],['👑','30 Tage Serie','Tagesaufgabe 30 Tage in Folge',c=>c.streak>=30],
- ['🥊','Duellant','Ein Duell gewonnen',c=>c.dw>=1],['🏅','Duell-Held','10 Duelle gewonnen',c=>c.dw>=10],['👥','Beliebt','3 Freunde hinzugefügt',c=>c.fr>=3],['🏆','Rekordhalter','Platz 1 in einem Spiel',c=>c.firsts>=1],['🎯','Quest-Held','5 Tages-Quests geschafft',c=>c.q>=5],['🌍','Weltenbummler','20 Spiele online gespielt',c=>c.online>=20]];
+ ['🥊','Duellant','Ein Duell gewonnen',c=>c.dw>=1],['🏅','Duell-Held','10 Duelle gewonnen',c=>c.dw>=10],['👥','Beliebt','3 Freunde hinzugefügt',c=>c.fr>=3],['🏆','Rekordhalter','Platz 1 in einem Spiel',c=>c.firsts>=1],['🎯','Quest-Held','5 Tages-Quests geschafft',c=>c.q>=5],['🌍','Weltenbummler','20 Spiele online gespielt',c=>c.online>=20],['🏅','Saisonsieger','Eine Saison auf Platz 1 beendet',c=>c.ssw>=1]];
 function bindBdg(){document.querySelectorAll('#bdg button').forEach(b=>b.onclick=()=>{const h=document.getElementById('bdh');if(h)h.textContent=b.dataset.h})}
-function badgesCard(extra){const me=skey(DB.acct.name),ru=DB.runs||[],c={runs:ru.length,clean:ru.some(x=>x.pen===0),streak:bestStreak(),dw:Object.values(DB.h2h||{}).reduce((a,e)=>a+(e.w[me]||0),0),fr:DB.frN||0,q:DB.qn||0,firsts:0,online:0,...(extra||{})},ok=BDG.filter(b=>b[3](c)).length;
+function badgesCard(extra){const me=skey(DB.acct.name),ru=DB.runs||[],c={runs:ru.length,clean:ru.some(x=>x.pen===0),streak:bestStreak(),dw:Object.values(DB.h2h||{}).reduce((a,e)=>a+(e.w[me]||0),0),fr:DB.frN||0,q:DB.qn||0,firsts:0,online:0,ssw:DB.ssw||0,...(extra||{})},ok=BDG.filter(b=>b[3](c)).length;
  return`<div class="card" style="padding:12px"><b>🎖️ Abzeichen (${ok}/${BDG.length})</b><div id="bdg" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px">${BDG.map(b=>`<button class="btn ghost sm" data-h="${b[1]} – ${b[2]}" style="padding:8px 2px;font-size:26px;width:auto;flex:none;${b[3](c)?'':'opacity:.3;filter:grayscale(1)'}">${b[0]}</button>`).join('')}</div><div class="hint" id="bdh">Tippe ein Abzeichen an.</div></div>`}
 const bestStreak=()=>{if(!DB.acct)return 0;const e=(DB.streak||{})[skey(DB.acct.name)]||{};return Math.max(e.best||0,e.n||0)};
 const thmOk=k=>THM[k].u<=bestStreak();
@@ -1456,7 +1466,7 @@ DB.seen?menu():onboard();
 try{const h=decodeURIComponent((location.hash||'').slice(1));if(h&&/^DUELL-[A-Z0-9]{4}$/i.test(h))duelOnline(h.slice(6).toUpperCase());else if(h&&(dec(h)||/^RAUM-[A-Z0-9]{4,8}$/i.test(h)))fern(h)}catch(e){}
 try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&location.hostname.endsWith('github.io'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-09-4';let updPend=null,updT=0;
+const BBV='2026-11-09-5';let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;font-weight:800;text-align:center';
