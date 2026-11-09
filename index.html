@@ -836,8 +836,12 @@ function gboard(back){
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🎮 Bestenlisten pro Spiel</h2>${srcBar()}<div class="mut">Online-Bestzeiten aller Spieler pro Mini-Game (inkl. Strafzeit)</div>
  <h3>🏆 Wochen-Champion</h3><div class="mut" style="margin-bottom:6px">Meiste Bestzeiten der letzten 7 Tage</div>${wk.length?wk.slice(0,3).map(([n,c],i)=>`<div class="rk${i==0?' w':''}"><span>${med[i]}</span><b>${esc(n)}</b><span>${c} 🏅</span></div>`).join(''):'<div class="mut">Diese Woche noch keine Zeiten – wer holt sich die Krone?</div>'}
  <h3>👑 Meiste Spiel-Rekorde</h3>${champ.length?champ.map(([n,c],i)=>`<div class="rk"><span>${i+1}.</span><b>${esc(n)}</b><span>${c} 🏅</span></div>`).join(''):'<div class="mut">Noch keine Daten – spielt eine Runde!</div>'}
- <h3>Alle Spiele</h3>${all.map(g=>`<div class="card" style="padding:12px"><b>${STG[g.k].emoji} ${STG[g.k].name}</b>${g.b.length?g.b.slice(0,5).map((x,i)=>`<div class="rk${i==0?' w':''}" style="margin-top:6px;padding:8px 12px"><span>${med[i]||i+1+'.'}</span><b>${esc(x.n)}</b><span>${f3(x.t)}</span></div>`).join(''):'<div class="mut" style="margin-top:4px">Noch nicht gespielt</div>'}</div>`).join('')}
+ <h3>Alle Spiele</h3><div class="pl"><input id="nf" maxlength="14" placeholder="🔍 Name suchen (z. B. Anna)" autocomplete="off" autocapitalize="off"></div><div id="gl"></div>
  <div class="tb"><button class="btn ghost sm" id="bt">⬅ Zurück</button><button class="btn ghost sm" id="rt">🔄 Aktualisieren</button></div></div>`;
+ const gl=q=>{q=q.trim().toLowerCase();const el=document.getElementById('gl');if(!el)return;
+  const rows=all.map(g=>{const L=g.b.map((x,i)=>({...x,i}));const sel=q?L.filter(x=>x.n.toLowerCase().includes(q)).slice(0,5):L.slice(0,5);return{g,sel,has:!!g.b.length}}).filter(r=>!q||r.sel.length);
+  el.innerHTML=rows.length?rows.map(r=>`<div class="card" style="padding:12px;margin-bottom:10px"><b>${STG[r.g.k].emoji} ${STG[r.g.k].name}</b>${r.sel.length?r.sel.map(x=>`<div class="rk${x.i==0?' w':''}" style="margin-top:6px;padding:8px 12px"><span>${med[x.i]||x.i+1+'.'}</span><b>${esc(x.n)}</b><span>${f3(x.t)}</span></div>`).join(''):'<div class="mut" style="margin-top:4px">Noch nicht gespielt</div>'}</div>`).join(''):'<div class="mut">Kein Spieler mit diesem Namen gefunden.</div>'};
+ gl('');$('#nf').oninput=e=>gl(e.target.value);
  $('#rt').onclick=()=>bestenlisten(back);$('#bt').onclick=back;
 }
 /* ===== Startmenü & Arcade ===== */
@@ -1001,7 +1005,7 @@ function loginScreen(next,msg=''){
   er.textContent='Prüfe …';
   try{const r=String(await rpc('claim_name',{p_name:nm,p_pin:pn})),m=/^(new|ok):(.+)$/.exec(r);
    if(m){DB.acct={name:m[2],pin:pn};DB.fname=m[2];save();sfx('win');(next||menu)();return}
-   er.textContent=r==='wrong'?'❌ PIN falsch – oder der Name gehört schon jemand anderem.':r==='locked'?'⏳ Zu viele Fehlversuche. Bitte 5 Minuten warten.':'❌ Name: 1–14 Zeichen, PIN: 4–12 Zeichen.'}
+   er.textContent=r==='blocked'?'🚫 Dieser Name ist nicht erlaubt – bitte einen netten Namen wählen.':r==='wrong'?'❌ PIN falsch – oder der Name gehört schon jemand anderem.':r==='locked'?'⏳ Zu viele Fehlversuche. Bitte 5 Minuten warten.':'❌ Name: 1–14 Zeichen, PIN: 4–12 Zeichen.'}
   catch(e){er.textContent=e.status==404?'⚠️ Die Konto-Funktion fehlt noch in Supabase (SQL einrichten).':'⚠️ Server nicht erreichbar (Internet oder Server pausiert?).'}};
 }
 const needAcct=(f,pre)=>{if(DB.acct)return false;loginScreen(()=>f(pre));return true};
