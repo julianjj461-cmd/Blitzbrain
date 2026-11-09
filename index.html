@@ -652,12 +652,10 @@ function duelStats(back){back=back||duelHub;
  const L=Object.values(DB.h2h||{}).map(e=>{const k=Object.keys(e.n);return{a:e.n[k[0]],b:e.n[k[1]]||'?',x:e.w[k[0]]||0,y:e.w[k[1]]||0,d:e.d}}).sort((p,q)=>(q.x+q.y+q.d)-(p.x+p.y+p.d));
  const row=r=>`<div class="rk" style="flex-wrap:wrap"><b>${esc(r.a)}</b><span>${r.x} : ${r.y}</span><b>${esc(r.b)}</b>${r.d?`<small style="width:100%">${r.d}× unentschieden</small>`:''}</div>`;
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">📊 Duell-Bilanz</h2><div class="mut">Wer hat wie oft gegen wen gewonnen.</div>
- <h3 style="margin:6px 0 0">🏆 Ranked-Rangliste (Elo)</h3><div id="elo" class="mut">Lade …</div>
- <h3 style="margin:10px 0 0">🌍 Online (alle Geräte)</h3><div id="onb" class="mut">Lade …</div>
+ <h3 style="margin:6px 0 0">🌍 Online (alle Geräte)</h3><div id="onb" class="mut">Lade …</div>
  <h3 style="margin:10px 0 0">📱 Auf diesem Handy</h3>
  ${L.length?L.map(row).join(''):'<div class="c mut">Noch keine Duelle gespielt.</div>'}${bar()}</div>`;
  $('#bt').onclick=back;
- (async()=>{try{const L=await rpc('elo_top',{});const e=document.getElementById('elo');if(e)e.innerHTML=Array.isArray(L)&&L.length?L.slice(0,10).map((x,i)=>`<div class="rk"><span>${i<3?['🥇','🥈','🥉'][i]:i+1}</span><b>${esc(x.n)}</b><span>${league(x.r).e} ${x.r}</span><small>${x.w}/${x.g} Siege</small></div>`).join('')+'<div class="mut" style="font-size:12px">Start 1000 Punkte. Zählt nur bei Online-Duellen.</div>':'Noch keine gewerteten Duelle.'}catch(e){const el=document.getElementById('elo');if(el)el.textContent='Nicht erreichbar.'}})();
  (async()=>{const box=()=>document.getElementById('onb');
   try{const r=await fx(DB.sb.url+'/rest/v1/results?code=like.1*-END&select=code,name,total_ms&limit=1000',{headers:{apikey:DB.sb.key}});if(!r.ok)throw new Error(r.status);
    const by={},pairs={};(await r.json()).forEach(x=>{(by[x.code]=by[x.code]||{})[x.name]=x.total_ms-500});
@@ -679,15 +677,26 @@ async function eloShow(code,me){const box=()=>document.getElementById('elr');
 function duForfeitWin(){const D=DU;duStop();const me=D.name,code=D.code;sfx('rec');confetti(220);
  app.innerHTML=`<div class="scr"><div class="mid"><div class="big bounce" style="font-size:70px">🏆</div><div class="big" style="font-size:30px;color:var(--yel)">Sieg!</div><div class="c mut">Dein Gegner hat das Ranked-Duell abgebrochen – es zählt für dich als Sieg.</div><div class="card c" id="elr">🏅 Elo wird berechnet …</div></div><button class="btn pink" id="kb">🏠 Zum Hauptmenü</button></div>`;
  DB.sess=null;save();h2hAdd(me,(D.rows.find(x=>x.name!==me)||{}).name||'?',me);eloShow(code,me);DU=null;$('#kb').onclick=menu}
+async function rankedHub(){if(needAcct(rankedHub))return;
+ app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🏆 Ranked</h2><div class="mut">Zufälliger Gegner · 3 Spiele · wer schneller ist, gewinnt Elo.</div>
+ <div class="card c" id="rme" style="padding:14px"><span class="mut">Lade deinen Rang …</span></div>
+ <button class="btn pink glow" id="rgo" style="padding:22px">🔍 MATCH SUCHEN<br><small style="font-weight:700;opacity:.9">Du wirst jemandem mit ähnlicher Elo zugelost</small></button>
+ <h3 style="margin:6px 0 0">Bestenliste</h3><div id="rtop" class="mut">Lade …</div>
+ <details class="card" style="padding:12px"><summary style="cursor:pointer"><b>ℹ️ So funktioniert Ranked</b></summary><div class="mut" style="margin-top:8px;line-height:1.6">Start bei 1000 Elo. Gegen stärkere Gegner gibt es mehr Punkte. Ligen: 🥉 Bronze unter 950 · 🥈 Silber · 🥇 Gold ab 1100 · 💎 Diamant ab 1250. Gegen denselben Gegner zählen höchstens 3 Duelle pro 24 Stunden. Wer 95 Sekunden nach dem Gegner nicht weiterspielt, verliert.</div></details>
+ ${bar('⬅ Hauptmenü')}</div>`;
+ $('#rgo').onclick=()=>randGo(rankedHub);$('#bt').onclick=menu;
+ (async()=>{try{const L=await rpc('elo_rank',{p_name:DB.acct.name}),e=document.getElementById('rme');if(!e)return;
+   if(Array.isArray(L)&&L[0]){const x=L[0],lg=league(x.r),nx=x.r>=1250?null:x.r>=1100?1250:x.r>=950?1100:950;e.innerHTML=`<div style="font-size:48px">${lg.e}</div><div class="big" style="font-size:28px">${lg.n}</div><div style="font-size:22px"><b>${x.r}</b> Elo · Platz <b>${x.pos}</b></div><div class="mut">${x.w} Siege aus ${x.g} Duellen${nx?` · noch ${nx-x.r} bis zur nächsten Liga`:''}</div>`}
+   else e.innerHTML='<div style="font-size:40px">🥈</div><div>Noch kein gewertetes Duell</div><div class="mut">Du startest bei 1000 Elo.</div>'}catch(x){const e=document.getElementById('rme');if(e)e.textContent='Rang gerade nicht erreichbar.'}})();
+ (async()=>{try{const L=await rpc('elo_top',{}),e=document.getElementById('rtop');if(!e)return;e.innerHTML=Array.isArray(L)&&L.length?L.slice(0,10).map((x,i)=>`<div class="rk${DB.acct&&skey(x.n)===skey(DB.acct.name)?' w':''}"><span>${i<3?['🥇','🥈','🥉'][i]:i+1}</span><b>${esc(x.n)}</b><span>${league(x.r).e} ${x.r}</span><small>${x.w}/${x.g}</small></div>`).join(''):'Noch keine gewerteten Duelle – sei der Erste!'}catch(x){const e=document.getElementById('rtop');if(e)e.textContent='Nicht erreichbar.'}})();
+}
 function randGo(back){back=typeof back=='function'?back:menu;ac();if(needAcct(()=>randGo(back)))return;duelRandom(DB.acct.name,3,back)}
 function duelHub(){
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🥊 1v1-Duell</h2><div class="mut">Zwei Spieler, jede Runde ein anderes Spiel – wer schneller ist, holt den Punkt.</div>
- <div class="mid"><div class="card c" id="eld" style="padding:8px;cursor:pointer"><span class="mut">🏅 Dein Elo …</span></div>
- <button class="btn" id="h2" style="padding:18px">🌍 MIT FREUND / CODE<br><small style="font-weight:700;opacity:.8">Duell eröffnen oder per Code beitreten</small></button>
- <button class="btn" id="h1" style="padding:18px;background:linear-gradient(180deg,#b9ff6b,#8be02e);box-shadow:0 6px 0 #4c8a0e">📱 EIN HANDY<br><small style="font-weight:700;opacity:.8">Reihum am selben Gerät</small></button><button class="btn ghost sm" id="h3">📊 Bilanz &amp; Ranked-Rangliste</button></div>${bar('⬅ Hauptmenü')}</div>`;
- $('#h1').onclick=duelSetup;$('#h2').onclick=()=>duelOnline();$('#h3').onclick=()=>duelStats();$('#eld').onclick=()=>duelStats();$('#bt').onclick=menu;
- (async()=>{const e=()=>document.getElementById('eld');if(!DB.acct){if(e())e().innerHTML='<span class="mut">🏅 Melde dich an, um in der Duell-Rangliste zu starten.</span>';return}
-  try{const L=await rpc('elo_rank',{p_name:DB.acct.name});if(!e())return;e().innerHTML=Array.isArray(L)&&L[0]?`${league(L[0].r).e} <b>${league(L[0].r).n}</b> · <b>${L[0].r}</b> Elo · Platz <b>${L[0].pos}</b> · ${L[0].w}/${L[0].g} Siege`:'<span class="mut">🏅 Noch kein gewertetes Online-Duell – Start bei 1000 Elo.</span>'}catch(x){if(e())e().innerHTML=''}})();
+ <div class="mid"><button class="btn" id="h2" style="padding:18px">🌍 MIT FREUND / CODE<br><small style="font-weight:700;opacity:.8">Duell eröffnen oder per Code beitreten</small></button>
+ <button class="btn" id="h1" style="padding:18px;background:linear-gradient(180deg,#b9ff6b,#8be02e);box-shadow:0 6px 0 #4c8a0e">📱 EIN HANDY<br><small style="font-weight:700;opacity:.8">Reihum am selben Gerät</small></button><button class="btn ghost sm" id="h3">📊 Duell-Bilanz</button></div>${bar('⬅ Hauptmenü')}</div>`;
+ $('#h1').onclick=duelSetup;$('#h2').onclick=()=>duelOnline();$('#h3').onclick=()=>duelStats();$('#bt').onclick=menu;
+
 }
 function duelSetup(){
  let n=DB.vr||5;const nm=DB.vn||[DB.names[0]||'',DB.names[1]||''];
@@ -858,7 +867,7 @@ function duRender0(){const r=DU.room,ph=DU.phase,N=(r.stages.g||[]).length,S2=du
  if(ph=='lobby'){
   app.innerHTML=`<div class="scr" id="du">${head}<div class="mid"><div class="big" style="font-size:clamp(30px,10vw,44px)">Warte auf Gegner …</div><div class="c mut">Gib deinem Gegner diesen Code:</div><div class="big" style="font-size:clamp(40px,13vw,60px);color:var(--yel);letter-spacing:4px">${esc(show)}</div><div id="plist"></div><div class="hint" id="rms"></div><button class="btn" id="inv">📤 Code teilen</button><button class="btn ghost" id="inf">👥 Freund einladen</button></div>${tb}</div>`;
   $('#inf').onclick=()=>inviteFriends('DUELL-'+show,'Duell');
-  $('#inv').onclick=()=>shareTxt(`🥊 BLITZBRAIN 1v1! Code: ${show}${lnk('DUELL-'+show)}\nUnter „1v1-Duell“ → „Online“ → „Beitreten“ eingeben.`,$('#inv'))}
+  $('#inv').onclick=()=>shareTxt(`🥊 BLITZBRAIN 1v1! Code: ${show}${lnk('DUELL-'+show)}\nUnter „1v1-Duell“ → „Mit Freund / Code“ → „Beitreten“ eingeben.`,$('#inv'))}
  else if(ph.startsWith('late')){
   app.innerHTML=`<div class="scr" id="du">${head}<div class="mid"><div class="big" style="font-size:clamp(28px,9vw,40px)">Runde ${R} läuft schon</div><div class="c mut">Du hast den gemeinsamen Start verpasst.</div></div><button class="btn pink" id="go">▶ Trotzdem mitspielen</button>${tb}</div>`;
   $('#go').onclick=()=>{ac();duCount(Date.now()+3500)}}
@@ -958,9 +967,9 @@ function help(){
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">❔ So geht's</h2>
  <div class="card" style="padding:14px;line-height:1.45;text-align:left">
  <b>Ziel:</b> Wer die Aufgaben am schnellsten löst, gewinnt. Jeder Fehler gibt <b>+1,5 s</b> Strafzeit. Alle bekommen dieselben Aufgaben.<br><br>
- <b>⚔️ Party-Runde:</b> Ein Handy, reihum. Jeder wählt heimlich 1 von 4 Spielen.<br>
- <b>🥊 1v1-Duell:</b> Zu zweit, jede Runde ein anderes Spiel. Wer schneller ist, holt den Punkt. Online mit 2 Handys: einer eröffnet und gibt den Code weiter.<br>
- <b>🌍 Online-Arena:</b> <i>Raum</i> = geheime Spielwahl und gemeinsamer Countdown. <i>Schnell-Challenge</i> = gleicher Code, jeder spielt wann er will.<br>
+ <b>🏆 Ranked:</b> Zufälliger Gegner, 3 Spiele. Wer schneller ist, gewinnt Elo und steigt in der Liga auf (Bronze bis Diamant).<br>
+ <b>🥊 1v1-Duell:</b> Mit einem Freund: online per Code oder Einladung, oder reihum an einem Handy.<br>
+ <b>👥 Party:</b> <i>Ein Handy</i> = reihum, jeder wählt heimlich 1 von 4 Spielen. <i>Online-Raum</i> = geheime Spielwahl und gemeinsamer Countdown. <i>Schnell-Challenge</i> = gleicher Code, jeder spielt wann er will.<br>
  <b>📅 Tagesaufgabe:</b> Jeden Tag 3 Spiele für alle – beste Zeit zählt, mit Top 3 des Tages. Jeden Tag spielen gibt eine 🔥 Serie.<br>
  <b>👤 Profil:</b> Tippe oben rechts auf deinen Namen: Serie, Team 🏢 und deine Bestzeiten.<br>
  <b>📳 Ton-Knopf:</b> wechselt zwischen Ton + Vibration, nur Vibration und stumm.<br>
@@ -1174,7 +1183,7 @@ async function inviteFriends(payload,what){ac();if(!DB.acct)return;const old=doc
  b.querySelectorAll('[data-n]').forEach(x=>x.onclick=async()=>{x.disabled=true;x.textContent='…';
   try{const r=await rpc('send_invite',{p_name:DB.acct.name,p_pin:DB.acct.pin,p_to:x.dataset.n,p_payload:payload});x.textContent=r=='ok'?'✔ gesendet':'❌ '+r;if(r=='ok')qAdd('invite')}catch(e){x.textContent='⚠️ Fehler'}})}
 /* ===== Onboarding (nur beim allerersten Start) ===== */
-function onboard(i=0){const P=[['⚡','Schnell sein!','Mini-Spiele, die du so schnell wie möglich löst. Jeder Fehler kostet +1,5 s – die niedrigste Zeit gewinnt.'],['👥','Gemeinsam spielen','Party-Runde mit einem Handy, 1v1-Duelle oder eine Online-Arena. Mit Freunden: Einladung direkt ins Postfach oder per Code.'],['📅','Jeden Tag dabei','Die Tagesaufgabe gibt jeden Tag 3 neue Spiele. Spiel täglich für eine 🔥 Serie und schalte Farbthemen frei.']],[e,t,x]=P[i];
+function onboard(i=0){const P=[['⚡','Schnell sein!','Mini-Spiele, die du so schnell wie möglich löst. Jeder Fehler kostet +1,5 s – die niedrigste Zeit gewinnt.'],['👥','Gemeinsam spielen','Ranked gegen Zufallsgegner, 1v1-Duelle oder Party mit einem Handy oder online. Mit Freunden: Einladung direkt ins Postfach oder per Code.'],['📅','Jeden Tag dabei','Die Tagesaufgabe gibt jeden Tag 3 neue Spiele. Spiel täglich für eine 🔥 Serie und schalte Farbthemen frei.']],[e,t,x]=P[i];
  app.innerHTML=`<div class="scr"><div class="mid"><div class="big pop" style="font-size:90px">${e}</div><div class="big" style="font-size:clamp(30px,10vw,42px);color:var(--yel)">${t}</div><div class="c mut" style="font-size:17px">${x}</div><div class="dots" style="width:120px;margin-top:8px">${P.map((_,j)=>`<i class="${j==i?'on':j<i?'dn':''}"></i>`).join('')}</div></div><button class="btn pink" id="on">${i<2?'Weiter ➜':'Los geht’s 🚀'}</button><button class="btn ghost sm" id="os">Überspringen</button></div>`;
  const end=()=>{DB.seen=1;save();menu()};$('#on').onclick=()=>{ac();i<2?onboard(i+1):end()};$('#os').onclick=end}
 function menu(){NBK=null;setTimeout(installNudge,1200);applyTheme();avLoad();ibLoad();S.code=null;S.room=null;S.daily=false;
@@ -1195,7 +1204,7 @@ function menu(){NBK=null;setTimeout(installNudge,1200);applyTheme();avLoad();ibL
   b.onclick=()=>{ac();if(DB.acct)profile();else loginScreen(menu)};
   if(DB.acct){const w=document.createElement('div'),ib=document.createElement('button');w.style.cssText='display:flex;gap:6px;flex:none';ib.className='btn ghost sm';ib.id='ib';ib.style.cssText='flex:none;width:auto;padding:6px 12px;font-size:14px';ib.textContent=IB.length?'📬 '+IB.length:'👥';ib.setAttribute('aria-label','Freunde und Postfach');ib.onclick=()=>{ac();friendsScreen()};b.replaceWith(w);w.append(ib,b)}}}
  $('#hp').onclick=help;
- $('#m1').onclick=()=>{ac();partyHub()};$('#m2').onclick=()=>{ac();arcade()};$('#m4').onclick=()=>{ac();duelHub()};$('#mr').onclick=()=>randGo(menu);
+ $('#m1').onclick=()=>{ac();partyHub()};$('#m2').onclick=()=>{ac();arcade()};$('#m4').onclick=()=>{ac();duelHub()};$('#mr').onclick=()=>{ac();rankedHub()};
  $('#rec').onclick=()=>{ac();bestenlisten(menu)};
  $('#mus').onclick=()=>{ac();DB.mus=!DB.mus;save();lab()};
  $('#snd').onclick=()=>{ac();if(DB.snd){DB.snd=false;DB.vib=true}else if(DB.vib!==false){DB.vib=false}else{DB.snd=true;DB.vib=true}save();lab();sfx('ok')};
@@ -1276,7 +1285,7 @@ function partyHub(){S.code=null;S.room=null;
  $('#p1').onclick=()=>{ac();home()};$('#p2').onclick=()=>{ac();fernRoom()};$('#p3').onclick=()=>{ac();fernChallenge()};$('#bt').onclick=menu}
 function fern(pre=''){S.code=null;S.room=null;if(!pre)return partyHub();if(needAcct(fern,pre))return;
  if(/^RAUM-/i.test(pre))return fernRoom(pre.slice(5));if(pre)return fernChallenge(pre);
- app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🌍 Online-Arena</h2><div class="mut">Jeder spielt am eigenen Handy – mit denselben Aufgaben.</div>
+ app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🌍 Party online</h2><div class="mut">Jeder spielt am eigenen Handy – mit denselben Aufgaben.</div>
  <div class="mid"><button class="btn pink" id="a1" style="padding:24px">🏠 RAUM<br><small style="font-weight:700;opacity:.9">Geheime Spiele-Wahl, gemeinsamer Countdown</small></button>
  <button class="btn" id="a2" style="padding:24px">⚡ SCHNELL-CHALLENGE<br><small style="font-weight:700;opacity:.8">Gleicher Code, jeder spielt wann er will</small></button></div>${bar('⬅ Hauptmenü')}</div>`;
  $('#a1').onclick=()=>fernRoom();$('#a2').onclick=()=>fernChallenge();$('#bt').onclick=menu;
@@ -1313,7 +1322,7 @@ function fernIntro(name,code,create,seed){
  <div class="c mut">Schick den Code (oder Link) an deine Freunde. Wer ihn eingibt, spielt exakt dieselben Aufgaben.</div>
  <div class="card">${S.stages.map(k=>`${STG[k].emoji} ${STG[k].name}`).join('<br>')}</div></div>
  <button class="btn" id="sc">📤 Code teilen</button><button class="btn ghost" id="sf">👥 An Freunde senden</button><button class="btn pink" id="go2">Ich spiele jetzt ➜</button>${bar()}</div>`;
- $('#sc').onclick=()=>shareTxt(`⚡ BLITZBRAIN-Challenge! Code: ${S.code}${lnk(S.code)}\nUnter „Online-Arena“ eingeben und meine Zeit schlagen.`,$('#sc'));$('#go2').onclick=pass;$('#sf').onclick=()=>inviteFriends(S.code,'Challenge');$('#bt').onclick=()=>(NBK||fernChallenge)();
+ $('#sc').onclick=()=>shareTxt(`⚡ BLITZBRAIN-Challenge! Code: ${S.code}${lnk(S.code)}\nUnter „Party“ → „Schnell-Challenge“ eingeben und meine Zeit schlagen.`,$('#sc'));$('#go2').onclick=pass;$('#sf').onclick=()=>inviteFriends(S.code,'Challenge');$('#bt').onclick=()=>(NBK||fernChallenge)();
 }
 /* ===== Online-Scoreboard (Supabase, nur REST – kein Server von mir nötig) ===== */
 const SQL=`create table public.results (
@@ -1452,7 +1461,7 @@ function rmRender(){const r=RM.room,host=r.host===RM.name,ph=RM.phase;
   if($('#go'))$('#go').onclick=async()=>{if(ph=='late'){rmStop();rmCount(Date.now()+3500);return}
    const at=new Date(Date.now()+6000).toISOString();try{await roomRpc('set_room',{p_code:RM.code,p_stages:null,p_start:at,p_expect:null});RM.room.start_at=at;RM.phase='count';rmRender()}catch(e){const st=document.getElementById('rms');if(st)st.textContent='⚠️ Start konnte nicht gesendet werden.'}}}
  if($('#inf'))$('#inf').onclick=()=>inviteFriends('RAUM-'+RM.code,'Raum');
- if($('#inv'))$('#inv').onclick=()=>shareTxt(`⚡ BLITZBRAIN-Raum! Code: ${RM.code}${lnk('RAUM-'+RM.code)}\nUnter „Online-Arena“ → „Raum beitreten“ eingeben.`,$('#inv'));
+ if($('#inv'))$('#inv').onclick=()=>shareTxt(`⚡ BLITZBRAIN-Raum! Code: ${RM.code}${lnk('RAUM-'+RM.code)}\nUnter „Party“ → „Online-Raum“ → „Raum beitreten“ eingeben.`,$('#inv'));
  $('#bt').onclick=()=>{leaveSig(RM&&RM.code);rmStop();RM=null;DB.sess=null;save();menu()};
  rmUpdate()}
 function remoteEnd(){
@@ -1464,7 +1473,7 @@ function remoteEnd(){
  <div class="row"><button class="btn pink" id="sh" style="flex:2">📤 Ergebnis teilen</button><button class="btn ghost" id="shi" aria-label="Als Bild teilen">🖼️ Bild</button></div><button class="btn" id="again">${S.room?'🔁 Revanche (alle müssen zustimmen)':'🔁 Nochmal versuchen'}</button><div class="hint" id="rer"></div>
  <div class="row"><button class="btn ghost sm" id="cp">${dly?'🏅 Tages-Scoreboard':'📋 Code teilen'}</button><button class="btn ghost sm" id="mn">🏠 Menü</button></div></div>`;
  countUp();bindRate();$('#sh').onclick=()=>shareTxt(txt,$('#sh'));$('#shi').onclick=()=>shareImg({name:r.n,sub:dly?'📅 Tagesaufgabe':'⚡ Challenge',big:f3(r.t),lines:[r.pen?'inkl. '+f3(r.pen)+' Strafzeit':'✨ Fehlerfrei!',...S.stages.map(k=>STG[k].emoji+' '+STG[k].name+': '+f3(g[k]||0))]});
- $('#cp').onclick=dly?()=>sbView(code,daily,1):()=>shareTxt(`⚡ BLITZBRAIN-Challenge! Code: ${code}${lnk(code)}\nUnter „Online-Arena“ eingeben und meine Zeit schlagen.`,$('#cp'));
+ $('#cp').onclick=dly?()=>sbView(code,daily,1):()=>shareTxt(`⚡ BLITZBRAIN-Challenge! Code: ${code}${lnk(code)}\nUnter „Party“ → „Schnell-Challenge“ eingeben und meine Zeit schlagen.`,$('#cp'));
  $('#again').onclick=()=>{if(S.room)return roomRematch();if(dly)S.seed=(Math.random()*1e9)|0;S.cur=0;S.res=[];pass()};$('#mn').onclick=menu;
  if(on){const up=()=>sbSend(r,g,code).then(()=>sbRender(code,S.room?S.stages:null),()=>{const el=document.getElementById('sbv');if(el){el.innerHTML='⚠️ Zeit konnte nicht gesendet werden. <button class="btn ghost sm" id="rt">Nochmal senden</button>';$('#rt').onclick=()=>{el.textContent='Sende Zeit …';up()}}});up()}
 }
@@ -1476,7 +1485,7 @@ setTimeout(()=>{if(DB.notif&&DB.acct)pushOn()},5000);
 try{const h=decodeURIComponent((location.hash||'').slice(1));if(h&&/^DUELL-[A-Z0-9]{4}$/i.test(h))duelOnline(h.slice(6).toUpperCase());else if(h&&(dec(h)||/^RAUM-[A-Z0-9]{4,8}$/i.test(h)))fern(h)}catch(e){}
 try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&location.hostname.endsWith('github.io'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-09-7';let updPend=null,updT=0;
+const BBV='2026-11-09-9';let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;font-weight:800;text-align:center';
