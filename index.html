@@ -1442,7 +1442,7 @@ async function rmTick(){
   const r=RM.room,me=rows.find(x=>x.name===RM.name)||{};
   if(r&&!r.stages){RM.maxN=Math.max(RM.maxN||0,rows.length);
    if(RM.maxN>=2&&rows.length<RM.maxN){lobbyKick('Jemand hat den Raum verlassen.');return}
-   if(RM.lobby&&rows.length<(RM.exp||2)&&Date.now()-RM.t0>40000){lobbyKick('Nicht alle sind zur Revanche mitgekommen.');return}}
+   if(RM.lobby&&rows.length>=2&&Date.now()-RM.t0>30000)RM.lobby=false}
   let ph=r.start_at?'count':r.stages?'reveal':me.game?'wait':'pick';
   if(RM.lobby){if(rows.length>=(RM.exp||2))RM.lobby=false;else if(ph=='pick')ph='lobby'}
   if(ph=='count'&&Date.parse(r.start_at)-Date.now()<-1500)ph='late';
@@ -1465,8 +1465,8 @@ function rmRender(){const r=RM.room,host=r.host===RM.name,ph=RM.phase;
   head=`<div class="c mut">Raum <b style="color:var(--yel);letter-spacing:2px;font-size:20px">${RM.code}</b> </div>`,
   inv=`<button class="btn ghost sm" id="inv">📤 Raum-Code teilen</button><button class="btn ghost sm" id="inf">👥 Freund einladen</button>`;
  if(ph=='lobby'){
-  app.innerHTML=`<div class="scr" id="rm">${head}<div class="mid"><div class="big" style="font-size:clamp(30px,10vw,44px)">🔁 Revanche</div><div class="c mut">Warte, bis alle Mitspieler zugestimmt haben …<br>Danach gibt es eine neue Spielauswahl.</div><div id="plist"></div><div class="hint" id="rms"></div>
-  ${host?'<button class="btn ghost sm" id="skip">Ohne die Wartenden weiter</button>':''}${inv}</div>${tb}</div>`;
+  app.innerHTML=`<div class="scr" id="rm">${head}<div class="mid"><div class="big" style="font-size:clamp(30px,10vw,44px)">🔁 Revanche</div><div class="c mut">Warte kurz auf die Mitspieler …<br>Nach 30 Sekunden geht es mit allen weiter, die da sind.</div><div id="plist"></div><div class="hint" id="rms"></div>
+  ${host?'<button class="btn ghost sm" id="skip">Jetzt ohne die Wartenden weiter</button>':''}${inv}</div>${tb}</div>`;
   if(host)$('#skip').onclick=()=>{RM.lobby=false;RM.phase='';rmTick()}}
  else if(ph=='pick'){
   if(!RM.pool){const taken=RM.rows.filter(x=>x.game).map(x=>x.game);RM.pool=shuffle(POOL().filter(k=>!taken.includes(k)),Math.random).slice(0,4)}
@@ -1514,7 +1514,7 @@ setTimeout(()=>{if(DB.notif&&DB.acct)pushOn()},5000);
 try{const h=decodeURIComponent((location.hash||'').slice(1));if(h&&/^DUELL-[A-Z0-9]{4}$/i.test(h))duelOnline(h.slice(6).toUpperCase());else if(h&&(dec(h)||/^RAUM-[A-Z0-9]{4,8}$/i.test(h)))fern(h)}catch(e){}
 try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&location.hostname.endsWith('github.io'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-10-1';let updPend=null,updT=0;
+const BBV='2026-11-10-2';let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;font-weight:800;text-align:center';
