@@ -606,7 +606,7 @@ function finish(t,pen,gt){
  const n=S.names[S.cur],d=today(),R=DB.runs,mn=a=>Math.min(Infinity,...a.map(x=>x.t));
  const Rc=R.filter(x=>(x.c||3)===Object.keys(gt).length),flag=t<mn(Rc)?'rec':t<mn(Rc.filter(x=>x.d===d))?'day':t<mn(Rc.filter(x=>x.n===n))?'pb':'';
  const gr=Object.keys(gt).filter(k=>gt[k]<Math.min(Infinity,...R.map(x=>x.g&&x.g[k]!=null?x.g[k]:Infinity)));
- R.push({n,t:Math.round(t),d,g:gt,c:Object.keys(gt).length});if(R.length>500)R.shift();save();
+ R.push({n,t:Math.round(t),d,g:gt,c:Object.keys(gt).length,pen:Math.round(pen)});if(R.length>500)R.shift();save();
  if(!S.code)sbSend({n,t,pen},gt,'DUELL-RUNDE').catch(()=>{});
  S.res.push({n,t,pen,flag});
  const sorted=[...S.res].sort((a,b)=>a.t-b.t),rank=sorted.findIndex(x=>x.n===n&&x.t===t),more=S.cur<S.names.length-1;
@@ -644,9 +644,10 @@ function board(){
 let V=null;
 const h2hKey=(a,b)=>[a,b].map(x=>x.trim().toLowerCase()).sort().join('|');
 function h2hAdd(a,b,w){DB.h2h=DB.h2h||{};const k=h2hKey(a,b),e=DB.h2h[k]||(DB.h2h[k]={n:{},w:{},d:0});
- e.n[a.toLowerCase()]=a;e.n[b.toLowerCase()]=b;if(w){const l=w.toLowerCase();e.w[l]=(e.w[l]||0)+1}else e.d++;save()}
+ e.t=Date.now();e.n[a.toLowerCase()]=a;e.n[b.toLowerCase()]=b;if(w){const l=w.toLowerCase();e.w[l]=(e.w[l]||0)+1}else e.d++;save()}
 function h2hLine(a,b){const e=DB.h2h&&DB.h2h[h2hKey(a,b)];if(!e)return'';const x=e.w[a.toLowerCase()]||0,y=e.w[b.toLowerCase()]||0;
  return `<div class="card c">📊 Bilanz gesamt<br><b>${esc(a)} ${x} : ${y} ${esc(b)}</b>${e.d?` · ${e.d}× unentschieden`:''}</div>`}
+function h2hMini(a,b){const e=DB.h2h&&DB.h2h[h2hKey(a,b)];if(!e)return'';return `Du ${e.w[a.toLowerCase()]||0} : ${e.w[b.toLowerCase()]||0}`}
 function duelStats(back){back=back||duelHub;
  const L=Object.values(DB.h2h||{}).map(e=>{const k=Object.keys(e.n);return{a:e.n[k[0]],b:e.n[k[1]]||'?',x:e.w[k[0]]||0,y:e.w[k[1]]||0,d:e.d}}).sort((p,q)=>(q.x+q.y+q.d)-(p.x+p.y+p.d));
  const row=r=>`<div class="rk" style="flex-wrap:wrap"><b>${esc(r.a)}</b><span>${r.x} : ${r.y}</span><b>${esc(r.b)}</b>${r.d?`<small style="width:100%">${r.d}× unentschieden</small>`:''}</div>`;
@@ -945,9 +946,11 @@ async function profile(){if(!DB.acct){loginScreen(profile);return}
  <div class="card" style="padding:12px"><b>🙂 Avatar</b><div id="avg" style="display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-top:8px">${AVS.map(a=>`<button class="btn ghost sm vb${DB.av===a?' sel':''}" data-a="${a}" style="padding:6px 0;font-size:22px;width:auto;flex:none">${a}</button>`).join('')}</div><div class="hint" id="avh"></div></div>
  <div class="card" style="padding:12px"><b>🎨 Farbthema</b><div id="thg" style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">${Object.entries(THM).map(([k,t])=>`<button class="btn ghost sm vb${(THM[DB.thm]&&thmOk(DB.thm)?DB.thm:'std')==k?' sel':''}" data-t="${k}" style="flex:1;width:auto;padding:8px 6px;min-width:70px">${thmOk(k)?t.e+' '+t.n:'🔒 '+t.u+' Tage'}</button>`).join('')}</div><div class="hint" id="thh">Themen schaltest du mit deiner Tagesserie frei (Rekord: ${best} Tage).</div></div>
  <div class="card" style="padding:12px"><b>🏢 Team</b><div class="pl" style="margin-top:6px"><input id="tm" maxlength="12" list="tml" placeholder="z. B. Drachen (leer = kein Team)" value="${esc(DB.team||'')}" autocomplete="off"><datalist id="tml"></datalist></div><button class="btn sm" id="tms" style="margin-top:8px">💾 Team speichern</button><div class="hint" id="tmh"></div></div>
+ <div id="bwrap">${badgesCard()}</div>
  <div class="card" style="padding:12px"><b>🏆 Meine Bestzeiten</b><div id="pb" class="mut" style="margin-top:6px">Lade …</div></div>
  <button class="btn ghost" id="pd">📊 Duell-Bilanz</button><button class="btn ghost" id="po">🚪 Abmelden</button>${bar('⬅ Zurück')}</div>`;
  $('#bt').onclick=menu;$('#pd').onclick=()=>duelStats(profile);$('#po').onclick=()=>{DB.acct=null;DB.sess=null;save();menu()};
+ bindBdg();
  document.querySelectorAll('#thg button').forEach(b=>b.onclick=()=>{const k=b.dataset.t;if(!thmOk(k)){$('#thh').textContent='🔒 Noch gesperrt – spiel die Tagesaufgabe '+THM[k].u+' Tage in Folge.';return}
   DB.thm=k;save();applyTheme();document.querySelectorAll('#thg button').forEach(x=>x.classList.toggle('sel',x.dataset.t==k))});
  document.querySelectorAll('#avg button').forEach(b=>b.onclick=async()=>{const a=b.dataset.a,nw=DB.av===a?'':a,h=document.getElementById('avh');h.textContent='Speichere …';
@@ -965,6 +968,7 @@ async function profile(){if(!DB.acct){loginScreen(profile);return}
  if(rows.status==='fulfilled'){const L=document.getElementById('tml');if(L)L.innerHTML=[...new Set(rows.value.map(x=>x.team).filter(Boolean))].map(t=>`<option value="${esc(t)}">`).join('')}
  const el=document.getElementById('pb');
  if(pb.status!=='fulfilled'){el.textContent='⚠️ Bestzeiten nicht erreichbar.';return}
+ {const bw=document.getElementById('bwrap'),PB=pb.value.filter(x=>STG[x.g]);if(bw){bw.innerHTML=badgesCard({firsts:PB.filter(x=>x.rk==1).length,online:PB.length});bindBdg()}}
  const med=['🥇','🥈','🥉'],B=pb.value.filter(x=>STG[x.g]&&!OFF.includes(x.g)).sort((a,b)=>a.rk-b.rk||a.ms-b.ms),firsts=B.filter(x=>x.rk==1).length;
  el.innerHTML=B.length?`<div style="margin-bottom:6px">👑 ${firsts} Rekord${firsts==1?'':'e'} · ${B.length} Spiel${B.length==1?'':'e'} gespielt</div>`+B.map(x=>`<div class="rk${x.rk==1?' w':''}" style="margin-top:6px;padding:8px 12px"><span>${med[x.rk-1]||x.rk+'.'}</span><b style="flex:1;margin-left:8px">${STG[x.g].emoji} ${STG[x.g].name}</b><span>${f3(x.ms)}</span></div>`).join(''):'Noch keine Online-Zeiten – spiel eine Challenge oder die Tagesaufgabe!'}
 /* ===== Farbthemen (nur Hintergrund/Flächen; Grün/Rot der Spiele bleiben unverändert) ===== */
@@ -972,14 +976,20 @@ const THM={std:{n:'Standard',e:'🟣',u:0,v:['#5a2fe0','#7a4dff','#3a2380','#2a1
  ozean:{n:'Ozean',e:'🌊',u:3,v:['#1f6fe0','#4d9bff','#164f8a','#0f3868','#08203d','#0d4a8f','#06182e']},
  glut:{n:'Glut',e:'🔥',u:7,v:['#c25a14','#ff9b4d','#8a3a16','#682a0f','#3d1a08','#8f3a12','#2e1006']},
  nacht:{n:'Nacht',e:'🌑',u:30,v:['#55556a','#7a7a95','#3a3a4a','#22222d','#14141b','#2a2a35','#0b0b10']}};
+const BDG=[['🎮','Neuling','Das erste Spiel gespielt',c=>c.runs>=1],['🔟','Stammspieler','25 Runden gespielt',c=>c.runs>=25],['💯','Dauerbrenner','100 Runden gespielt',c=>c.runs>=100],['✨','Makellos','Eine Runde ohne Fehler',c=>c.clean],
+ ['🔥','3 Tage Serie','Tagesaufgabe 3 Tage in Folge',c=>c.streak>=3],['🌟','7 Tage Serie','Tagesaufgabe 7 Tage in Folge',c=>c.streak>=7],['👑','30 Tage Serie','Tagesaufgabe 30 Tage in Folge',c=>c.streak>=30],
+ ['🥊','Duellant','Ein Duell gewonnen',c=>c.dw>=1],['🏅','Duell-Held','10 Duelle gewonnen',c=>c.dw>=10],['👥','Beliebt','3 Freunde hinzugefügt',c=>c.fr>=3],['🏆','Rekordhalter','Platz 1 in einem Spiel',c=>c.firsts>=1],['🌍','Weltenbummler','20 Spiele online gespielt',c=>c.online>=20]];
+function bindBdg(){document.querySelectorAll('#bdg button').forEach(b=>b.onclick=()=>{const h=document.getElementById('bdh');if(h)h.textContent=b.dataset.h})}
+function badgesCard(extra){const me=skey(DB.acct.name),ru=DB.runs||[],c={runs:ru.length,clean:ru.some(x=>x.pen===0),streak:bestStreak(),dw:Object.values(DB.h2h||{}).reduce((a,e)=>a+(e.w[me]||0),0),fr:DB.frN||0,firsts:0,online:0,...(extra||{})},ok=BDG.filter(b=>b[3](c)).length;
+ return`<div class="card" style="padding:12px"><b>🎖️ Abzeichen (${ok}/${BDG.length})</b><div id="bdg" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px">${BDG.map(b=>`<button class="btn ghost sm" data-h="${b[1]} – ${b[2]}" style="padding:8px 2px;font-size:26px;width:auto;flex:none;${b[3](c)?'':'opacity:.3;filter:grayscale(1)'}">${b[0]}</button>`).join('')}</div><div class="hint" id="bdh">Tippe ein Abzeichen an.</div></div>`}
 const bestStreak=()=>{if(!DB.acct)return 0;const e=(DB.streak||{})[skey(DB.acct.name)]||{};return Math.max(e.best||0,e.n||0)};
 const thmOk=k=>THM[k].u<=bestStreak();
 function applyTheme(){const k=THM[DB.thm]&&thmOk(DB.thm)?DB.thm:'std',t=THM[k],st=document.documentElement.style;
  ['--b1','--b2','--c1','--c2','--tb','--g1','--g2'].forEach((v,i)=>st.setProperty(v,t.v[i]));
  const m=document.querySelector('meta[name=theme-color]');if(m)m.content=t.v[6]}
 /* ===== Freunde & Postfach ===== */
-let NBK=null,FR=[],IB=[],FF=false,FRD='';const IBSEEN=new Set();
-async function frLoad(){if(!DB.acct){FR=[];return}try{const r=await rpc('friends_list',{p_name:DB.acct.name,p_pin:DB.acct.pin});FR=Array.isArray(r)?r:[]}catch(e){}}
+let NBK=null,FR=[],IB=[],FF=false,FRD='',FSEL=null;const isOn=f=>f.s!=null&&f.s<120;const IBSEEN=new Set();
+async function frLoad(){if(!DB.acct){FR=[];return}try{const r=await rpc('friends_list',{p_name:DB.acct.name,p_pin:DB.acct.pin});FR=Array.isArray(r)?r:[];DB.frN=FR.length}catch(e){}}
 async function ibLoad(){if(!DB.acct){IB=[];ibBadge();return}try{const r=await rpc('inbox_list',{p_name:DB.acct.name,p_pin:DB.acct.pin});IB=Array.isArray(r)?r:[];ibBadge();ibBanner()}catch(e){}}
 function ibBadge(){const b=document.getElementById('ib');if(b)b.textContent=IB.length?'📬 '+IB.length:'👥'}
 function ibBanner(){if(!document.getElementById('ib')&&!document.getElementById('fr'))return;
@@ -1003,14 +1013,20 @@ async function friendsScreen(back=menu){if(!DB.acct){loginScreen(()=>friendsScre
 function frDraw(back){const el=document.getElementById('fr');if(!el)return;const me=DB.acct,av=a=>`<div style="font-size:28px;width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;flex:none">${a||'🙂'}</div>`;
  el.className='';el.style.cssText='display:flex;flex-direction:column;gap:12px';
  el.innerHTML=`<div class="card${IB.length?' glow':''}" style="padding:12px;${IB.length?'border:2px solid var(--yel)':''}"><b>${IB.length?'📬 Neu für dich ('+IB.length+')':'📭 Postfach leer'}</b>${IB.map(i=>`<div style="margin-top:10px;display:flex;gap:8px;align-items:center">${av((FR.find(f=>skey(f.n)==skey(i.f))||{}).a)}<div style="flex:1;min-width:0;text-align:left"><b>${esc(i.f)}</b><br><span class="mut">${i.k=='friend'?'🙋 möchte dein Freund sein':pyTxt(i.p||'')}</span></div><button class="btn sm" data-i="${i.id}" data-a="1" style="flex:none;width:auto;padding:10px 14px">${i.k=='friend'?'✔ Annehmen':'▶ Los!'}</button><button class="btn ghost sm" data-i="${i.id}" data-a="0" style="flex:none;width:auto;padding:10px 12px">✖</button></div>`).join('')}<div class="hint" id="fm"></div></div>
- <div style="display:flex;justify-content:space-between;align-items:baseline"><h3 style="margin:4px 0 0">👥 Meine Freunde (${FR.length})</h3></div>
+ <div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:4px 0 0">👥 Meine Freunde (${FR.length})</h3>${FR.length>=2?`<button class="btn ghost sm" id="fgr" style="flex:none;width:auto;padding:6px 12px">${FSEL?'✖ Abbrechen':'🏠 Gruppen-Raum'}</button>`:''}</div>
+ ${(()=>{const rc=Object.values(DB.h2h||{}).filter(e=>e.t).map(e=>{const k=Object.keys(e.n),o=k.find(x=>x!==skey(me.name));return{n:e.n[o],t:e.t}}).filter(x=>x.n&&FR.some(f=>skey(f.n)==skey(x.n))).sort((a,b)=>b.t-a.t).slice(0,3);return rc.length&&!FSEL?`<div class="c mut" style="text-align:left">🕘 Zuletzt gespielt:</div><div class="row">${rc.map(x=>`<button class="btn ghost sm" data-q="${esc(FR.find(f=>skey(f.n)==skey(x.n)).n)}" style="padding:8px 4px">🥊 ${esc(x.n)}</button>`).join('')}</div>`:''})()}
 
- ${FR.length?FR.map(f=>`<div class="card" style="padding:10px;margin:0${FRD==f.n?';border:2px solid var(--yel)':''}"><div style="display:flex;align-items:center;gap:10px">${av(f.a)}<b style="flex:1;min-width:0;text-align:left;overflow:hidden;text-overflow:ellipsis">${esc(f.n)}</b><button class="btn sm${FRD==f.n?'':' pink'}" data-d="${esc(f.n)}" style="flex:none;width:auto;padding:8px 12px">${FRD==f.n?'▲':'🥊 Duell'}</button><button class="btn ghost sm" data-r="${esc(f.n)}" style="flex:none;width:auto;padding:8px 10px" aria-label="entfernen">✖</button></div>${FRD==f.n?`<div class="c mut" style="margin:10px 0 6px">Runden pro Duell:</div><div class="row" id="frr">${[1,3,5,7,10].map(r=>`<button class="btn ghost sm" data-n="${r}" style="padding:8px 0">${(DB.vr||5)==r?'✔ ':''}${r}</button>`).join('')}</div><button class="btn pink" id="frgo" style="margin-top:10px">⚔️ ${esc(f.n)} herausfordern</button>`:''}</div>`).join(''):'<div class="card mut" style="padding:14px">Noch keine Freunde. Schick unten eine Anfrage – danach lädst du sie mit einem Tipp zum Duell ein.</div>'}
+ ${FR.length?[...FR].sort((a,b)=>isOn(b)-isOn(a)).map(f=>`<div class="card" ${FSEL?`data-s="${esc(f.n)}" `:''}style="padding:10px;margin:0${FRD==f.n&&!FSEL?';border:2px solid var(--yel)':''}${FSEL&&FSEL.has(f.n)?';border:2px solid var(--grn)':''}"><div style="display:flex;align-items:center;gap:10px">${av(f.a)}<div style="flex:1;min-width:0;text-align:left"><b style="display:block;overflow:hidden;text-overflow:ellipsis">${esc(f.n)}</b><span class="mut" style="font-size:13px">${isOn(f)?'<span style="color:var(--grn)">● online</span>':'○ offline'}${h2hMini(me.name,f.n)?' · '+h2hMini(me.name,f.n):''}</span></div>${FSEL?`<b style="font-size:26px">${FSEL.has(f.n)?'✅':'⬜'}</b>`:`<button class="btn sm${FRD==f.n?'':' pink'}" data-d="${esc(f.n)}" style="flex:none;width:auto;padding:8px 12px">${FRD==f.n?'▲':'🥊 Duell'}</button><button class="btn ghost sm" data-r="${esc(f.n)}" style="flex:none;width:auto;padding:8px 10px" aria-label="entfernen">✖</button>`}</div>${FRD==f.n?`<div class="c mut" style="margin:10px 0 6px">Runden pro Duell:</div><div class="row" id="frr">${[1,3,5,7,10].map(r=>`<button class="btn ghost sm" data-n="${r}" style="padding:8px 0">${(DB.vr||5)==r?'✔ ':''}${r}</button>`).join('')}</div><button class="btn pink" id="frgo" style="margin-top:10px">⚔️ ${esc(f.n)} herausfordern</button>`:''}</div>`).join('')+(FSEL?`<button class="btn pink" id="fgo" ${FSEL.size?'':'disabled'}>🏠 Raum eröffnen${FSEL.size?' & '+FSEL.size+' einladen':' – erst Freunde antippen'}</button>`:''):'<div class="card mut" style="padding:14px">Noch keine Freunde. Schick unten eine Anfrage – danach lädst du sie mit einem Tipp zum Duell ein.</div>'}
  <div class="card" style="padding:12px"><b>➕ Freund hinzufügen</b><div style="display:flex;gap:8px;margin-top:8px"><div class="pl" style="flex:1;margin:0"><input id="fn" maxlength="14" placeholder="Name des Freundes" autocomplete="off" autocapitalize="off"></div><button class="btn sm" id="fa" style="flex:none;width:auto;padding:0 16px">📨</button></div><div class="hint" id="fh"></div></div><div style="height:14px;flex:none"></div>`;
  el.querySelectorAll('[data-i]').forEach(b=>b.onclick=async()=>{const i=IB.find(x=>String(x.id)==b.dataset.i);if(!i)return;const acc=b.dataset.a=='1';el.querySelectorAll('button').forEach(x=>x.disabled=true);
   try{await rpc('inbox_answer',{p_name:me.name,p_pin:me.pin,p_id:i.id,p_accept:acc})}catch(e){}
   IB=IB.filter(x=>x.id!=i.id);ibBadge();if(i.k=='friend'&&acc)await frLoad();frDraw(back);if(i.k=='invite'&&acc)joinPayload(i.p)});
  el.querySelectorAll('#frr [data-n]').forEach(b=>b.onclick=()=>{DB.vr=+b.dataset.n;save();sfx('ok');frDraw(back)});
+ const fg=document.getElementById('fgr');if(fg)fg.onclick=()=>{ac();FSEL=FSEL?null:new Set();FRD='';frDraw(back)};
+ el.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{ac();FRD=b.dataset.q;frDraw(back)});
+ el.querySelectorAll('[data-s]').forEach(c=>c.onclick=()=>{const n=c.dataset.s;if(FSEL.has(n))FSEL.delete(n);else if(FSEL.size<4)FSEL.add(n);frDraw(back)});
+ const fo=document.getElementById('fgo');if(fo)fo.onclick=async()=>{ac();const L=[...FSEL];fo.disabled=true;fo.textContent='Eröffne Raum …';NBK=menu;
+  try{const c=await roomCreate(me.name,Math.max(2,Math.min(5,L.length+1)));await Promise.all(L.map(n=>rpc('send_invite',{p_name:me.name,p_pin:me.pin,p_to:n,p_payload:'RAUM-'+c})));FSEL=null}catch(e){fo.disabled=false;fo.textContent='⚠️ Raum konnte nicht eröffnet werden'}};
  el.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{ac();FRD=FRD==b.dataset.d?'':b.dataset.d;frDraw(back)});
  const go=document.getElementById('frgo');if(go)go.onclick=async()=>{ac();const who=FRD;el.querySelectorAll('button').forEach(x=>x.disabled=true);NBK=menu;const m=document.getElementById('fh');if(m)m.textContent='Eröffne Duell …';
   try{const c=await duCreate(me.name,DB.vr||5);await rpc('send_invite',{p_name:me.name,p_pin:me.pin,p_to:who,p_payload:'DUELL-'+c.slice(1)})}catch(e){frDraw(back);const h=document.getElementById('fh');if(h)h.textContent='⚠️ Duell konnte nicht eröffnet werden.'}};
@@ -1065,36 +1081,54 @@ function arcade(){
  const t0=performance.now();app.querySelectorAll('.ar').forEach(b=>b.onclick=e=>{const r=$('.tb').getBoundingClientRect();if(performance.now()-t0<400||(e.clientY&&e.clientY>=r.top-6))return;sfx('ok');arcIntro(b.dataset.k)});
  $('#bt').onclick=menu;
 }
-function arcIntro(k){
+const LVS=[{n:'😌 Leicht',pen:750,runs:1,d:'Fehler +0,75 s'},{n:'😐 Normal',pen:1500,runs:1,d:'Fehler +1,5 s'},{n:'🔥 Hart',pen:2500,runs:3,d:'Fehler +2,5 s · 3 Durchgänge'}];
+const lvOf=()=>LVS[DB.lv==null?1:DB.lv],arcKey=(k,lv)=>k+(lv==null||lv==1?'':'#'+lv),fmtPen=ms=>'+'+String(+(ms/1000).toFixed(2)).replace('.',',')+' s';
+function arcIntro(k){const lv=DB.lv==null?1:DB.lv,L=LVS[lv],bk=DB.arc&&DB.arc[arcKey(k,lv)];
  app.innerHTML=`<div class="scr"><div class="mid"><div class="big" style="font-size:90px">${STG[k].emoji}</div><div class="big" style="font-size:clamp(34px,11vw,50px);color:var(--cyan)">${STG[k].name}</div>
- <div class="card c">${STG[k].hint}<div class="mut" style="margin-top:6px">Fehler: +1,5 s${DB.arc&&DB.arc[k]?' · Bestzeit: '+f3(DB.arc[k]):''}</div></div></div>
+ <div class="card c">${STG[k].hint}<div class="mut" style="margin-top:6px">${L.d}${bk?' · Bestzeit: '+f3(bk):''}</div></div>
+ <div class="row" id="lvr">${LVS.map((x,i)=>`<button class="btn ghost sm" data-l="${i}" style="padding:10px 2px;font-size:14px${i==lv?';outline:3px solid #fff':''}">${x.n}</button>`).join('')}</div></div>
  <button class="btn pink" id="rdy">BEREIT! 🔥</button>${bar('⬅ Andere Spiele')}</div>`;
- $('#bt').onclick=arcade;
+ $('#bt').onclick=arcade;$('#lvr').onclick=e=>{const l=e.target.dataset.l;if(l!=null){DB.lv=+l;save();sfx('ok');arcIntro(k)}};
  $('#rdy').onclick=()=>{ac();const seed=(Math.random()*1e9)|0;let n=3;
   const t=()=>{if(n==0){sfx('go');arcRun(k,seed);return}app.innerHTML=`<div class="scr"><div class="mid"><div class="cd">${n}</div></div></div>`;sfx('cd');n--;setTimeout(t,800)};t()};
 }
-function arcRun(k,seed){
- app.innerHTML=`<div class="scr play"><div class="hud"><span>${STG[k].emoji} ${STG[k].name}</span><span id="tm">0,000 s</span></div><div class="hint">${STG[k].hint}</div><div id="stg"></div></div>`;
+function arcRun(k,seed,i=0,acc){acc=acc||{t:0,pen:0};const lv=DB.lv==null?1:DB.lv,L=LVS[lv];
+ app.innerHTML=`<div class="scr play"><div class="hud"><span>${STG[k].emoji} ${STG[k].name}${L.runs>1?' · '+(i+1)+'/'+L.runs:''}</span><span id="tm">0,000 s</span></div><div class="hint">${STG[k].hint}</div><div id="stg"></div></div>`;
  const el=$('#stg'),tm=$('#tm');let pen=0,live=true;const t0=performance.now();
- (function tick(){if(!live)return;tm.textContent=f3(performance.now()-t0+pen);requestAnimationFrame(tick)})();
- const err=(b,ms=1500)=>{pen+=ms;sfx('bad');if(b){b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake')}
-  const p=document.createElement('div');p.className='pen';p.textContent=ms==1500?'+1,5 s':'+'+(ms/1000).toFixed(2).replace('.',',')+' s';document.body.append(p);setTimeout(()=>p.remove(),800);
+ (function tick(){if(!live)return;tm.textContent=f3(acc.t+performance.now()-t0+pen);requestAnimationFrame(tick)})();
+ const err=(b,ms=1500)=>{if(ms==1500)ms=L.pen;pen+=ms;sfx('bad');if(b){b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake')}
+  const p=document.createElement('div');p.className='pen';p.textContent=fmtPen(ms);document.body.append(p);setTimeout(()=>p.remove(),800);
   app.firstChild.classList.remove('flash');void app.firstChild.offsetWidth;app.firstChild.classList.add('flash')};
- STG[k].run(el,mulberry(seed),()=>{live=false;arcDone(k,performance.now()-t0+pen,pen)},err);
+ STG[k].run(el,mulberry(seed+i*7919),()=>{live=false;const t=performance.now()-t0+pen;acc.t+=t;acc.pen+=pen;
+  if(i+1<L.runs){app.innerHTML=`<div class="scr"><div class="mid"><div class="big pop" style="font-size:60px">✔</div><div class="big" style="font-size:34px">Durchgang ${i+1} geschafft</div><div class="c mut">Weiter in 1 Sekunde …</div></div></div>`;sfx('ok');setTimeout(()=>arcRun(k,seed,i+1,acc),1000)}
+  else arcDone(k,acc.t,acc.pen)},err);
 }
+function arcDone(k,t,pen){const lv=DB.lv==null?1:DB.lv,key=arcKey(k,lv);
+ const prev=DB.arc[key],rec=!prev||t<prev;if(rec){DB.arc[key]=Math.round(t);save()}
+ sfx(rec?'rec':'win');if(rec)confetti(150);
+ app.innerHTML=`<div class="scr"><div class="mid"><div class="c mut">${STG[k].emoji} ${STG[k].name} · ${LVS[lv].n}</div><div class="big">${f3(t)}</div>
+ <div class="c mut">${pen?`davon ${f3(pen)} Strafzeit`:'✨ Fehlerfrei!'}</div>
+ <div class="banner${rec?' pop glow':''}">${rec?'🏅 Neue Bestzeit!':'Bestzeit: '+f3(prev)}</div>${rateBox([k])}</div>
+ <div class="row"><button class="btn pink" id="again" style="flex:2">🔁 Nochmal</button><button class="btn ghost" id="shi" aria-label="Als Bild teilen">🖼️ Bild</button></div>${bar('📋 Andere Spiele')}</div>`;
+ countUp();bindRate();$('#again').onclick=()=>arcIntro(k);$('#bt').onclick=arcade;
+ $('#shi').onclick=()=>shareImg({name:DB.acct?DB.acct.name:'',sub:STG[k].emoji+' '+STG[k].name+' · '+LVS[lv].n,big:f3(t),lines:[pen?'davon '+f3(pen)+' Strafzeit':'✨ Fehlerfrei!',rec?'🏅 Neue Bestzeit!':'Bestzeit: '+f3(prev)]});
+}
+/* ===== Ergebnis als Bild teilen ===== */
+async function shareImg(o){try{const W=1080,H=1350,cv=document.createElement('canvas');cv.width=W;cv.height=H;const x=cv.getContext('2d'),cs=getComputedStyle(document.documentElement);
+ const g=x.createRadialGradient(W/2,0,50,W/2,0,H);g.addColorStop(0,cs.getPropertyValue('--g1').trim()||'#3b1a8f');g.addColorStop(.7,cs.getPropertyValue('--g2').trim()||'#120b2e');x.fillStyle=g;x.fillRect(0,0,W,H);
+ const F='system-ui,-apple-system,Segoe UI,sans-serif';x.textAlign='center';
+ x.save();x.translate(W/2,190);x.rotate(-.05);x.font='900 120px '+F;x.fillStyle='#fff';x.fillText('BLITZ',0,0);x.fillStyle='#ff3d8b';x.fillText('BRAIN',8,128);x.fillStyle='#ffd23f';x.fillText('BRAIN',0,120);x.restore();
+ x.fillStyle='#b9a9f5';x.font='700 44px '+F;x.fillText(o.name||'',W/2,430);x.fillStyle='#fff';x.font='800 52px '+F;x.fillText(o.sub||'',W/2,510);
+ x.font='900 190px '+F;x.fillStyle='#ff3d8b';x.fillText(o.big,W/2+8,740+8);x.fillStyle='#ffd23f';x.fillText(o.big,W/2,740);
+ x.font='700 46px '+F;x.fillStyle='#fff';let y=840;(o.lines||[]).slice(0,7).forEach(l=>{x.fillText(String(l).slice(0,40),W/2,y);y+=70});
+ x.fillStyle='#27e1ff';x.font='800 54px '+F;x.fillText('Schlag meine Zeit! 😏',W/2,H-110);
+ const blob=await new Promise(r=>cv.toBlob(r,'image/png')),f=new File([blob],'blitzbrain.png',{type:'image/png'});
+ if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],text:'⚡ BLITZBRAIN – schlag meine Zeit!'});return}
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='blitzbrain.png';document.body.append(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(a.href)},2000)}catch(e){}}
 const VOTES=[['up','👍'],['hard','🐢'],['down','👎']];
 function rateBox(keys){const ks=[...new Set(keys)].filter(k=>STG[k]);if(!ks.length)return'';
  return`<details class="card" style="padding:10px;text-align:left"><summary style="cursor:pointer;list-style:none"><b>⭐ Spiele bewerten</b> <span class="mut">– hilft beim Verbessern</span></summary><div class="mut" style="margin:6px 0">👍 gut · 🐢 zu schwer · 👎 nervig</div>${ks.map(k=>`<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;padding:4px 0"><span>${STG[k].emoji} ${STG[k].name}</span><span class="vt" data-k="${k}" style="display:flex;gap:6px">${VOTES.map(([v,e])=>`<button class="btn ghost sm vb${(DB.vt||{})[k]===v?' sel':''}" data-v="${v}" style="flex:none;width:auto;padding:6px 10px;font-size:20px">${e}</button>`).join('')}</span></div>`).join('')}</details>`}
 function bindRate(){document.querySelectorAll('.vt').forEach(w=>w.querySelectorAll('.vb').forEach(b=>b.onclick=()=>{const k=w.dataset.k,v=b.dataset.v;DB.vt=DB.vt||{};DB.vt[k]=v;save();w.querySelectorAll('.vb').forEach(x=>x.classList.toggle('sel',x===b));sfx('ok');if(DB.acct)rpc('rate_game',{p_name:DB.acct.name,p_pin:DB.acct.pin,p_game:k,p_vote:v}).catch(()=>{})}))}
-function arcDone(k,t,pen){
- const prev=DB.arc[k],rec=!prev||t<prev;if(rec){DB.arc[k]=Math.round(t);save()}
- sfx(rec?'rec':'win');if(rec)confetti(150);
- app.innerHTML=`<div class="scr"><div class="mid"><div class="c mut">${STG[k].emoji} ${STG[k].name}</div><div class="big">${f3(t)}</div>
- <div class="c mut">${pen?`davon ${f3(pen)} Strafzeit`:'✨ Fehlerfrei!'}</div>
- <div class="banner${rec?' pop glow':''}">${rec?'🏅 Neue Bestzeit!':'Bestzeit: '+f3(prev)}</div>${rateBox([k])}</div>
- <button class="btn pink" id="again">🔁 Nochmal</button>${bar('📋 Andere Spiele')}</div>`;
- countUp();bindRate();$('#again').onclick=()=>arcIntro(k);$('#bt').onclick=arcade;
-}
 /* ===== Online-Challenge: gleicher Code = gleiche Aufgaben auf jedem Handy, Ergebnis per Chat teilen ===== */
 const enc=(seed,idx)=>(seed.toString(36).padStart(6,'0')+idx.map(i=>i.toString(36).padStart(2,'0')).join('')).toUpperCase().match(/.{1,4}/g).join('-');
 const dec=c=>{c=String(c).toLowerCase().replace(/[^0-9a-z]/g,'');const n=(c.length-6)/2,K=Object.keys(STG).length;if(!(Number.isInteger(n)&&n>=1&&n<=5))return null;
@@ -1214,7 +1248,7 @@ const rmStop=()=>{clearInterval(rmT);rmT=0};
 async function roomCreate(name,size){
  for(let i=0;i<6;i++){const code=[...Array(4)].map(()=>RMCH[Math.random()*RMCH.length|0]).join('');
   try{await roomRpc('create_room',{p_code:code,p_seed:(Math.random()*2e9)|0,p_size:size,p_stages:null})}catch(e){if(e.status==409)continue;throw e}
-  await joinPick(code,name);roomEnter(code,name);return}
+  await joinPick(code,name);roomEnter(code,name);return code}
  throw new Error('Code')}
 async function roomJoin(code,name,x){code=code.trim().toUpperCase().replace(/^RAUM-/,'');
  const rm=await api('GET',`rooms?code=eq.${encodeURIComponent(code)}&select=*`);if(!rm||!rm[0])throw Object.assign(new Error('nf'),{nf:true});
@@ -1290,9 +1324,9 @@ function remoteEnd(){
  sfx('win');
  app.innerHTML=`<div class="scr"><div class="mid" style="justify-content:flex-start"><div class="c mut">${dly?'📅 Tagesaufgabe · '+esc(r.n):esc(r.n)+' · Code '+code}</div><div class="big">${f3(r.t)}</div>${sk?`<div class="banner pop" style="font-size:20px">${streakTxt(sk)}</div>`:''}
  ${on?'<h3>📊 '+(dly?'Heutiges Scoreboard':'Scoreboard')+'</h3><div id="sbv" class="c mut">Sende Zeit …</div>':`<div class="banner" style="font-size:20px">Teile deine Zeit mit den Freunden!</div><div class="card" style="white-space:pre-line">${esc(txt)}</div><div class="c mut" style="font-size:14px"></div>`}${rateBox(S.stages)}</div>
- <button class="btn pink" id="sh">📤 Ergebnis teilen</button><button class="btn" id="again">${S.room?'🔁 Revanche (alle müssen zustimmen)':'🔁 Nochmal versuchen'}</button><div class="hint" id="rer"></div>
+ <div class="row"><button class="btn pink" id="sh" style="flex:2">📤 Ergebnis teilen</button><button class="btn ghost" id="shi" aria-label="Als Bild teilen">🖼️ Bild</button></div><button class="btn" id="again">${S.room?'🔁 Revanche (alle müssen zustimmen)':'🔁 Nochmal versuchen'}</button><div class="hint" id="rer"></div>
  <div class="row"><button class="btn ghost sm" id="cp">${dly?'🏅 Tages-Scoreboard':'📋 Code teilen'}</button><button class="btn ghost sm" id="mn">🏠 Menü</button></div></div>`;
- countUp();bindRate();$('#sh').onclick=()=>shareTxt(txt,$('#sh'));
+ countUp();bindRate();$('#sh').onclick=()=>shareTxt(txt,$('#sh'));$('#shi').onclick=()=>shareImg({name:r.n,sub:dly?'📅 Tagesaufgabe':'⚡ Challenge',big:f3(r.t),lines:[r.pen?'inkl. '+f3(r.pen)+' Strafzeit':'✨ Fehlerfrei!',...S.stages.map(k=>STG[k].emoji+' '+STG[k].name+': '+f3(g[k]||0))]});
  $('#cp').onclick=dly?()=>sbView(code,daily,1):()=>shareTxt(`⚡ BLITZBRAIN-Challenge! Code: ${code}${lnk(code)}\nUnter „Online-Arena“ eingeben und meine Zeit schlagen.`,$('#cp'));
  $('#again').onclick=()=>{if(S.room)return roomRematch();if(dly)S.seed=(Math.random()*1e9)|0;S.cur=0;S.res=[];pass()};$('#mn').onclick=menu;
  if(on){const up=()=>sbSend(r,g,code).then(()=>sbRender(code,S.room?S.stages:null),()=>{const el=document.getElementById('sbv');if(el){el.innerHTML='⚠️ Zeit konnte nicht gesendet werden. <button class="btn ghost sm" id="rt">Nochmal senden</button>';$('#rt').onclick=()=>{el.textContent='Sende Zeit …';up()}}});up()}
