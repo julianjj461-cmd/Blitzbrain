@@ -1304,15 +1304,15 @@ function fern(pre=''){S.code=null;S.room=null;if(!pre)return partyHub();if(needA
  $('#a1').onclick=()=>fernRoom();$('#a2').onclick=()=>fernChallenge();$('#bt').onclick=menu;
 }
 function fernRoom(pre=''){S.code=null;S.room=null;if(needAcct(fernRoom,pre))return;
- app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🏠 Raum</h2><div class="mut">Jeder wählt heimlich 1 von 4 Spielen, dann startet der Countdown für alle gleichzeitig.</div>
+ app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🏠 Raum</h2><div class="mut">Alle treten mit dem Code bei und wählen heimlich 1 von 4 Spielen. Wenn alle bereit sind, startet der Host den gemeinsamen Countdown (bis zu 5 Spieler).</div>
  ${nameField()}
  <h3 style="margin:4px 0 0">Neuen Raum eröffnen</h3>
- <div class="row"><select id="rsz" style="border:2px solid rgba(255,255,255,.2);border-radius:16px;background:rgba(255,255,255,.1);color:#fff;font:700 16px system-ui;padding:12px"><option value="2">2 Spieler</option><option value="3" selected>3 Spieler</option><option value="4">4 Spieler</option><option value="5">5 Spieler</option></select><button class="btn pink sm" id="rmk">✨ Raum eröffnen</button></div>
+ <button class="btn pink" id="rmk">✨ Raum eröffnen</button>
  <h3 style="margin:8px 0 0">Raum beitreten</h3>
  <div class="pl"><input id="rcd" maxlength="9" placeholder="Raum-Code, z. B. K7P2" value="${esc(pre)}" autocomplete="off" autocapitalize="characters" style="text-transform:uppercase;letter-spacing:2px"></div>
  <button class="btn" id="rjn">▶ Raum beitreten</button><div class="hint" id="er"></div>${bar()}</div>`;
- $('#rmk').onclick=async()=>{ac();const v=getName();$('#er').textContent='Eröffne Raum …';try{await roomCreate(v,+$('#rsz').value)}catch(e){$('#er').textContent='❌ Raum konnte nicht erstellt werden. Ist die Raum-Tabelle in Supabase angelegt?'}};
- $('#rjn').onclick=async()=>{ac();const v=getName(),c=$('#rcd').value;if(c.trim().length<4){$('#er').textContent='❌ Bitte den Raum-Code eingeben.';return}$('#er').textContent='Trete bei …';try{await roomJoin(c,v)}catch(e){$('#er').textContent=e.auth?'❌ Anmeldung ungültig – im Hauptmenü unter 👤 neu anmelden.':e.nf?'❌ Raum nicht gefunden.':e.full?'❌ Der Raum ist schon voll.':'❌ Beitritt nicht möglich (Internet oder Server pausiert?).'}};
+ $('#rmk').onclick=async()=>{ac();const v=getName();$('#er').textContent='Eröffne Raum …';try{await roomCreate(v)}catch(e){$('#er').textContent='❌ Raum konnte nicht erstellt werden. Ist die Raum-Tabelle in Supabase angelegt?'}};
+ $('#rjn').onclick=async()=>{ac();const v=getName(),c=$('#rcd').value;if(c.trim().length<4){$('#er').textContent='❌ Bitte den Raum-Code eingeben.';return}$('#er').textContent='Trete bei …';try{await roomJoin(c,v)}catch(e){$('#er').textContent=e.auth?'❌ Anmeldung ungültig – im Hauptmenü unter 👤 neu anmelden.':e.nf?'❌ Raum nicht gefunden.':e.full?'❌ Der Raum ist voll oder die Runde läuft schon.':'❌ Beitritt nicht möglich (Internet oder Server pausiert?).'}};
  $('#bt').onclick=()=>(NBK||fern)();
 }
 function fernChallenge(pre=''){S.code=null;S.room=null;if(needAcct(fernChallenge,pre))return;
@@ -1415,21 +1415,21 @@ async function roomRpc(fn,args){if(!DB.acct)throw Object.assign(new Error('kein 
  if(s!=='ok'&&s!=='stale')throw Object.assign(new Error(String(s)),{auth:true});return s}
 const RMCH='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let RM=null,rmT=0;
 const rmStop=()=>{clearInterval(rmT);rmT=0};
-async function roomCreate(name,size){
+async function roomCreate(name){
  for(let i=0;i<6;i++){const code=[...Array(4)].map(()=>RMCH[Math.random()*RMCH.length|0]).join('');
-  try{await roomRpc('create_room',{p_code:code,p_seed:(Math.random()*2e9)|0,p_size:size,p_stages:null})}catch(e){if(e.status==409)continue;throw e}
+  try{await roomRpc('create_room',{p_code:code,p_seed:(Math.random()*2e9)|0,p_size:5,p_stages:null})}catch(e){if(e.status==409)continue;throw e}
   await joinPick(code,name);roomEnter(code,name);return code}
  throw new Error('Code')}
 async function roomJoin(code,name,x){code=code.trim().toUpperCase().replace(/^RAUM-/,'');
  const rm=await api('GET',`rooms?code=eq.${encodeURIComponent(code)}&select=*`);if(!rm||!rm[0])throw Object.assign(new Error('nf'),{nf:true});
  const pk=await api('GET',`picks?code=eq.${encodeURIComponent(code)}&select=name,game`);
- if(!pk.some(x=>x.name===name)){if(!rm[0].stages&&pk.length>=rm[0].size)throw Object.assign(new Error('full'),{full:true});await joinPick(code,name)}
+ if(!pk.some(x=>x.name===name)){if(rm[0].stages||pk.length>=rm[0].size)throw Object.assign(new Error('full'),{full:true});await joinPick(code,name)}
  roomEnter(code,name,x)}
 function roomEnter(code,name,x){rmStop();DB.sess={t:'rm',code,name,ts:Date.now()};save();RM={t0:Date.now(),maxN:0,code,name,phase:'',room:null,rows:[],pool:null,ticking:false,...(x||{})};rmTick();rmT=setInterval(rmTick,1500)}
 async function roomRematch(){const x=S.rm,er=document.getElementById('rer');if(!x)return;if(er)er.textContent='Verbinde …';
  const nc=x.base+(x.n+1);
  try{try{await roomRpc('create_room',{p_code:nc,p_seed:(Math.random()*2e9)|0,p_size:x.size,p_stages:null})}catch(e){if(e.status!==409)throw e}
-  await roomJoin(nc,x.name,{base:x.base,n:x.n+1,lobby:true})}
+  await roomJoin(nc,x.name,{base:x.base,n:x.n+1,lobby:true,exp:x.cnt||2})}
  catch(e){const el=document.getElementById('rer');if(el)el.textContent='⚠️ Revanche nicht möglich (Internet oder Server pausiert?).'}}
 async function rmReveal(){const st=RM.rows.filter(x=>x.game).sort((a,b)=>String(a.picked_at).localeCompare(String(b.picked_at))).map(x=>x.game);
  if(!st.length)return null;await roomRpc('set_room',{p_code:RM.code,p_stages:st,p_start:null,p_expect:null});return st}
@@ -1442,26 +1442,27 @@ async function rmTick(){
   const r=RM.room,me=rows.find(x=>x.name===RM.name)||{};
   if(r&&!r.stages){RM.maxN=Math.max(RM.maxN||0,rows.length);
    if(RM.maxN>=2&&rows.length<RM.maxN){lobbyKick('Jemand hat den Raum verlassen.');return}
-   if(RM.lobby&&rows.length<r.size&&Date.now()-RM.t0>40000){lobbyKick('Nicht alle sind zur Revanche mitgekommen.');return}}
-  if(r.host===RM.name&&!r.stages&&rows.length>=r.size&&rows.every(x=>x.game)){const st=await rmReveal();if(st)r.stages=st}
+   if(RM.lobby&&rows.length<(RM.exp||2)&&Date.now()-RM.t0>40000){lobbyKick('Nicht alle sind zur Revanche mitgekommen.');return}}
   let ph=r.start_at?'count':r.stages?'reveal':me.game?'wait':'pick';
-  if(RM.lobby){if(rows.length>=r.size)RM.lobby=false;else if(ph=='pick')ph='lobby'}
+  if(RM.lobby){if(rows.length>=(RM.exp||2))RM.lobby=false;else if(ph=='pick')ph='lobby'}
   if(ph=='count'&&Date.parse(r.start_at)-Date.now()<-1500)ph='late';
   if(ph!==RM.phase){RM.phase=ph;rmRender()}else rmUpdate();
  }catch(e){if(RM){RM.err=true;RM.errN=(RM.errN||0)+1;rmUpdate()}}
  finally{if(RM)RM.ticking=false}}
 function rmUpdate(){if(!RM)return;const pl=document.getElementById('plist');
- if(pl){const lb=RM.phase=='lobby';pl.innerHTML=RM.rows.map(x=>`<div class="rk"><b>${esc(x.name)}</b><span>${lb?'✔ dabei':x.game?'✔ gewählt':'⏳ wählt …'}</span></div>`).join('')+`<div class="mut c" style="font-size:13px;margin-top:6px">${lb?RM.rows.length+'/'+RM.room.size+' dabei':RM.rows.filter(x=>x.game).length+'/'+RM.room.size+' gewählt'}</div>`}
+ if(pl){const lb=RM.phase=='lobby';pl.innerHTML=RM.rows.map(x=>`<div class="rk"><b>${esc(x.name)}</b><span>${lb?'✔ dabei':x.game?'✔ gewählt':'⏳ wählt …'}</span></div>`).join('')+`<div class="mut c" style="font-size:13px;margin-top:6px">${lb?RM.rows.length+' dabei':RM.rows.filter(x=>x.game).length+' von '+RM.rows.length+' bereit'}</div>`}
+ const rv=document.getElementById('rvl');if(rv){const rd=RM.rows.filter(x=>x.game).length,all=RM.rows.length>=2&&rd==RM.rows.length;rv.disabled=!all;rv.textContent=all?'✅ Alle bereit – Spiele aufdecken':RM.rows.length<2?'⏳ Warte auf Mitspieler …':'⏳ Warte auf '+(RM.rows.length-rd)+' Spieler …';const fc=document.getElementById('force');if(fc)fc.style.display=rd>=2&&!all?'':'none'}
  const st=document.getElementById('rms');if(st&&RM.err)connMsg(st,RM.errN||0,()=>{RM&&rmTick()})}
-function rmCount(startMs){rmStop();let last=-1,iv=0;const r=RM.room,nm=RM.name,code=RM.code,bs=RM.base||code,nn=RM.n||1;
+let RM_CNT=2;
+function rmCount(startMs){rmStop();RM_CNT=(RM&&RM.rows&&RM.rows.length)||RM_CNT;let last=-1,iv=0;const r=RM.room,nm=RM.name,code=RM.code,bs=RM.base||code,nn=RM.n||1;
  const tk=()=>{const rem=startMs-Date.now();
-  if(rem<=0){clearInterval(iv);RM=null;S.rm={base:bs,n:nn,size:r.size,name:nm};S.names=[nm];S.seed=r.seed;S.stages=r.stages;S.cur=0;S.res=[];S.code='RAUM-'+code;S.room=true;sfx('go');play();return}
+  if(rem<=0){clearInterval(iv);RM=null;S.rm={base:bs,n:nn,size:r.size,name:nm,cnt:RM_CNT};S.names=[nm];S.seed=r.seed;S.stages=r.stages;S.cur=0;S.res=[];S.code='RAUM-'+code;S.room=true;sfx('go');play();return}
   const n=Math.ceil(rem/1000);if(n!==last){last=n;app.innerHTML=`<div class="scr" id="rm"><div class="mid"><div class="c mut">Gemeinsamer Start in …</div><div class="cd">${n}</div></div></div>`;sfx('cd')}};
  tk();iv=setInterval(tk,100)}
 function rmRender(){const r=RM.room,host=r.host===RM.name,ph=RM.phase;
  if(ph=='count'){rmCount(Date.parse(r.start_at));return}
  const tb='<div class="tb"><button class="btn ghost sm" id="bt">⬅ Raum verlassen</button></div>',
-  head=`<div class="c mut">Raum <b style="color:var(--yel);letter-spacing:2px;font-size:20px">${RM.code}</b> · ${r.size} Spieler</div>`,
+  head=`<div class="c mut">Raum <b style="color:var(--yel);letter-spacing:2px;font-size:20px">${RM.code}</b> </div>`,
   inv=`<button class="btn ghost sm" id="inv">📤 Raum-Code teilen</button><button class="btn ghost sm" id="inf">👥 Freund einladen</button>`;
  if(ph=='lobby'){
   app.innerHTML=`<div class="scr" id="rm">${head}<div class="mid"><div class="big" style="font-size:clamp(30px,10vw,44px)">🔁 Revanche</div><div class="c mut">Warte, bis alle Mitspieler zugestimmt haben …<br>Danach gibt es eine neue Spielauswahl.</div><div id="plist"></div><div class="hint" id="rms"></div>
@@ -1478,7 +1479,8 @@ function rmRender(){const r=RM.room,host=r.host===RM.name,ph=RM.phase;
    catch(e){sfx('bad');if(e.status==409){RM.pool=null;RM.phase='';await rmTick();const st=document.getElementById('rms');if(st)st.textContent='Das Spiel war gerade vergeben – neue Auswahl!'}else{const st=document.getElementById('rms');if(st)st.textContent='⚠️ Wahl konnte nicht gesendet werden.'}}})}
  else if(ph=='wait'){
   app.innerHTML=`<div class="scr" id="rm">${head}<div class="mid"><div class="big" style="font-size:clamp(34px,11vw,52px)">✔ Gewählt!</div><div class="c mut">Warte auf die anderen … deine Wahl bleibt geheim.</div><div id="plist"></div><div class="hint" id="rms"></div>
-  ${host?'<button class="btn ghost sm" id="force">Jetzt aufdecken (ohne die Wartenden)</button>':''}${inv}</div>${tb}</div>`;
+  ${host?'<button class="btn pink" id="rvl" disabled>⏳ Warte auf Mitspieler …</button><button class="btn ghost sm" id="force" style="display:none">Ohne die Wartenden aufdecken</button>':'<div class="hint">Der Host startet, sobald alle bereit sind.</div>'}${inv}</div>${tb}</div>`;
+  if(host)$('#rvl').onclick=async()=>{try{const st=await rmReveal();if(st){RM.room.stages=st;RM.phase='';await rmTick()}}catch(e){}};
   if(host)$('#force').onclick=async()=>{try{const st=await rmReveal();if(st){RM.room.stages=st;RM.phase='';await rmTick()}}catch(e){}}}
  else{
   app.innerHTML=`<div class="scr" id="rm">${head}<div class="mid"><div class="big" style="font-size:clamp(30px,10vw,44px);color:var(--cyan)">Das sind eure Spiele!</div>
@@ -1512,7 +1514,7 @@ setTimeout(()=>{if(DB.notif&&DB.acct)pushOn()},5000);
 try{const h=decodeURIComponent((location.hash||'').slice(1));if(h&&/^DUELL-[A-Z0-9]{4}$/i.test(h))duelOnline(h.slice(6).toUpperCase());else if(h&&(dec(h)||/^RAUM-[A-Z0-9]{4,8}$/i.test(h)))fern(h)}catch(e){}
 try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&location.hostname.endsWith('github.io'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-09-11';let updPend=null,updT=0;
+const BBV='2026-11-09-12';let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;font-weight:800;text-align:center';
