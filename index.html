@@ -383,18 +383,21 @@ drehung:{name:'Dreh-Check',emoji:'🔄',hint:'Ist das rechte Muster nur GEDREHT 
    el.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;gap:14px;margin:0 auto 20px"><div style="width:36%">${draw(p)}</div><div style="font:900 34px system-ui">➜</div><div style="width:36%">${draw(q)}</div></div><div class="grid g2" style="gap:14px"><button class="tile txt" data-v="0" style="padding:36px 0;font-size:clamp(18px,5.6vw,26px)">🔄 Gedreht</button><button class="tile txt" data-v="1" style="padding:36px 0;font-size:clamp(18px,5.6vw,26px)">🪞 Gespiegelt</button></div>`};
   show();el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b)return;
    if(+b.dataset.v===a){sfx('tap',k);if(++k>=N)done();else show()}else err(b)}}},
-code:{name:'Zahlenschloss',emoji:'🔐',hint:'Welcher Code passt zu BEIDEN Hinweisen? ✔ = Ziffer an der richtigen Stelle · ↔ = Ziffer ist im Code, aber an anderer Stelle',
- run(el,r,done,err){const N=2;let k=0,ans=0;
-  const all=[];for(let a=1;a<=5;a++)for(let b=1;b<=5;b++)for(let c=1;c<=5;c++)if(a!=b&&b!=c&&a!=c)all.push([a,b,c]);
-  const fb=(g,s)=>{let p=0,w=0;g.forEach((d,i)=>{if(s[i]==d)p++;else if(s.includes(d))w++});return[p,w]},same=(f,g)=>f[0]==g[0]&&f[1]==g[1];
-  const show=()=>{let sec,cl,decs;for(let tr=0;tr<800;tr++){sec=all[r()*all.length|0];
-    const oth=shuffle(all.filter(s=>s.join()!=sec.join()),r),near=oth.filter(s=>s.filter(d=>sec.includes(d)).length>=2);decs=[...near,...oth].slice(0,2);
-    cl=[];let rem=decs.slice();
-    for(let t=0;t<40&&rem.length&&cl.length<2;t++){const g=all[r()*all.length|0];if(g.join()==sec.join()||cl.some(c=>c.g.join()==g.join()))continue;
-     const f=fb(g,sec),kill=rem.filter(s=>!same(fb(g,s),f));if(kill.length){cl.push({g,f});rem=rem.filter(s=>same(fb(g,s),f))}}
-    if(!rem.length&&cl.length==2)break}
+code:{name:'Zahlenschloss',emoji:'🔐',hint:'Drei Aussagen – nur EIN Code stimmt mit allen überein. Tippe ihn an!',
+ run(el,r,done,err){const N=3;let k=0,ans=0;
+  const par=c=>c[0]%2==0,mid=c=>c[1]>c[0]&&c[1]>c[2]?'g':c[1]<c[0]&&c[1]<c[2]?'k':'',dist=c=>new Set(c).size==3;
+  const fam=[
+   c=>par(c)?['Die erste Ziffer ist gerade',x=>par(x)]:['Die erste Ziffer ist ungerade',x=>!par(x)],
+   c=>mid(c)=='g'?['Die mittlere Ziffer ist die größte',x=>mid(x)=='g']:mid(c)=='k'?['Die mittlere Ziffer ist die kleinste',x=>mid(x)=='k']:null,
+   c=>c[2]>c[0]?['Die letzte Ziffer ist größer als die erste',x=>x[2]>x[0]]:c[2]<c[0]?['Die letzte Ziffer ist kleiner als die erste',x=>x[2]<x[0]]:null,
+   c=>dist(c)?['Alle drei Ziffern sind verschieden',x=>dist(x)]:['Eine Ziffer kommt doppelt vor',x=>!dist(x)],
+   c=>{const d=c[r()*3|0];return['Der Code enthält die '+d,x=>x.includes(d)]}];
+  const rnd=()=>[0,0,0].map(()=>1+(r()*9|0)),sat=(c,st)=>st.filter(t=>t[1](c)).length;
+  const show=()=>{let sec,st,decs;for(let tr=0;tr<3000;tr++){sec=rnd();const idx=shuffle([0,1,2,3,4],r).slice(0,3);st=idx.map(f=>fam[f](sec));if(st.some(x=>!x))continue;
+    decs=[];for(let t=0;t<400&&decs.length<2;t++){const d=rnd();if(d.join()==sec.join()||decs.some(z=>z.join()==d.join()))continue;if(sat(d,st)==2)decs.push(d)}
+    if(decs.length==2)break}
    const o=shuffle([sec,...decs],r).map(s=>s.join(''));ans=o.indexOf(sec.join(''));
-   el.innerHTML=`${ttl('Welcher Code passt zu BEIDEN Hinweisen? '+(k+1)+'/'+N)}<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">${cl.map(c=>`<div class="rk" style="justify-content:space-between"><b style="letter-spacing:6px;font-size:26px">${c.g.join(' ')}</b><span>${c.f[0]+c.f[1]==0?'✘ nichts':'✔'+c.f[0]+'  ↔'+c.f[1]}</span></div>`).join('')}</div><div class="grid g3" style="gap:10px">${o.map((x,i)=>`<button class="tile txt" data-v="${i}" style="font-size:30px;letter-spacing:4px">${x}</button>`).join('')}</div>`};
+   el.innerHTML=`${ttl('Welcher Code erfüllt ALLE Aussagen? '+(k+1)+'/'+N)}<div class="card" style="text-align:left;line-height:1.9;margin-bottom:16px">${st.map(t=>'• '+t[0]).join('<br>')}</div><div class="grid g3" style="gap:10px">${o.map((x,i)=>`<button class="tile txt" data-v="${i}" style="font-size:32px;letter-spacing:5px">${x}</button>`).join('')}</div>`};
   show();el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b)return;
    if(+b.dataset.v===ans){sfx('tap',k);if(++k>=N)done();else show()}else err(b)}}},
 weg:{name:'Kürzester Weg',emoji:'🗺️',hint:'Zwei Wege von A nach Z – tippe den KÜRZEREN! Zähle die Zahlen auf dem Weg zusammen.',
