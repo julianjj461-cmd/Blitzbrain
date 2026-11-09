@@ -224,3 +224,9 @@ revoke execute on function public.cleanup_old() from anon, authenticated, public
 revoke execute on function public.elo_rollover() from anon, authenticated, public;
 grant execute on function public.submit_result(text, text, text, integer, integer, jsonb), public.elo_apply(text), public.elo_result(text, text), public.elo_map(), public.elo_hall(text), public.elo_season_top(integer) to anon, authenticated;
 select public.elo_rollover();
+
+-- 14) Räume bis 10 Spieler
+alter table public.rooms drop constraint if exists rooms_size_check;
+alter table public.rooms add constraint rooms_size_check check (size between 2 and 10);
+create or replace function public.create_room(p_name text, p_pin text, p_code text, p_seed integer, p_size integer, p_stages jsonb) returns text language plpgsql security definer set search_path = public, extensions as $$ declare s text; begin s := public._auth(p_name, p_pin, false); if s not like 'ok:%' then return s; end if; if char_length(coalesce(p_code, '')) not between 4 and 8 or p_size not between 2 and 10 then return 'invalid'; end if; insert into public.rooms(code, seed, size, host, stages) values (p_code, p_seed, p_size, substr(s, 4), p_stages); return 'ok'; exception when unique_violation then return 'exists'; end $$;
+grant execute on function public.create_room(text, text, text, integer, integer, jsonb) to anon, authenticated;

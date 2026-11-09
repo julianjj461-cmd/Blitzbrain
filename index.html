@@ -1304,7 +1304,7 @@ function fern(pre=''){S.code=null;S.room=null;if(!pre)return partyHub();if(needA
  $('#a1').onclick=()=>fernRoom();$('#a2').onclick=()=>fernChallenge();$('#bt').onclick=menu;
 }
 function fernRoom(pre=''){S.code=null;S.room=null;if(needAcct(fernRoom,pre))return;
- app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🏠 Raum</h2><div class="mut">Alle treten mit dem Code bei und wählen heimlich 1 von 4 Spielen. Wenn alle bereit sind, startet der Host den gemeinsamen Countdown (bis zu 5 Spieler).</div>
+ app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🏠 Raum</h2><div class="mut">Alle treten mit dem Code bei und wählen heimlich 1 von 4 Spielen. Wenn alle bereit sind, startet der Host den gemeinsamen Countdown (bis zu 10 Spieler; werden mehr als 5 Spiele gewählt, werden 5 ausgelost).</div>
  ${nameField()}
  <h3 style="margin:4px 0 0">Neuen Raum eröffnen</h3>
  <button class="btn pink" id="rmk">✨ Raum eröffnen</button>
@@ -1417,7 +1417,7 @@ const RMCH='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let RM=null,rmT=0;
 const rmStop=()=>{clearInterval(rmT);rmT=0};
 async function roomCreate(name){
  for(let i=0;i<6;i++){const code=[...Array(4)].map(()=>RMCH[Math.random()*RMCH.length|0]).join('');
-  try{await roomRpc('create_room',{p_code:code,p_seed:(Math.random()*2e9)|0,p_size:5,p_stages:null})}catch(e){if(e.status==409)continue;throw e}
+  try{await roomRpc('create_room',{p_code:code,p_seed:(Math.random()*2e9)|0,p_size:10,p_stages:null})}catch(e){if(e.status==409)continue;throw e}
   await joinPick(code,name);roomEnter(code,name);return code}
  throw new Error('Code')}
 async function roomJoin(code,name,x){code=code.trim().toUpperCase().replace(/^RAUM-/,'');
@@ -1431,8 +1431,8 @@ async function roomRematch(){const x=S.rm,er=document.getElementById('rer');if(!
  try{try{await roomRpc('create_room',{p_code:nc,p_seed:(Math.random()*2e9)|0,p_size:x.size,p_stages:null})}catch(e){if(e.status!==409)throw e}
   await roomJoin(nc,x.name,{base:x.base,n:x.n+1,lobby:true,exp:x.cnt||2})}
  catch(e){const el=document.getElementById('rer');if(el)el.textContent='⚠️ Revanche nicht möglich (Internet oder Server pausiert?).'}}
-async function rmReveal(){const st=RM.rows.filter(x=>x.game).sort((a,b)=>String(a.picked_at).localeCompare(String(b.picked_at))).map(x=>x.game);
- if(!st.length)return null;await roomRpc('set_room',{p_code:RM.code,p_stages:st,p_start:null,p_expect:null});return st}
+async function rmReveal(){let st=RM.rows.filter(x=>x.game).sort((a,b)=>String(a.picked_at).localeCompare(String(b.picked_at))).map(x=>x.game);
+ if(!st.length)return null;if(st.length>5)st=shuffle(st,Math.random).slice(0,5);await roomRpc('set_room',{p_code:RM.code,p_stages:st,p_start:null,p_expect:null});return st}
 async function rmTick(){
  if(!RM||RM.ticking)return;
  if(RM.phase&&!document.getElementById('rm')){rmStop();RM=null;return}
@@ -1484,7 +1484,7 @@ function rmRender(){const r=RM.room,host=r.host===RM.name,ph=RM.phase;
   if(host)$('#force').onclick=async()=>{try{const st=await rmReveal();if(st){RM.room.stages=st;RM.phase='';await rmTick()}}catch(e){}}}
  else{
   app.innerHTML=`<div class="scr" id="rm">${head}<div class="mid"><div class="big" style="font-size:clamp(30px,10vw,44px);color:var(--cyan)">Das sind eure Spiele!</div>
-  <div class="card">${r.stages.map((k,i)=>`<div style="padding:6px 0"><b>${i+1}. ${STG[k].emoji} ${STG[k].name}</b><br><span class="mut">${STG[k].hint}</span></div>`).join('')}<div class="mut c" style="margin-top:6px">Fehler kosten +1,5 s. Zeit läuft über alle ${r.stages.length} Spiele.</div></div>
+  <div class="card">${r.stages.map((k,i)=>`<div style="padding:6px 0"><b>${i+1}. ${STG[k].emoji} ${STG[k].name}</b><br><span class="mut">${STG[k].hint}</span></div>`).join('')}<div class="mut c" style="margin-top:6px">Fehler kosten +1,5 s. Zeit läuft über alle ${r.stages.length} Spiele.</div>${RM.rows.filter(x=>x.game).length>r.stages.length?`<div class="mut c" style="margin-top:6px">🎲 Aus ${RM.rows.filter(x=>x.game).length} gewählten Spielen wurden ${r.stages.length} ausgelost.</div>`:''}</div>
   <div id="plist"></div><div class="hint" id="rms"></div></div>
   ${ph=='late'?'<button class="btn pink" id="go">▶ Trotzdem mitspielen</button>':host?'<button class="btn pink" id="go">🚀 Gemeinsamen Countdown starten</button>':'<div class="hint">Warte, bis der Host den Countdown startet …</div>'}${tb}</div>`;
   if($('#go'))$('#go').onclick=async()=>{if(ph=='late'){rmStop();rmCount(Date.now()+3500);return}
@@ -1514,7 +1514,7 @@ setTimeout(()=>{if(DB.notif&&DB.acct)pushOn()},5000);
 try{const h=decodeURIComponent((location.hash||'').slice(1));if(h&&/^DUELL-[A-Z0-9]{4}$/i.test(h))duelOnline(h.slice(6).toUpperCase());else if(h&&(dec(h)||/^RAUM-[A-Z0-9]{4,8}$/i.test(h)))fern(h)}catch(e){}
 try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&location.hostname.endsWith('github.io'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-09-12';let updPend=null,updT=0;
+const BBV='2026-11-10-1';let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;font-weight:800;text-align:center';
