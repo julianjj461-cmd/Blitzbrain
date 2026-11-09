@@ -383,17 +383,18 @@ drehung:{name:'Dreh-Check',emoji:'🔄',hint:'Ist das rechte Muster nur GEDREHT 
    el.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;gap:14px;margin:0 auto 20px"><div style="width:36%">${draw(p)}</div><div style="font:900 34px system-ui">➜</div><div style="width:36%">${draw(q)}</div></div><div class="grid g2" style="gap:14px"><button class="tile txt" data-v="0" style="padding:36px 0;font-size:clamp(18px,5.6vw,26px)">🔄 Gedreht</button><button class="tile txt" data-v="1" style="padding:36px 0;font-size:clamp(18px,5.6vw,26px)">🪞 Gespiegelt</button></div>`};
   show();el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b)return;
    if(+b.dataset.v===a){sfx('tap',k);if(++k>=N)done();else show()}else err(b)}}},
-code:{name:'Zahlenschloss',emoji:'🔐',hint:'Knacke den 3-stelligen Code! ✔ = richtige Stelle · ↔ = Ziffer enthalten, aber falsche Stelle',
- run(el,r,done,err){const N=1;let k=0,ans=0;
-  const all=[];for(let a=1;a<=6;a++)for(let b=1;b<=6;b++)for(let c=1;c<=6;c++)if(a!=b&&b!=c&&a!=c)all.push([a,b,c]);
+code:{name:'Zahlenschloss',emoji:'🔐',hint:'Welcher Code passt zu BEIDEN Hinweisen? ✔ = Ziffer an der richtigen Stelle · ↔ = Ziffer ist im Code, aber an anderer Stelle',
+ run(el,r,done,err){const N=2;let k=0,ans=0;
+  const all=[];for(let a=1;a<=5;a++)for(let b=1;b<=5;b++)for(let c=1;c<=5;c++)if(a!=b&&b!=c&&a!=c)all.push([a,b,c]);
   const fb=(g,s)=>{let p=0,w=0;g.forEach((d,i)=>{if(s[i]==d)p++;else if(s.includes(d))w++});return[p,w]},same=(f,g)=>f[0]==g[0]&&f[1]==g[1];
-  const show=()=>{let sec,cl,cand;for(;;){sec=all[r()*all.length|0];cl=[];cand=all;
-    for(let t=0;t<40&&cand.length>1&&cl.length<5;t++){const g=all[r()*all.length|0];if(g.join()==sec.join()||cl.some(c=>c.g.join()==g.join()))continue;
-     const f=fb(g,sec),n=cand.filter(s=>same(fb(g,s),f));if(n.length<cand.length){cl.push({g,f});cand=n}}
-    if(cand.length==1&&cl.length>=3)break}
-   const oth=shuffle(all.filter(s=>s.join()!=sec.join()),r),near=oth.filter(s=>s.filter(d=>sec.includes(d)).length>=2),dec=[...near,...oth].filter((s,i,a)=>a.findIndex(z=>z.join()==s.join())==i).slice(0,3),
-    o=shuffle([sec,...dec],r).map(s=>s.join(''));ans=o.indexOf(sec.join(''));
-   el.innerHTML=`${ttl('Welcher Code passt zu ALLEN Hinweisen?')}<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">${cl.map(c=>`<div class="rk" style="justify-content:space-between"><b style="letter-spacing:5px;font-size:24px">${c.g.join(' ')}</b><span>${c.f[0]+c.f[1]==0?'✘ nichts':'✔'+c.f[0]+'  ↔'+c.f[1]}</span></div>`).join('')}</div><div class="grid g2" style="gap:10px">${o.map((x,i)=>`<button class="tile txt" data-v="${i}" style="font-size:30px;letter-spacing:4px">${x}</button>`).join('')}</div>`};
+  const show=()=>{let sec,cl,decs;for(let tr=0;tr<800;tr++){sec=all[r()*all.length|0];
+    const oth=shuffle(all.filter(s=>s.join()!=sec.join()),r),near=oth.filter(s=>s.filter(d=>sec.includes(d)).length>=2);decs=[...near,...oth].slice(0,2);
+    cl=[];let rem=decs.slice();
+    for(let t=0;t<40&&rem.length&&cl.length<2;t++){const g=all[r()*all.length|0];if(g.join()==sec.join()||cl.some(c=>c.g.join()==g.join()))continue;
+     const f=fb(g,sec),kill=rem.filter(s=>!same(fb(g,s),f));if(kill.length){cl.push({g,f});rem=rem.filter(s=>same(fb(g,s),f))}}
+    if(!rem.length&&cl.length==2)break}
+   const o=shuffle([sec,...decs],r).map(s=>s.join(''));ans=o.indexOf(sec.join(''));
+   el.innerHTML=`${ttl('Welcher Code passt zu BEIDEN Hinweisen? '+(k+1)+'/'+N)}<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">${cl.map(c=>`<div class="rk" style="justify-content:space-between"><b style="letter-spacing:6px;font-size:26px">${c.g.join(' ')}</b><span>${c.f[0]+c.f[1]==0?'✘ nichts':'✔'+c.f[0]+'  ↔'+c.f[1]}</span></div>`).join('')}</div><div class="grid g3" style="gap:10px">${o.map((x,i)=>`<button class="tile txt" data-v="${i}" style="font-size:30px;letter-spacing:4px">${x}</button>`).join('')}</div>`};
   show();el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b)return;
    if(+b.dataset.v===ans){sfx('tap',k);if(++k>=N)done();else show()}else err(b)}}},
 weg:{name:'Kürzester Weg',emoji:'🗺️',hint:'Zwei Wege von A nach Z – tippe den KÜRZEREN! Zähle die Zahlen auf dem Weg zusammen.',
@@ -523,7 +524,7 @@ doppel:{name:'Doppelgänger',emoji:'👯',hint:'Welches Symbol war schon in der 
 });
 
 /* ===== Spiellogik ===== */
-const OFF=['rhythmus','stop0','balance','drehung','code'];/* aus der Auswahl genommen – bleiben in STG, damit alte Codes gültig bleiben */
+const OFF=['rhythmus','stop0','balance','drehung'];/* aus der Auswahl genommen – bleiben in STG, damit alte Codes gültig bleiben */
 const POOL=()=>Object.keys(STG).filter(k=>!OFF.includes(k));
 let S={names:[],seed:0,stages:[],cur:0,res:[]};
 const names=()=>DB.names;
