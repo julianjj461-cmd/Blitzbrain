@@ -842,21 +842,30 @@ async function bestenlisten(back=menu){
  try{try{[ONL,WK]=await Promise.all([sbBest(null),sbBest(7)])}catch(e){ONL=await sbAll();const cut=new Date(Date.now()-7*864e5).toISOString().slice(0,10);WK=ONL.filter(x=>x.d>=cut)}ONLERR=''}catch(e){ONL=[];WK=[];ONLERR='⚠️ Bestenlisten nicht erreichbar (Internet oder Server pausiert?).'}
  if(document.getElementById('rl'))gboard(back);
 }
+let GTAB=0;
 function gboard(back){
  const R=RR(),best=k=>{const m={};R.forEach(x=>{const t=x.g&&x.g[k];if(t!=null&&(!(x.n in m)||t<m[x.n].t))m[x.n]={n:x.n,t}});return Object.values(m).sort((a,b)=>a.t-b.t)};
  const all=POOL().map(k=>({k,b:best(k)})),cnt={},med=['🥇','🥈','🥉'];
  all.forEach(g=>{if(g.b.length)cnt[g.b[0].n]=(cnt[g.b[0].n]||0)+1});
- const champ=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,5),wk=champOf(WK);
  all.sort((a,b)=>(b.b.length>0)-(a.b.length>0));
- app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🎮 Bestenlisten pro Spiel</h2>${srcBar()}<div class="mut">Online-Bestzeiten aller Spieler pro Mini-Game (inkl. Strafzeit)</div>
- <h3>🏆 Wochen-Champion</h3><div class="mut" style="margin-bottom:6px">Meiste Bestzeiten der letzten 7 Tage</div>${wk.length?wk.slice(0,3).map(([n,c],i)=>`<div class="rk${i==0?' w':''}"><span>${med[i]}</span><b>${esc(n)}</b><span>${c} 🏅</span></div>`).join(''):'<div class="mut">Diese Woche noch keine Zeiten – wer holt sich die Krone?</div>'}
- <h3>👑 Meiste Spiel-Rekorde</h3>${champ.length?champ.map(([n,c],i)=>`<div class="rk"><span>${i+1}.</span><b>${esc(n)}</b><span>${c} 🏅</span></div>`).join(''):'<div class="mut">Noch keine Daten – spielt eine Runde!</div>'}
- <h3>Alle Spiele</h3><div class="pl"><input id="nf" maxlength="14" placeholder="🔍 Name suchen (z. B. Anna)" autocomplete="off" autocapitalize="off"></div><div id="gl"></div>
+ const champ=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,5),wk=champOf(WK);
+ const row=(i,n,t,sub)=>`<div class="rk${i==0?' w':''}" style="margin-top:6px;padding:8px 12px"><span>${med[i]||i+1+'.'}</span><b>${esc(n)}</b><span>${sub||f3(t)}</span></div>`;
+ app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🏆 Bestenlisten</h2>${srcBar()}
+ <div style="display:flex;gap:8px"><button class="btn sm" id="g0" style="flex:1">👑 Champions</button><button class="btn sm" id="g1" style="flex:1">🎮 Pro Spiel</button></div>
+ <div id="gc"></div>
  <div class="tb"><button class="btn ghost sm" id="bt">⬅ Zurück</button><button class="btn ghost sm" id="rt">🔄 Aktualisieren</button></div></div>`;
- const gl=q=>{q=q.trim().toLowerCase();const el=document.getElementById('gl');if(!el)return;
-  const rows=all.map(g=>{const L=g.b.map((x,i)=>({...x,i}));const sel=q?L.filter(x=>x.n.toLowerCase().includes(q)).slice(0,5):L.slice(0,5);return{g,sel,has:!!g.b.length}}).filter(r=>!q||r.sel.length);
-  el.innerHTML=rows.length?rows.map(r=>`<div class="card" style="padding:12px;margin-bottom:10px"><b>${STG[r.g.k].emoji} ${STG[r.g.k].name}</b>${r.sel.length?r.sel.map(x=>`<div class="rk${x.i==0?' w':''}" style="margin-top:6px;padding:8px 12px"><span>${med[x.i]||x.i+1+'.'}</span><b>${esc(x.n)}</b><span>${f3(x.t)}</span></div>`).join(''):'<div class="mut" style="margin-top:4px">Noch nicht gespielt</div>'}</div>`).join(''):'<div class="mut">Kein Spieler mit diesem Namen gefunden.</div>'};
- gl('');$('#nf').oninput=e=>gl(e.target.value);
+ const tabs=()=>[0,1].forEach(i=>{const b=$('#g'+i);b.className='btn sm'+(GTAB==i?'':' ghost');b.style.flex='1'});
+ const champs=()=>{$('#gc').innerHTML=`<h3 style="margin:8px 0 2px">🏆 Wochen-Champion</h3><div class="mut">Meiste Bestzeiten der letzten 7 Tage</div>
+  ${wk.length?wk.slice(0,3).map(([n,c],i)=>row(i,n,0,c+' 🏅')).join(''):'<div class="mut" style="margin-top:6px">Diese Woche noch keine Zeiten – wer holt sich die Krone?</div>'}
+  <h3 style="margin:16px 0 2px">👑 Gesamt-Rekordhalter</h3><div class="mut">Meiste Spiele mit Bestzeit aller Zeiten</div>
+  ${champ.length?champ.map(([n,c],i)=>row(i,n,0,c+' 🏅')).join(''):'<div class="mut" style="margin-top:6px">Noch keine Daten – spielt eine Runde!</div>'}`};
+ const games=q=>{q=(q||'').trim().toLowerCase();const el=document.getElementById('gc');if(!el)return;
+  const items=all.map(g=>{const nm=STG[g.k].name.toLowerCase().includes(q),L=g.b.map((x,i)=>({...x,i})),sel=q&&!nm?L.filter(x=>x.n.toLowerCase().includes(q)):L;return{g,sel,show:!q||nm||sel.length}}).filter(x=>x.show);
+  el.innerHTML=`<div class="pl" style="margin-top:6px"><input id="nf" maxlength="14" placeholder="🔍 Spiel oder Spieler suchen" value="${esc(q)}" autocomplete="off" autocapitalize="off"></div>
+  ${items.length?items.map(({g,sel})=>{const w=g.b[0];return`<details class="card" style="padding:12px;margin-top:10px"${q?' open':''}><summary style="cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:8px"><b>${STG[g.k].emoji} ${STG[g.k].name}</b><span class="mut">${w?'🥇 '+esc(w.n)+' · '+f3(w.t):'–'}</span></summary>${sel.length?sel.slice(0,10).map(x=>row(x.i,x.n,x.t)).join(''):'<div class="mut" style="margin-top:6px">Noch nicht gespielt</div>'}</details>`}).join(''):'<div class="mut" style="margin-top:10px">Nichts gefunden.</div>'}`;
+  const inp=document.getElementById('nf');inp.oninput=e=>{const pos=e.target.selectionStart;games(e.target.value);const n=document.getElementById('nf');n.focus();try{n.setSelectionRange(pos,pos)}catch(_){}}};
+ const show=()=>{tabs();GTAB?games(''):champs()};
+ $('#g0').onclick=()=>{GTAB=0;show()};$('#g1').onclick=()=>{GTAB=1;show()};show();
  $('#rt').onclick=()=>bestenlisten(back);$('#bt').onclick=back;
 }
 /* ===== Startmenü & Arcade ===== */
