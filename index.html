@@ -528,7 +528,7 @@ const POOL=()=>Object.keys(STG).filter(k=>!OFF.includes(k));
 let S={names:[],seed:0,stages:[],cur:0,res:[]};
 const names=()=>DB.names;
 function home(){S.code=null;S.room=null;
- app.innerHTML=`<div class="scr"><h1 class="logo">BLITZ<span>BRAIN</span></h1><p class="sub">⚔️ Lokal-Duell · 1 Handy · 0 Gnade</p>
+ app.innerHTML=`<div class="scr"><h1 class="logo">BLITZ<span>BRAIN</span></h1><p class="sub">⚔️ Party-Runde · 1 Handy · 0 Gnade</p>
  <div class="c mut">Wer spielt mit?</div>
  <div id="pl" style="display:flex;flex-direction:column;gap:8px"></div>
  <button class="btn ghost sm" id="add">＋ Spieler hinzufügen</button>
@@ -864,9 +864,10 @@ function help(){
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">❔ So geht's</h2>
  <div class="card" style="padding:14px;line-height:1.45;text-align:left">
  <b>Ziel:</b> Wer die Aufgaben am schnellsten löst, gewinnt. Jeder Fehler gibt <b>+1,5 s</b> Strafzeit. Alle bekommen dieselben Aufgaben.<br><br>
- <b>⚔️ Lokal-Duell:</b> Ein Handy, reihum. Jeder wählt heimlich 1 von 4 Spielen.<br>
+ <b>⚔️ Party-Runde:</b> Ein Handy, reihum. Jeder wählt heimlich 1 von 4 Spielen.<br>
  <b>🥊 1v1-Duell:</b> Zu zweit, jede Runde ein anderes Spiel. Wer schneller ist, holt den Punkt. Online mit 2 Handys: einer eröffnet und gibt den Code weiter.<br>
- <b>🌍 Online-Duell:</b> <i>Raum</i> = geheime Spielwahl und gemeinsamer Countdown. <i>Schnell-Challenge</i> = gleicher Code, jeder spielt wann er will.<br>
+ <b>🌍 Online-Arena:</b> <i>Raum</i> = geheime Spielwahl und gemeinsamer Countdown. <i>Schnell-Challenge</i> = gleicher Code, jeder spielt wann er will.<br>
+ <b>📅 Tagesaufgabe:</b> Jeden Tag 3 Spiele für alle – beste Zeit zählt, mit Top 3 des Tages.<br>
  <b>🕹️ Arcade:</b> Spiele einzeln üben (Zeiten kommen nicht in die Bestenliste).<br>
  <b>🏆 Bestenlisten:</b> Beste Zeiten pro Spiel, online.<br><br>
  Alle Spiele laufen ohne Farben. Der Ton lässt sich unten ein- und ausschalten.</div>${bar('⬅ Zurück')}</div>`;
@@ -884,9 +885,9 @@ function daily(){S.code=null;S.room=null;if(needAcct(daily,''))return;const D=da
   const el=document.getElementById('dtop');if(el)el.innerHTML=h})()}
 function menu(){S.code=null;S.room=null;S.daily=false;
  app.innerHTML=`<div class="scr"><h1 class="logo">BLITZ<span>BRAIN</span></h1><p class="sub">${POOL().length} Mini-Games · Duell gegen Freunde</p>
- <div class="mid"><button class="btn pink" id="m1" style="padding:20px">⚔️ LOKAL-DUELL<br><small style="font-weight:700;opacity:.9">Ein Handy, reihum – auch offline</small></button>
- <button class="btn" id="m4" style="padding:20px;background:linear-gradient(180deg,#b9ff6b,#8be02e);box-shadow:0 6px 0 #4c8a0e">🥊 1v1-DUELL<br><small style="font-weight:700;opacity:.8">Zu zweit · jede Runde ein anderes Spiel</small></button>
- <button class="btn" id="m3" style="padding:20px;background:linear-gradient(180deg,#6ff0ff,#27e1ff);box-shadow:0 6px 0 #0a7f94">🌍 ONLINE-DUELL<br><small style="font-weight:700;opacity:.8">Jeder am eigenen Handy, gleiche Aufgaben</small></button>
+ <div class="mid"><button class="btn pink" id="m1" style="padding:20px">⚔️ PARTY-RUNDE<br><small style="font-weight:700;opacity:.9">Ein Handy für alle, reihum – auch offline</small></button>
+ <button class="btn" id="m4" style="padding:20px;background:linear-gradient(180deg,#b9ff6b,#8be02e);box-shadow:0 6px 0 #4c8a0e">🥊 1v1-DUELL<br><small style="font-weight:700;opacity:.8">Zu zweit, lokal oder online · jede Runde ein neues Spiel</small></button>
+ <button class="btn" id="m3" style="padding:20px;background:linear-gradient(180deg,#6ff0ff,#27e1ff);box-shadow:0 6px 0 #0a7f94">🌍 ONLINE-ARENA<br><small style="font-weight:700;opacity:.8">Raum oder Challenge · jeder am eigenen Handy</small></button>
  <button class="btn" id="m2" style="padding:20px">🕹️ ARCADE<br><small style="font-weight:700;opacity:.8">Solo – jedes Spiel einzeln üben</small></button></div>
  <div class="tb"><button class="btn ghost sm" id="rec">🏆 Bestenlisten</button><button class="btn ghost sm" id="mus" style="flex:0 0 64px" aria-label="Musik"></button><button class="btn ghost sm" id="snd" style="flex:0 0 64px" aria-label="Sound"></button><button class="btn ghost sm" id="hp" style="flex:0 0 64px" aria-label="So geht's">❔</button></div></div>`;
  const lab=()=>{$('#mus').textContent=DB.mus?'🎵':'🔕';$('#snd').textContent=DB.snd?'🔊':'🔇'};lab();
@@ -949,7 +950,7 @@ const nameField=()=>`<div class="card c" style="padding:10px">👤 Angemeldet al
 const getName=()=>DB.acct.name;
 function fern(pre=''){S.code=null;S.room=null;if(needAcct(fern,pre))return;
  if(/^RAUM-/i.test(pre))return fernRoom(pre.slice(5));if(pre)return fernChallenge(pre);
- app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🌍 Online-Duell</h2><div class="mut">Jeder spielt am eigenen Handy – mit denselben Aufgaben.</div>
+ app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🌍 Online-Arena</h2><div class="mut">Jeder spielt am eigenen Handy – mit denselben Aufgaben.</div>
  <div class="mid"><button class="btn pink" id="a1" style="padding:24px">🏠 RAUM<br><small style="font-weight:700;opacity:.9">Geheime Spiele-Wahl, gemeinsamer Countdown</small></button>
  <button class="btn" id="a2" style="padding:24px">⚡ SCHNELL-CHALLENGE<br><small style="font-weight:700;opacity:.8">Gleicher Code, jeder spielt wann er will</small></button></div>${bar('⬅ Hauptmenü')}</div>`;
  $('#a1').onclick=()=>fernRoom();$('#a2').onclick=()=>fernChallenge();$('#bt').onclick=menu;
@@ -986,7 +987,7 @@ function fernIntro(name,code,create,seed){
  <div class="c mut">Schick den Code (oder Link) an deine Freunde. Wer ihn eingibt, spielt exakt dieselben Aufgaben.</div>
  <div class="card">${S.stages.map(k=>`${STG[k].emoji} ${STG[k].name}`).join('<br>')}</div></div>
  <button class="btn" id="sc">📤 Code teilen</button><button class="btn pink" id="go2">Ich spiele jetzt ➜</button>${bar()}</div>`;
- $('#sc').onclick=()=>shareTxt(`⚡ BLITZBRAIN-Challenge! Code: ${S.code}${lnk(S.code)}\nUnter „Online-Duell“ eingeben und meine Zeit schlagen.`,$('#sc'));$('#go2').onclick=pass;$('#bt').onclick=()=>fernChallenge();
+ $('#sc').onclick=()=>shareTxt(`⚡ BLITZBRAIN-Challenge! Code: ${S.code}${lnk(S.code)}\nUnter „Online-Arena“ eingeben und meine Zeit schlagen.`,$('#sc'));$('#go2').onclick=pass;$('#bt').onclick=()=>fernChallenge();
 }
 /* ===== Online-Scoreboard (Supabase, nur REST – kein Server von mir nötig) ===== */
 const SQL=`create table public.results (
@@ -1121,7 +1122,7 @@ function rmRender(){const r=RM.room,host=r.host===RM.name,ph=RM.phase;
   ${ph=='late'?'<button class="btn pink" id="go">▶ Trotzdem mitspielen</button>':host?'<button class="btn pink" id="go">🚀 Gemeinsamen Countdown starten</button>':'<div class="hint">Warte, bis der Host den Countdown startet …</div>'}${tb}</div>`;
   if($('#go'))$('#go').onclick=async()=>{if(ph=='late'){rmStop();rmCount(Date.now()+3500);return}
    const at=new Date(Date.now()+6000).toISOString();try{await roomRpc('set_room',{p_code:RM.code,p_stages:null,p_start:at,p_expect:null});RM.room.start_at=at;RM.phase='count';rmRender()}catch(e){const st=document.getElementById('rms');if(st)st.textContent='⚠️ Start konnte nicht gesendet werden.'}}}
- if($('#inv'))$('#inv').onclick=()=>shareTxt(`⚡ BLITZBRAIN-Raum! Code: ${RM.code}${lnk('RAUM-'+RM.code)}\nUnter „Online-Duell“ → „Raum beitreten“ eingeben.`,$('#inv'));
+ if($('#inv'))$('#inv').onclick=()=>shareTxt(`⚡ BLITZBRAIN-Raum! Code: ${RM.code}${lnk('RAUM-'+RM.code)}\nUnter „Online-Arena“ → „Raum beitreten“ eingeben.`,$('#inv'));
  $('#bt').onclick=()=>{rmStop();RM=null;DB.sess=null;save();fernRoom()};
  rmUpdate()}
 function remoteEnd(){
@@ -1133,7 +1134,7 @@ function remoteEnd(){
  <button class="btn pink" id="sh">📤 Ergebnis teilen</button><button class="btn" id="again">${S.room?'🔁 Revanche (alle müssen zustimmen)':'🔁 Nochmal versuchen'}</button><div class="hint" id="rer"></div>
  <div class="row"><button class="btn ghost sm" id="cp">${dly?'🏅 Tages-Scoreboard':'📋 Code teilen'}</button><button class="btn ghost sm" id="mn">🏠 Menü</button></div></div>`;
  $('#sh').onclick=()=>shareTxt(txt,$('#sh'));
- $('#cp').onclick=dly?()=>sbView(code,daily):()=>shareTxt(`⚡ BLITZBRAIN-Challenge! Code: ${code}${lnk(code)}\nUnter „Online-Duell“ eingeben und meine Zeit schlagen.`,$('#cp'));
+ $('#cp').onclick=dly?()=>sbView(code,daily):()=>shareTxt(`⚡ BLITZBRAIN-Challenge! Code: ${code}${lnk(code)}\nUnter „Online-Arena“ eingeben und meine Zeit schlagen.`,$('#cp'));
  $('#again').onclick=()=>{if(S.room)return roomRematch();if(dly)S.seed=(Math.random()*1e9)|0;S.cur=0;S.res=[];pass()};$('#mn').onclick=menu;
  if(on){const up=()=>sbSend(r,g,code).then(()=>sbRender(code,S.room?S.stages:null),()=>{const el=document.getElementById('sbv');if(el){el.innerHTML='⚠️ Zeit konnte nicht gesendet werden. <button class="btn ghost sm" id="rt">Nochmal senden</button>';$('#rt').onclick=()=>{el.textContent='Sende Zeit …';up()}}});up()}
 }
