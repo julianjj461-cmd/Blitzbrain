@@ -510,6 +510,8 @@ doppel:{name:'Doppelgänger',emoji:'👯',hint:'Welches Symbol war schon in der 
 });
 
 /* ===== Spiellogik ===== */
+const OFF=['rhythmus','stop0'];/* aus der Auswahl genommen – bleiben in STG, damit alte Codes gültig bleiben */
+const POOL=()=>Object.keys(STG).filter(k=>!OFF.includes(k));
 let S={names:[],seed:0,stages:[],cur:0,res:[]};
 const names=()=>DB.names;
 function home(){S.code=null;S.room=null;
@@ -540,7 +542,7 @@ function draft(){
   const who=S.names[(off+i)%n];
   app.innerHTML=`<div class="scr"><div class="mid"><div class="c mut">Spiele-Wahl ${i+1}/${K} · geheim 🤫</div><div class="c mut">Handy weitergeben an</div><div class="big" style="font-size:clamp(40px,13vw,60px);color:var(--cyan)">${esc(who)}</div><div class="c mut">Du wählst 1 von 4 Spielen.<br>Die anderen sehen nicht, was du nimmst.</div></div><button class="btn pink" id="ok">ICH BIN'S – SPIELE ZEIGEN</button>${bar('⬅ Abbrechen')}</div>`;
   $('#bt').onclick=home;
-  $('#ok').onclick=()=>{ac();const pool=shuffle(Object.keys(STG).filter(k=>!order.includes(k)),Math.random).slice(0,4);
+  $('#ok').onclick=()=>{ac();const pool=shuffle(POOL().filter(k=>!order.includes(k)),Math.random).slice(0,4);
    app.innerHTML=`<div class="scr"><div class="big" style="font-size:clamp(34px,11vw,52px);color:var(--cyan)">${esc(who)}</div><div class="c">Wähle dein Spiel!</div><div class="grid g2" style="gap:12px">${pool.map(k=>`<button class="card dp" data-k="${k}" style="border:0;color:#fff;text-align:center;padding:16px 8px;font:inherit;background:linear-gradient(180deg,#7a4dff,#5a2fe0);box-shadow:0 5px 0 rgba(0,0,0,.3)"><div style="font-size:44px">${STG[k].emoji}</div><b>${STG[k].name}</b><div class="mut" style="font-size:13px;margin-top:4px">${STG[k].hint}</div></button>`).join('')}</div>${bar('⬅ Abbrechen')}</div>`;
    $('#bt').onclick=home;
    app.querySelectorAll('.dp').forEach(b=>b.onclick=()=>{sfx('ok');order.push(b.dataset.k);view()})}};
@@ -662,7 +664,7 @@ function duelSetup(){
   DB.vn=[a,b];DB.vr=n;save();V={names:[a,b],rounds:n};duelStart()};
 }
 function duelStart(){
- V.games=shuffle(Object.keys(STG),Math.random).slice(0,V.rounds);V.rec=0;V.i=0;V.sc=[0,0];V.tot=[0,0];V.hist=[];duelRound();
+ V.games=shuffle(POOL(),Math.random).slice(0,V.rounds);V.rec=0;V.i=0;V.sc=[0,0];V.tot=[0,0];V.hist=[];duelRound();
 }
 function duelRound(){V.seed=(Math.random()*1e9)|0;V.k=V.games[V.i];V.first=V.i%2;V.t=[null,null];duelTurn(0)}
 function duelTurn(j){
@@ -726,7 +728,7 @@ function duelOnline(pre=''){duStop();DU=null;if(needAcct(duelOnline,pre))return;
 }
 async function duCreate(name,rounds,nc,base,n){
  for(let i=0;i<6;i++){const code=nc||'1'+[...Array(4)].map(()=>RMCH[Math.random()*RMCH.length|0]).join('');
-  const g=shuffle(Object.keys(STG),Math.random).slice(0,rounds);
+  const g=shuffle(POOL(),Math.random).slice(0,rounds);
   try{await roomRpc('create_room',{p_code:code,p_seed:(Math.random()*2e9)|0,p_size:2,p_stages:{g,r:0}})}catch(e){if(e.status==409){if(nc)return nc;continue}throw e}
   await joinPick(code,name);duEnter(code,name,{base,n});return code}
  throw new Error('Code')}
@@ -829,7 +831,7 @@ async function bestenlisten(back=menu){
 }
 function gboard(back){
  const R=RR(),best=k=>{const m={};R.forEach(x=>{const t=x.g&&x.g[k];if(t!=null&&(!(x.n in m)||t<m[x.n].t))m[x.n]={n:x.n,t}});return Object.values(m).sort((a,b)=>a.t-b.t)};
- const all=Object.keys(STG).map(k=>({k,b:best(k)})),cnt={},med=['🥇','🥈','🥉'];
+ const all=POOL().map(k=>({k,b:best(k)})),cnt={},med=['🥇','🥈','🥉'];
  all.forEach(g=>{if(g.b.length)cnt[g.b[0].n]=(cnt[g.b[0].n]||0)+1});
  const champ=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,5),wk=champOf(WK);
  all.sort((a,b)=>(b.b.length>0)-(a.b.length>0));
@@ -858,7 +860,7 @@ function help(){
  $('#bt').onclick=menu;
 }
 function dayInfo(){let p;try{p=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Berlin',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())}catch(e){p=new Date().toISOString().slice(0,10)}
- const seed=+p.replace(/-/g,''),idx=shuffle(Object.keys(STG).map((_,i)=>i),mulberry(seed)).slice(0,3);return{p,code:enc(seed,idx),idx}}
+ const seed=+p.replace(/-/g,''),idx=shuffle(Object.keys(STG).map((_,i)=>i).filter(i=>!OFF.includes(Object.keys(STG)[i])),mulberry(seed)).slice(0,3);return{p,code:enc(seed,idx),idx}}
 function daily(){S.code=null;S.room=null;if(needAcct(daily,''))return;const D=dayInfo(),K=Object.keys(STG),dt=D.p.split('-').reverse().join('.');
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">📅 Tagesaufgabe</h2><div class="mut">Heute, ${dt}: für alle dieselben 3 Spiele. Deine Zeit kommt ins Tages-Scoreboard – morgen gibt es neue Aufgaben.</div>
  <div class="card">${D.idx.map(i=>`<div style="padding:4px 0">${STG[K[i]].emoji} <b>${STG[K[i]].name}</b></div>`).join('')}</div>
@@ -868,7 +870,7 @@ function daily(){S.code=null;S.room=null;if(needAcct(daily,''))return;const D=da
   h=L.length?L.map((x,i)=>`<div class="rk${i==0?' w':''}"><span>${med[i]}</span><b>${esc(x.name)}</b><span>${f3(x.total_ms)}</span></div>`).join(''):'Noch niemand – sei der Erste!'}catch(e){h='⚠️ Nicht erreichbar.'}
   const el=document.getElementById('dtop');if(el)el.innerHTML=h})()}
 function menu(){S.code=null;S.room=null;
- app.innerHTML=`<div class="scr"><h1 class="logo">BLITZ<span>BRAIN</span></h1><p class="sub">${Object.keys(STG).length} Mini-Games · Duell gegen Freunde</p>
+ app.innerHTML=`<div class="scr"><h1 class="logo">BLITZ<span>BRAIN</span></h1><p class="sub">${POOL().length} Mini-Games · Duell gegen Freunde</p>
  <div class="mid"><button class="btn pink" id="m1" style="padding:20px">⚔️ LOKAL-DUELL<br><small style="font-weight:700;opacity:.9">Ein Handy, reihum – auch offline</small></button>
  <button class="btn" id="m4" style="padding:20px;background:linear-gradient(180deg,#b9ff6b,#8be02e);box-shadow:0 6px 0 #4c8a0e">🥊 1v1-DUELL<br><small style="font-weight:700;opacity:.8">Zu zweit · jede Runde ein anderes Spiel</small></button>
  <button class="btn" id="m3" style="padding:20px;background:linear-gradient(180deg,#6ff0ff,#27e1ff);box-shadow:0 6px 0 #0a7f94">🌍 ONLINE-DUELL<br><small style="font-weight:700;opacity:.8">Jeder am eigenen Handy, gleiche Aufgaben</small></button>
@@ -890,7 +892,7 @@ function menu(){S.code=null;S.room=null;
 function arcade(){
  if(!DB.arc)DB.arc={};
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🕹️ Arcade</h2><div class="mut">Tippe ein Spiel an und teste es solo. Die Bestzeit pro Spiel wird gespeichert.</div>
- <div class="grid g2" style="gap:10px;padding-bottom:12px">${Object.keys(STG).map(k=>`<button class="card ar" data-k="${k}" style="border:0;color:#fff;text-align:center;padding:12px 6px;font:inherit;background:linear-gradient(180deg,#7a4dff,#5a2fe0);box-shadow:0 4px 0 rgba(0,0,0,.3)"><div style="font-size:34px">${STG[k].emoji}</div><b>${STG[k].name}</b><div class="mut" style="font-size:12px;margin-top:2px">${DB.arc[k]?'🏅 '+f3(DB.arc[k]):'noch nicht gespielt'}</div></button>`).join('')}</div>
+ <div class="grid g2" style="gap:10px;padding-bottom:12px">${POOL().map(k=>`<button class="card ar" data-k="${k}" style="border:0;color:#fff;text-align:center;padding:12px 6px;font:inherit;background:linear-gradient(180deg,#7a4dff,#5a2fe0);box-shadow:0 4px 0 rgba(0,0,0,.3)"><div style="font-size:34px">${STG[k].emoji}</div><b>${STG[k].name}</b><div class="mut" style="font-size:12px;margin-top:2px">${DB.arc[k]?'🏅 '+f3(DB.arc[k]):'noch nicht gespielt'}</div></button>`).join('')}</div>
  <div class="tb"><button class="btn ghost sm" id="bt">⬅ Zurück</button></div></div>`;
  const t0=performance.now();app.querySelectorAll('.ar').forEach(b=>b.onclick=e=>{const r=$('.tb').getBoundingClientRect();if(performance.now()-t0<400||(e.clientY&&e.clientY>=r.top-6))return;sfx('ok');arcIntro(b.dataset.k)});
  $('#bt').onclick=menu;
@@ -959,7 +961,7 @@ function fernChallenge(pre=''){S.code=null;S.room=null;if(needAcct(fernChallenge
  <div class="pl"><input id="cd" maxlength="24" placeholder="XXXX-XXXX-XXXX" value="${esc(pre)}" autocomplete="off" autocapitalize="characters" style="text-transform:uppercase;letter-spacing:2px"></div>
  <button class="btn" id="jn">▶ Mit Code mitspielen</button><div class="hint" id="er"></div>
  <button class="btn ghost sm" id="vw">📊 Scoreboard zu diesem Code ansehen</button>${bar()}</div>`;
- $('#mk').onclick=()=>{ac();const v=getName();fernIntro(v,enc((Math.random()*2e9)|0,shuffle(Object.keys(STG).map((_,i)=>i),Math.random).slice(0,3)),true)};
+ $('#mk').onclick=()=>{ac();const v=getName();fernIntro(v,enc((Math.random()*2e9)|0,shuffle(Object.keys(STG).map((_,i)=>i).filter(i=>!OFF.includes(Object.keys(STG)[i])),Math.random).slice(0,3)),true)};
  $('#jn').onclick=()=>{ac();const v=getName(),c=$('#cd').value;if(!dec(c)){$('#er').textContent='❌ Dieser Code ist ungültig.';return}fernIntro(v,c,false)};
  $('#vw').onclick=()=>{const d=dec($('#cd').value);if(!d){$('#er').textContent='❌ Bitte oben den Code eingeben.';return}sbView(enc(d.seed,d.idx))};
  $('#bt').onclick=()=>fern();
@@ -1087,7 +1089,7 @@ function rmRender(){const r=RM.room,host=r.host===RM.name,ph=RM.phase;
   ${host?'<button class="btn ghost sm" id="skip">Ohne die Wartenden weiter</button>':''}${inv}</div>${tb}</div>`;
   if(host)$('#skip').onclick=()=>{RM.lobby=false;RM.phase='';rmTick()}}
  else if(ph=='pick'){
-  if(!RM.pool){const taken=RM.rows.filter(x=>x.game).map(x=>x.game);RM.pool=shuffle(Object.keys(STG).filter(k=>!taken.includes(k)),Math.random).slice(0,4)}
+  if(!RM.pool){const taken=RM.rows.filter(x=>x.game).map(x=>x.game);RM.pool=shuffle(POOL().filter(k=>!taken.includes(k)),Math.random).slice(0,4)}
   app.innerHTML=`<div class="scr" id="rm">${head}<div class="big" style="font-size:clamp(30px,10vw,44px);color:var(--cyan)">${esc(RM.name)}</div><div class="c">Wähle dein Spiel – die anderen sehen es nicht! 🤫</div>
   <div class="grid g2" style="gap:12px">${RM.pool.map(k=>`<button class="card dp" data-k="${k}" style="border:0;color:#fff;text-align:center;padding:16px 8px;font:inherit;background:linear-gradient(180deg,#7a4dff,#5a2fe0);box-shadow:0 5px 0 rgba(0,0,0,.3)"><div style="font-size:44px">${STG[k].emoji}</div><b>${STG[k].name}</b><div class="mut" style="font-size:13px;margin-top:4px">${STG[k].hint}</div></button>`).join('')}</div>
   <div class="hint" id="rms"></div><div id="plist"></div>${inv}${tb}</div>`;
