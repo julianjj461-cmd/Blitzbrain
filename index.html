@@ -11,7 +11,7 @@ html,body{height:100%;margin:0;touch-action:pan-x pan-y;-webkit-text-size-adjust
 input,select,textarea{font-size:16px!important}
 body{background:radial-gradient(120% 80% at 50% 0,#3b1a8f,#120b2e 70%) fixed;color:#fff;font:600 16px system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden}
 #app{height:100%}
-.scr{max-width:480px;margin:0 auto;height:100%;padding:16px 16px 0;display:flex;flex-direction:column;gap:12px;overflow-y:auto;animation:in .25s}
+.scr{max-width:480px;margin:0 auto;height:100%;overscroll-behavior-y:contain;padding:16px 16px 0;display:flex;flex-direction:column;gap:12px;overflow-y:auto;animation:in .25s}
 .play{animation:none}
 .scr:not(:has(.tb)){padding-bottom:16px}
 .tb{position:sticky;bottom:0;z-index:50;isolation:isolate;box-shadow:0 -14px 14px -4px #1a0f45;display:flex;gap:10px;margin:auto -16px 0;padding:10px 16px 16px;background:#1a0f45}.tb .btn{flex:1}
@@ -864,7 +864,8 @@ function gboard(back){
  const games=q=>{q=(q||'').trim().toLowerCase();const el=document.getElementById('gc');if(!el)return;
   const items=all.map(g=>{const nm=STG[g.k].name.toLowerCase().includes(q),L=g.b.map((x,i)=>({...x,i})),sel=q&&!nm?L.filter(x=>x.n.toLowerCase().includes(q)):L;return{g,sel,show:!q||nm||sel.length}}).filter(x=>x.show);
   el.innerHTML=`<div class="pl" style="margin-top:6px"><input id="nf" maxlength="14" placeholder="🔍 Spiel oder Spieler suchen" value="${esc(q)}" autocomplete="off" autocapitalize="off"></div>
-  ${items.length?items.map(({g,sel})=>{const w=g.b[0];return`<details class="card" style="padding:12px;margin-top:10px"${q?' open':''}><summary style="cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:8px"><b>${STG[g.k].emoji} ${STG[g.k].name}</b><span class="mut">${w?'🥇 '+esc(w.n)+' · '+f3(w.t):'–'}</span></summary>${sel.length?sel.slice(0,10).map(x=>row(x.i,x.n,x.t)).join(''):'<div class="mut" style="margin-top:6px">Noch nicht gespielt</div>'}</details>`}).join(''):'<div class="mut" style="margin-top:10px">Nichts gefunden.</div>'}`;
+  ${items.length?items.filter(x=>x.g.b.length||q).map(({g,sel})=>{const w=g.b[0];return`<details class="card" style="padding:12px;margin-top:10px"${q?' open':''}><summary style="cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:8px"><b>${STG[g.k].emoji} ${STG[g.k].name}</b><span class="mut">${w?'🥇 '+esc(w.n)+' · '+f3(w.t):'–'}</span></summary>${sel.length?sel.slice(0,10).map(x=>row(x.i,x.n,x.t)).join(''):'<div class="mut" style="margin-top:6px">Noch nicht gespielt</div>'}</details>`}).join(''):'<div class="mut" style="margin-top:10px">Nichts gefunden.</div>'}
+  ${!q&&items.some(x=>!x.g.b.length)?`<details class="card" style="padding:12px;margin-top:10px"><summary style="cursor:pointer;list-style:none"><b>🕳️ Noch nicht gespielt (${items.filter(x=>!x.g.b.length).length})</b></summary><div class="mut" style="margin-top:8px;line-height:1.7">${items.filter(x=>!x.g.b.length).map(x=>STG[x.g.k].emoji+' '+STG[x.g.k].name).join(' · ')}</div></details>`:''}<div style="height:14px;flex:none"></div>`;
   const inp=document.getElementById('nf');inp.oninput=e=>{const pos=e.target.selectionStart;games(e.target.value);const n=document.getElementById('nf');n.focus();try{n.setSelectionRange(pos,pos)}catch(_){}}};
  const show=()=>{tabs();GTAB?games(''):champs()};
  $('#g0').onclick=()=>{GTAB=0;show()};$('#g1').onclick=()=>{GTAB=1;show()};show();
