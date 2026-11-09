@@ -770,13 +770,14 @@ async function duTick(){
  if(!DU||DU.playing||DU.ticking)return;const D=DU;
  if(DU.phase&&!document.getElementById('du')){duStop();DU=null;return}
  D.ticking=true;
- try{const[rm,pk,rs,rx]=await Promise.all([api('GET',`rooms?code=eq.${D.code}&select=*`),api('GET',`picks?code=eq.${D.code}&select=name&order=created_at.asc`),api('GET',`results?code=like.${D.code}-R*&select=code,name,total_ms&limit=100`),api('GET',`reacts?code=eq.${D.code}&id=gt.${D.rid||0}&select=id,name,emoji&order=id.asc&limit=50`).catch(()=>null)]);
+ try{const[rm,pk,rs,rx]=await Promise.all([api('GET',`rooms?code=eq.${D.code}&select=*`),api('GET',`picks?code=eq.${D.code}&select=name,game&order=created_at.asc`),api('GET',`results?code=like.${D.code}-R*&select=code,name,total_ms&limit=100`),api('GET',`reacts?code=eq.${D.code}&id=gt.${D.rid||0}&select=id,name,emoji&order=id.asc&limit=50`).catch(()=>null)]);
   if(DU!==D||D.playing)return;
   if(Array.isArray(rx)){const first=D.rid===undefined;rx.forEach(x=>{D.rid=Math.max(D.rid||0,x.id);if(!first&&x.name!==D.name)showReact(x.name,x.emoji)});if(D.rid===undefined)D.rid=0}D.room=rm[0];D.rows=pk;D.res=rs;D.err=false;
   const r=DU.room,st=r.stages||{g:[],r:0},R=st.r,host=r.host===D.name,S2=duStats(),me=D.name;
   let ph;
-  if(R==0){ph='lobby';
-   if(host&&pk.length>=2&&!D.starting){D.starting=true;duPatch(0,{stages:{g:st.g,r:1},start_at:new Date(Date.now()+6000).toISOString()}).catch(()=>{D.starting=false})}}
+  if(R==0){const isR=q=>q.game==='ok-'+q.name,rd=n=>pk.some(q=>q.name===n&&isR(q)),need=D.n<=1,all=pk.length>=2&&pk.every(isR);
+   ph=pk.length>=2&&need?'lobbyr'+(rd(me)?1:0)+(all?1:0):'lobby';
+   if(host&&pk.length>=2&&(!need||all)&&!D.starting){D.starting=true;duPatch(0,{stages:{g:st.g,r:1},start_at:new Date(Date.now()+(need?4000:6000)).toISOString()}).catch(()=>{D.starting=false})}}
   else{const mine=S2.T[R]&&S2.T[R][me]!=null||D.played[R],both=S2.P.length>=2&&S2.P.every(p=>S2.T[R]&&S2.T[R][p]!=null);
    if(!mine){ph=Date.parse(r.start_at)-Date.now()<-1500?'late'+R:'count'+R}
    else if(both){ph=R>=S2.N?'end':'result'+R;if(!D.seen[R])D.seen[R]=Date.now();
@@ -806,6 +807,10 @@ function duRender0(){const r=DU.room,ph=DU.phase,N=(r.stages.g||[]).length,S2=du
  head=`<div class="c mut">1v1 · Code <b style="color:var(--yel);letter-spacing:2px;font-size:20px">${esc(show)}</b> · ${N} Runde${N>1?'n':''}</div>`,
  score=()=>S2.P.length>1?`<div class="c mut">${nmx(S2.P[0])} <b>${S2.sc[S2.P[0]]} : ${S2.sc[S2.P[1]]}</b> ${nmx(S2.P[1])}</div>`:'';
  if(ph.startsWith('count')){duCount(Date.parse(r.start_at));return}
+ if(ph.startsWith('lobbyr')){const meR=ph[6]=='1',all=ph[7]=='1',op=DU.rows.map(x=>x.name).find(n=>n!==me)||'?';
+  app.innerHTML=`<div class="scr" id="du">${head}<div class="mid"><div class="big pop" style="font-size:clamp(28px,9vw,40px)">${nmx(me)}<br><span style="color:var(--pink)">VS</span><br>${nmx(op)}</div><div class="c mut">${N} Runde${N>1?'n':''} · beide drücken „Bereit“, dann startet der Countdown</div>
+   ${all?'<div class="big" style="font-size:30px;color:var(--grn)">Gleich geht’s los …</div>':meR?`<div class="c" style="font-size:20px">✔ Du bist bereit – warte auf ${esc(op)} …</div>`:'<button class="btn pink glow" id="rdy2" style="padding:20px;font-size:24px">✅ BEREIT</button>'}</div>${tb}</div>`;
+  const rb=document.getElementById('rdy2');if(rb)rb.onclick=async()=>{ac();rb.disabled=true;try{await roomRpc('set_pick',{p_code:DU.code,p_game:'ok-'+DU.name});DU.phase='';duTick()}catch(e){rb.disabled=false}};$('#bt').onclick=()=>{duStop();DU=null;DB.sess=null;save();duelOnline()};return}
  if(ph=='lobby'){
   app.innerHTML=`<div class="scr" id="du">${head}<div class="mid"><div class="big" style="font-size:clamp(30px,10vw,44px)">Warte auf Gegner …</div><div class="c mut">Gib deinem Gegner diesen Code:</div><div class="big" style="font-size:clamp(40px,13vw,60px);color:var(--yel);letter-spacing:4px">${esc(show)}</div><div id="plist"></div><div class="hint" id="rms"></div><button class="btn" id="inv">📤 Code teilen</button><button class="btn ghost" id="inf">👥 Freund einladen</button></div>${tb}</div>`;
   $('#inf').onclick=()=>inviteFriends('DUELL-'+show,'Duell');
@@ -979,18 +984,23 @@ async function ibLoad(){if(!DB.acct){IB=[];ibBadge();return}try{const r=await rp
 function ibBadge(){const b=document.getElementById('ib');if(b)b.textContent=IB.length?'📬 '+IB.length:'👥'}
 setInterval(()=>{if(document.getElementById('ib'))ibLoad()},30000);
 const pyTxt=p=>/^DUELL-/.test(p)?'🥊 lädt dich zum 1v1-Duell ein':/^RAUM-/.test(p)?'🌍 lädt dich in einen Raum ein':'⚡ schickt dir eine Challenge';
-function joinPayload(p){ac();if(/^DUELL-[A-Z0-9]{4}$/i.test(p))duelOnline(p.slice(6).toUpperCase());else fern(p)}
+async function joinPayload(p){ac();const nm=DB.acct.name,msg=t=>{const m=document.getElementById('fm');if(m)m.textContent=t};
+ try{if(/^DUELL-[A-Z0-9]{4}$/i.test(p))await duJoin(duCode(p.slice(6)),nm,true);else if(/^RAUM-/i.test(p))await roomJoin(p,nm);else fern(p)}
+ catch(e){msg(e.nf?'❌ Diese Einladung ist abgelaufen oder das Spiel gibt es nicht mehr.':e.full?'❌ Dort ist schon alles voll.':'❌ Beitritt nicht möglich – versuch es nochmal.')}}
 async function friendsScreen(back=menu){if(!DB.acct){loginScreen(()=>friendsScreen(back));return}
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">👥 Freunde</h2><div id="fr" class="c mut">Lade …</div><div class="tb"><button class="btn ghost sm" id="bt">⬅ Zurück</button></div></div>`;
  $('#bt').onclick=()=>{menu()};await Promise.all([frLoad(),ibLoad()]);frDraw(back)}
-function frDraw(back){const el=document.getElementById('fr');if(!el)return;const me=DB.acct;
+function frDraw(back){const el=document.getElementById('fr');if(!el)return;const me=DB.acct,av=a=>`<div style="font-size:28px;width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;flex:none">${a||'🙂'}</div>`;
  el.className='';el.style.cssText='display:flex;flex-direction:column;gap:12px';
- el.innerHTML=`<div class="card" style="padding:12px"><b>📬 Postfach</b>${IB.length?IB.map(i=>`<div style="margin-top:10px;display:flex;gap:6px;align-items:center;justify-content:space-between"><div style="flex:1;min-width:0;text-align:left"><b>${nmx(i.f)}</b><br><span class="mut">${i.k=='friend'?'🙋 möchte dein Freund sein':pyTxt(i.p||'')}</span></div><button class="btn sm" data-i="${i.id}" data-a="1" style="flex:none;width:auto;padding:8px 12px">${i.k=='friend'?'✔':'▶'}</button><button class="btn ghost sm" data-i="${i.id}" data-a="0" style="flex:none;width:auto;padding:8px 12px">✖</button></div>`).join(''):'<div class="mut" style="margin-top:6px">Keine neuen Nachrichten.</div>'}</div>
- <div class="card" style="padding:12px"><b>➕ Freund hinzufügen</b><div class="pl" style="margin-top:6px"><input id="fn" maxlength="14" placeholder="Name des Freundes" autocomplete="off" autocapitalize="off"></div><button class="btn sm" id="fa" style="margin-top:8px">📨 Anfrage senden</button><div class="hint" id="fh"></div></div>
- <div class="card" style="padding:12px"><b>👥 Meine Freunde (${FR.length})</b>${FR.length?FR.map(f=>`<div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center"><span>${nmx(f.n)}</span><button class="btn ghost sm" data-r="${esc(f.n)}" style="flex:none;width:auto;padding:4px 10px">entfernen</button></div>`).join(''):'<div class="mut" style="margin-top:6px">Noch keine Freunde – schick eine Anfrage! Danach kannst du sie direkt zu Duellen, Räumen und Challenges einladen, und in den Bestenlisten gibt es einen Freunde-Filter.</div>'}</div><div style="height:14px;flex:none"></div>`;
- el.querySelectorAll('[data-i]').forEach(b=>b.onclick=async()=>{const i=IB.find(x=>String(x.id)==b.dataset.i);if(!i)return;const acc=b.dataset.a=='1';b.disabled=true;
+ el.innerHTML=`<div class="card${IB.length?' glow':''}" style="padding:12px;${IB.length?'border:2px solid var(--yel)':''}"><b>${IB.length?'📬 Neu für dich ('+IB.length+')':'📭 Postfach leer'}</b>${IB.map(i=>`<div style="margin-top:10px;display:flex;gap:8px;align-items:center">${av((FR.find(f=>skey(f.n)==skey(i.f))||{}).a)}<div style="flex:1;min-width:0;text-align:left"><b>${esc(i.f)}</b><br><span class="mut">${i.k=='friend'?'🙋 möchte dein Freund sein':pyTxt(i.p||'')}</span></div><button class="btn sm" data-i="${i.id}" data-a="1" style="flex:none;width:auto;padding:10px 14px">${i.k=='friend'?'✔ Annehmen':'▶ Los!'}</button><button class="btn ghost sm" data-i="${i.id}" data-a="0" style="flex:none;width:auto;padding:10px 12px">✖</button></div>`).join('')}<div class="hint" id="fm"></div></div>
+ <div style="display:flex;justify-content:space-between;align-items:baseline"><h3 style="margin:4px 0 0">👥 Deine Crew (${FR.length})</h3></div>
+ ${FR.length?FR.map(f=>`<div class="card" style="padding:10px;display:flex;align-items:center;gap:10px;margin:0">${av(f.a)}<b style="flex:1;min-width:0;text-align:left;overflow:hidden;text-overflow:ellipsis">${esc(f.n)}</b><button class="btn sm" data-d="${esc(f.n)}" style="flex:none;width:auto;padding:8px 12px">🥊 Duell</button><button class="btn ghost sm" data-r="${esc(f.n)}" style="flex:none;width:auto;padding:8px 10px" aria-label="entfernen">✖</button></div>`).join(''):'<div class="card mut" style="padding:14px">Noch keine Freunde. Schick unten eine Anfrage – danach lädst du sie mit einem Tipp zum Duell ein.</div>'}
+ <div class="card" style="padding:12px"><b>➕ Freund hinzufügen</b><div style="display:flex;gap:8px;margin-top:8px"><div class="pl" style="flex:1;margin:0"><input id="fn" maxlength="14" placeholder="Name des Freundes" autocomplete="off" autocapitalize="off"></div><button class="btn sm" id="fa" style="flex:none;width:auto;padding:0 16px">📨</button></div><div class="hint" id="fh"></div></div><div style="height:14px;flex:none"></div>`;
+ el.querySelectorAll('[data-i]').forEach(b=>b.onclick=async()=>{const i=IB.find(x=>String(x.id)==b.dataset.i);if(!i)return;const acc=b.dataset.a=='1';el.querySelectorAll('button').forEach(x=>x.disabled=true);
   try{await rpc('inbox_answer',{p_name:me.name,p_pin:me.pin,p_id:i.id,p_accept:acc})}catch(e){}
-  IB=IB.filter(x=>x.id!=i.id);if(i.k=='friend'&&acc)await frLoad();if(i.k=='invite'&&acc){joinPayload(i.p);return}frDraw(back);ibBadge()});
+  IB=IB.filter(x=>x.id!=i.id);ibBadge();if(i.k=='friend'&&acc)await frLoad();frDraw(back);if(i.k=='invite'&&acc)joinPayload(i.p)});
+ el.querySelectorAll('[data-d]').forEach(b=>b.onclick=async()=>{ac();const who=b.dataset.d;el.querySelectorAll('button').forEach(x=>x.disabled=true);const m=document.getElementById('fh');if(m)m.textContent='Eröffne Duell …';
+  try{const c=await duCreate(me.name,DB.vr||5);await rpc('send_invite',{p_name:me.name,p_pin:me.pin,p_to:who,p_payload:'DUELL-'+c.slice(1)})}catch(e){frDraw(back);const h=document.getElementById('fh');if(h)h.textContent='⚠️ Duell konnte nicht eröffnet werden.'}});
  el.querySelectorAll('[data-r]').forEach(b=>b.onclick=async()=>{if(b.dataset.s!='1'){b.dataset.s='1';b.textContent='sicher?';return}
   try{await rpc('friend_remove',{p_name:me.name,p_pin:me.pin,p_who:b.dataset.r})}catch(e){}await frLoad();frDraw(back)});
  $('#fa').onclick=async()=>{const v=$('#fn').value.trim(),h=$('#fh');if(!v)return;h.textContent='Sende …';
