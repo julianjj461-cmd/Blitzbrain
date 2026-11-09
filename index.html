@@ -440,16 +440,29 @@ fallen:{name:'Zahlenregen',emoji:'🌧️',hint:'Tippe 1 bis 6 der Reihe nach �
   loop();
   el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b||b.style.display=='none')return;
    if(+b.dataset.v===nx){b.style.display='none';sfx('tap',nx);if(++nx>N){fin=true;done()}}else err(b)}}},
-balance:{name:'Balance-Akt',emoji:'🤹',hint:'Halte die Kugel in der Mitte! ◀ schiebt sie nach links, ▶ nach rechts.',
- run(el,r,done,err){const DUR=6500,acc=[...Array(14)].map(()=>(r()-.5)*3.6);let x=0,v=0,t=0,last=performance.now(),acu=0,fin=false;
-  el.innerHTML=`<div class="c" id="bt2" style="font-weight:900;color:var(--yel)">noch 6,5 s</div><div id="trk" style="position:relative;height:84px;border-radius:42px;background:rgba(255,255,255,.12);margin:16px 0 22px;overflow:hidden"><div style="position:absolute;left:calc(50% - 2px);top:0;bottom:0;width:4px;background:#fff;opacity:.6"></div><span style="position:absolute;left:10px;top:28px;font-size:24px">⛔</span><span style="position:absolute;right:10px;top:28px;font-size:24px">⛔</span><div id="bl" style="position:absolute;top:9px;left:0;width:66px;height:66px;border-radius:50%;background:#fff;box-shadow:inset -6px -8px 0 rgba(0,0,0,.2)"></div></div><div class="grid g2" style="gap:14px"><button class="tile txt" data-d="-1" style="padding:48px 0;font-size:44px">◀</button><button class="tile txt" data-d="1" style="padding:48px 0;font-size:44px">▶</button></div>`;
-  const bl=el.querySelector('#bl'),trk=el.querySelector('#trk'),tx=el.querySelector('#bt2'),place=()=>{bl.style.left=((x+1)/2*((trk.clientWidth||300)-66))+'px'};
-  const step=()=>{v+=acc[Math.floor(t/600)%acc.length]/60;v*=.997;x+=v/60;t+=1000/60;if(Math.abs(x)>=1){err(bl);x=0;v=0}};
+balance:{name:'Balance-Akt',emoji:'🤹',hint:'Halte die Kugel 8 s lang in der markierten MITTE – jede Sekunde dort gibt Punkte! ◀ ▶ gedrückt halten neigt das Brett. Der Wind wird stärker, die Mitte schmaler. Runterfallen: Strafzeit. Wenig Punkte = Strafzeit.',
+ run(el,r,done,err){const DUR=8000,G=900,gs=[...Array(12)].map(()=>(r()<.5?-1:1)*(.5+r()*.5));let x=0,v=0,th=0,t=0,inz=0,lock=0,acu=0,last=performance.now(),fin=false;const held={};
+  el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:baseline;font-weight:900"><span id="bsc" style="font-size:26px;color:var(--yel)">0 Punkte</span><span id="btm" class="mut">8,0 s</span></div>
+  <div id="stg" style="position:relative;height:176px;margin:6px 0 4px"><div id="pl" style="position:absolute;left:4%;right:4%;top:120px;height:16px;border-radius:8px;background:#fff;box-shadow:0 4px 0 rgba(0,0,0,.35);transform-origin:50% 50%"><div id="zn" style="position:absolute;top:-70px;height:72px;border:3px dashed #fff;border-bottom:0;border-radius:12px 12px 0 0;opacity:.75;text-align:center;font-size:11px;letter-spacing:2px;color:#fff;padding-top:2px">MITTE</div><div id="bl" style="position:absolute;bottom:16px;width:44px;height:44px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#ffd23f 45%,#c9890c);box-shadow:0 3px 0 rgba(0,0,0,.35)"></div></div>
+  <div style="position:absolute;left:calc(50% - 22px);top:136px;width:0;height:0;border-left:22px solid transparent;border-right:22px solid transparent;border-bottom:36px solid #7a4dff"></div></div>
+  <div class="c mut" id="bmsg" style="min-height:20px">Gleich geht's los – halte die Kugel in der Mitte!</div>
+  <div style="display:flex;gap:12px;margin-top:6px"><div class="btn" data-d="-1" style="flex:1;padding:30px 0;font-size:34px;text-align:center;touch-action:none">◀</div><div class="btn" data-d="1" style="flex:1;padding:30px 0;font-size:34px;text-align:center;touch-action:none">▶</div></div>`;
+  const bl=el.querySelector('#bl'),pl=el.querySelector('#pl'),zn=el.querySelector('#zn'),sc=el.querySelector('#bsc'),tm=el.querySelector('#btm'),ms=el.querySelector('#bmsg');
+  const place=()=>{const pw=pl.clientWidth||300,q=t/DUR,Z=.34-.14*q,zw=Z*(pw-44)+44;bl.style.left=((x+1)/2*(pw-44))+'px';zn.style.width=zw+'px';zn.style.left=((pw-zw)/2)+'px';pl.style.transform='rotate('+(th*9).toFixed(2)+'deg)'};
+  const dir=()=>(held[1]?1:0)-(held[-1]?1:0);
+  el.querySelectorAll('[data-d]').forEach(b=>{const d=+b.dataset.d;b.onpointerdown=e=>{held[d]=1;sfx('tap',2);e.preventDefault&&e.preventDefault()};const up=()=>{held[d]=0};b.onpointerup=up;b.onpointercancel=up;b.onpointerleave=up;b.oncontextmenu=e=>e.preventDefault&&e.preventDefault()});
+  const step=()=>{const q=t/DUR,W=1+1.0*q,Z=.34-.14*q,gi=t/G,ga=Math.floor(gi),f=gi-ga,sm=f*f*(3-2*f),wind=W*(gs[ga%12]*(1-sm)+gs[(ga+1)%12]*sm);
+   th+=(dir()-th)*.18;v+=(th*4+wind)/60;v*=.995;x+=v/60;t+=1000/60;
+   if(Math.abs(x)>=1){err(bl);x=0;v=0;th=0;lock=500;ms.textContent='💥 Runtergefallen!'}
+   if(lock>0)lock-=1000/60;else if(Math.abs(x)<Z)inz+=1000/60};
   const loop=()=>{if(fin||!live(el))return;const now=performance.now();acu+=Math.min(100,now-last);last=now;
-   while(acu>=1000/60){acu-=1000/60;step();if(t>=DUR){fin=true;place();done();return}}
-   place();tx.textContent='noch '+Math.max(0,(DUR-t)/1000).toFixed(1).replace('.',',')+' s';requestAnimationFrame(loop)};
-  loop();
-  el.onpointerdown=e=>{const b=e.target.closest('[data-d]');if(!b)return;v+=(+b.dataset.d)*.7;sfx('tap',3)}}},
+   while(acu>=1000/60){acu-=1000/60;step();if(t>=DUR){fin=true;place();end();return}}
+   place();const pts=Math.round(inz/DUR*100);sc.textContent=pts+' Punkte';tm.textContent=Math.max(0,(DUR-t)/1000).toFixed(1).replace('.',',')+' s';
+   if(lock<=0&&t>800&&ms.textContent.startsWith('💥'))ms.textContent='';requestAnimationFrame(loop)};
+  const end=()=>{const pts=Math.round(inz/DUR*100),pen=Math.round((100-pts)*35);sc.textContent=pts+' Punkte';tm.textContent='0,0 s';
+   ms.textContent='Ergebnis: '+pts+' Punkte'+(pen>=30?' → +'+(pen/1000).toFixed(1).replace('.',',')+' s Strafzeit':' 🎯');
+   if(pen>=30)err(bl,pen);setTimeout(()=>{if(live(el))done()},1100)};
+  loop()}},
 ziel:{name:'Zielscheibe',emoji:'🏹',hint:'Triff 8 Ziele – sie werden immer kleiner! Daneben tippen = Strafe.',
  run(el,r,done,err){const N=8,P=[...Array(N)].map((_,i)=>({x:r(),y:r(),s:84-i*5}));let k=0;
   const show=()=>{const p=P[k];el.innerHTML=`<div id="fld" style="position:relative;height:min(58vh,440px);border-radius:16px;background:rgba(255,255,255,.07)"><button id="tg" class="tile" style="position:absolute;left:calc((100% - ${p.s}px)*${p.x.toFixed(3)});top:calc((100% - ${p.s}px)*${p.y.toFixed(3)});width:${p.s}px;height:${p.s}px;aspect-ratio:1;border-radius:50%;background:#ff3d8b;font-size:${Math.round(p.s*.55)}px;padding:0;box-shadow:inset 0 0 0 5px #fff,0 4px 0 rgba(0,0,0,.3)">🎯</button></div>`};
