@@ -11,11 +11,13 @@ html,body{height:100%;margin:0;touch-action:pan-x pan-y;-webkit-text-size-adjust
 input,select,textarea{font-size:16px!important}
 body{background:radial-gradient(120% 80% at 50% 0,#3b1a8f,#120b2e 70%) fixed;color:#fff;font:600 16px system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden}
 #app{height:100%}
-.scr{max-width:480px;margin:0 auto;height:100%;padding:16px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;animation:in .25s}
+.scr{max-width:480px;margin:0 auto;height:100%;padding:16px 16px 0;display:flex;flex-direction:column;gap:12px;overflow-y:auto;animation:in .25s}
 .play{animation:none}
-.tb{position:sticky;bottom:0;z-index:50;isolation:isolate;box-shadow:0 -14px 14px -4px #1a0f45;display:flex;gap:10px;margin-top:auto;padding:10px 0 max(6px,env(safe-area-inset-bottom));background:#1a0f45}.tb .btn{flex:1}
+.scr:not(:has(.tb)){padding-bottom:16px}
+.tb{position:sticky;bottom:0;z-index:50;isolation:isolate;box-shadow:0 -14px 14px -4px #1a0f45;display:flex;gap:10px;margin:auto -16px 0;padding:10px 16px 16px;background:#1a0f45}.tb .btn{flex:1}
 @keyframes in{from{opacity:0;transform:translateY(12px)}}
 .logo{font:900 clamp(44px,15vw,64px)/.9 system-ui;margin:10px 0 0;text-align:center;letter-spacing:-2px;transform:rotate(-3deg)}
+.logo.sm{font-size:clamp(32px,10.5vw,44px);margin-top:4px}
 .logo span{display:block;color:var(--yel);text-shadow:4px 4px 0 var(--pink)}
 .sub{text-align:center;color:var(--mut);margin:4px 0 8px}
 .btn{border:0;border-radius:20px;padding:18px;font:900 20px system-ui;color:#1a0b45;background:linear-gradient(180deg,var(--yel),#ffab2e);box-shadow:0 6px 0 #b66a00;touch-action:manipulation;width:100%}
@@ -893,18 +895,18 @@ function daily(){S.code=null;S.room=null;if(needAcct(daily,''))return;const D=da
   h=L.length?L.map((x,i)=>`<div class="rk${i==0?' w':''}"><span>${med[i]}</span><b>${esc(x.name)}</b><span>${f3(x.total_ms)}</span></div>`).join(''):'Noch niemand – sei der Erste!'}catch(e){h='⚠️ Nicht erreichbar.'}
   const el=document.getElementById('dtop');if(el)el.innerHTML=h})()}
 function menu(){S.code=null;S.room=null;S.daily=false;
- app.innerHTML=`<div class="scr"><h1 class="logo">BLITZ<span>BRAIN</span></h1><p class="sub">${POOL().length} Mini-Games · Duell gegen Freunde</p>
- <div class="mid"><button class="btn pink" id="m1" style="padding:20px">⚔️ PARTY-RUNDE<br><small style="font-weight:700;opacity:.9">Ein Handy für alle, reihum – auch offline</small></button>
- <button class="btn" id="m4" style="padding:20px;background:linear-gradient(180deg,#b9ff6b,#8be02e);box-shadow:0 6px 0 #4c8a0e">🥊 1v1-DUELL<br><small style="font-weight:700;opacity:.8">Zu zweit, lokal oder online · jede Runde ein neues Spiel</small></button>
- <button class="btn" id="m3" style="padding:20px;background:linear-gradient(180deg,#6ff0ff,#27e1ff);box-shadow:0 6px 0 #0a7f94">🌍 ONLINE-ARENA<br><small style="font-weight:700;opacity:.8">Raum oder Challenge · jeder am eigenen Handy</small></button>
- <button class="btn" id="m2" style="padding:20px">🕹️ ARCADE<br><small style="font-weight:700;opacity:.8">Solo – jedes Spiel einzeln üben</small></button></div>
+ app.innerHTML=`<div class="scr"><h1 class="logo sm">BLITZ<span>BRAIN</span></h1><div class="sub" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="white-space:nowrap">${POOL().length} Mini-Games</span><button class="btn ghost sm" id="ac" style="flex:none;width:auto;padding:6px 12px;font-size:13px"></button></div>
+ <div class="mid" style="gap:10px"><button class="btn pink" id="m1" style="padding:13px">⚔️ PARTY-RUNDE<br><small style="font-weight:700;opacity:.9">Ein Handy für alle – auch offline</small></button>
+ <button class="btn" id="m4" style="padding:13px;background:linear-gradient(180deg,#b9ff6b,#8be02e);box-shadow:0 6px 0 #4c8a0e">🥊 1v1-DUELL<br><small style="font-weight:700;opacity:.8">Zu zweit · lokal oder online</small></button>
+ <button class="btn" id="m3" style="padding:13px;background:linear-gradient(180deg,#6ff0ff,#27e1ff);box-shadow:0 6px 0 #0a7f94">🌍 ONLINE-ARENA<br><small style="font-weight:700;opacity:.8">Raum oder Challenge · online</small></button>
+ <button class="btn" id="m2" style="padding:13px">🕹️ ARCADE<br><small style="font-weight:700;opacity:.8">Solo – jedes Spiel einzeln üben</small></button></div>
  <div class="tb"><button class="btn ghost sm" id="rec">🏆 Bestenlisten</button><button class="btn ghost sm" id="mus" style="flex:0 0 64px" aria-label="Musik"></button><button class="btn ghost sm" id="snd" style="flex:0 0 64px" aria-label="Sound"></button><button class="btn ghost sm" id="hp" style="flex:0 0 64px" aria-label="So geht's">❔</button></div></div>`;
  const lab=()=>{$('#mus').textContent=DB.mus?'🎵':'🔕';$('#snd').textContent=DB.snd?'🔊':'🔇'};lab();
  const sv=DB.acct&&DB.sess&&Date.now()-DB.sess.ts<90*60*1000?DB.sess:null;
  if(sv){const mid=app.querySelector('.mid');if(mid){const b=document.createElement('button');b.className='btn ghost';b.id='rs';b.textContent='↩️ Zurück ins '+(sv.t=='du'?'Duell':'Raum')+' ('+sv.code.replace(/^1/,'')+')';mid.append(b);
   b.onclick=async()=>{ac();b.textContent='Verbinde …';try{if(sv.t=='du')await duJoin(sv.code,sv.name,true);else await roomJoin(sv.code,sv.name)}catch(e){DB.sess=null;save();b.textContent='❌ Nicht mehr verfügbar'}}}}
  {const mid=app.querySelector('.mid');if(mid){const b=document.createElement('button');b.className='btn ghost';b.id='dly';b.innerHTML='📅 Tagesaufgabe';mid.append(b);b.onclick=()=>{ac();daily()}}}
- {const mid=app.querySelector('.mid');if(mid){const b=document.createElement('button');b.className='btn ghost sm';b.id='ac';b.textContent=DB.acct?'👤 '+DB.acct.name+' · abmelden':'👤 Anmelden / Registrieren';mid.append(b);
+ {const b=document.getElementById('ac');if(b){b.textContent=DB.acct?'👤 '+DB.acct.name+' · abmelden':'👤 Anmelden';
   b.onclick=()=>{ac();if(DB.acct){DB.acct=null;DB.sess=null;save();menu()}else loginScreen(menu)}}}
  $('#hp').onclick=help;
  $('#m1').onclick=()=>{ac();home()};$('#m3').onclick=()=>{ac();fern()};$('#m2').onclick=()=>{ac();arcade()};$('#m4').onclick=()=>{ac();duelHub()};
