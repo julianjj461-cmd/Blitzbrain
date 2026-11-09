@@ -980,7 +980,7 @@ function fernChallenge(pre=''){S.code=null;S.room=null;if(needAcct(fernChallenge
  $('#bt').onclick=()=>fern();
 }
 function fernIntro(name,code,create,seed){
- const d=dec(code),K=Object.keys(STG);S.names=[name];S.seed=seed!=null?seed:d.seed;S.stages=d.idx.map(i=>K[i]);S.cur=0;S.res=[];S.code=enc(d.seed,d.idx);
+ const d=dec(code),K=Object.keys(STG);S.names=[name];S.daily=seed!=null;S.seed=seed!=null?seed:d.seed;S.stages=d.idx.map(i=>K[i]);S.cur=0;S.res=[];S.code=enc(d.seed,d.idx);
  if(!create){pass();return}
  app.innerHTML=`<div class="scr"><div class="mid"><div class="c mut">Deine Challenge</div><div class="big" style="font-size:clamp(28px,9vw,40px);color:var(--yel);letter-spacing:2px">${S.code}</div>
  <div class="c mut">Schick den Code (oder Link) an deine Freunde. Wer ihn eingibt, spielt exakt dieselben Aufgaben.</div>
@@ -1125,16 +1125,16 @@ function rmRender(){const r=RM.room,host=r.host===RM.name,ph=RM.phase;
  $('#bt').onclick=()=>{rmStop();RM=null;DB.sess=null;save();fernRoom()};
  rmUpdate()}
 function remoteEnd(){
- const r=S.res[0],g=(DB.runs[DB.runs.length-1]||{}).g||{},code=S.code,on=sbOk();
- const txt=`⚡ BLITZBRAIN – ${r.n}: ${f3(r.t)}${r.pen?' (inkl. '+f3(r.pen)+' Strafzeit)':' – fehlerfrei!'}\n${S.stages.map(k=>`${STG[k].emoji} ${STG[k].name}: ${f3(g[k]||0)}`).join('\n')}\nChallenge-Code: ${code}${lnk(code)}\nSchlag meine Zeit! 😏`;
+ const r=S.res[0],g=(DB.runs[DB.runs.length-1]||{}).g||{},code=S.code,on=sbOk(),dly=!!S.daily&&!S.room;
+ const txt=`⚡ BLITZBRAIN – ${r.n}: ${f3(r.t)}${r.pen?' (inkl. '+f3(r.pen)+' Strafzeit)':' – fehlerfrei!'}\n${S.stages.map(k=>`${STG[k].emoji} ${STG[k].name}: ${f3(g[k]||0)}`).join('\n')}${dly?'\n📅 Tagesaufgabe – spiel mit und schlag meine Zeit! 😏':`\nChallenge-Code: ${code}${lnk(code)}\nSchlag meine Zeit! 😏`}`;
  sfx('win');
  app.innerHTML=`<div class="scr"><div class="mid" style="justify-content:flex-start"><div class="c mut">${esc(r.n)} · Code ${code}</div><div class="big">${f3(r.t)}</div>
  ${on?'<h3>📊 Scoreboard</h3><div id="sbv" class="c mut">Sende Zeit …</div>':`<div class="banner" style="font-size:20px">Teile deine Zeit mit den Freunden!</div><div class="card" style="white-space:pre-line">${esc(txt)}</div><div class="c mut" style="font-size:14px"></div>`}</div>
  <button class="btn pink" id="sh">📤 Ergebnis teilen</button><button class="btn" id="again">${S.room?'🔁 Revanche (alle müssen zustimmen)':'🔁 Nochmal versuchen'}</button><div class="hint" id="rer"></div>
- <div class="row"><button class="btn ghost sm" id="cp">📋 Code teilen</button><button class="btn ghost sm" id="mn">🏠 Menü</button></div></div>`;
+ <div class="row"><button class="btn ghost sm" id="cp">${dly?'🏅 Tages-Scoreboard':'📋 Code teilen'}</button><button class="btn ghost sm" id="mn">🏠 Menü</button></div></div>`;
  $('#sh').onclick=()=>shareTxt(txt,$('#sh'));
- $('#cp').onclick=()=>shareTxt(`⚡ BLITZBRAIN-Challenge! Code: ${code}${lnk(code)}\nUnter „Online-Duell“ eingeben und meine Zeit schlagen.`,$('#cp'));
- $('#again').onclick=()=>{if(S.room)return roomRematch();S.cur=0;S.res=[];pass()};$('#mn').onclick=menu;
+ $('#cp').onclick=dly?()=>sbView(code,daily):()=>shareTxt(`⚡ BLITZBRAIN-Challenge! Code: ${code}${lnk(code)}\nUnter „Online-Duell“ eingeben und meine Zeit schlagen.`,$('#cp'));
+ $('#again').onclick=()=>{if(S.room)return roomRematch();if(dly)S.seed=(Math.random()*1e9)|0;S.cur=0;S.res=[];pass()};$('#mn').onclick=menu;
  if(on){const up=()=>sbSend(r,g,code).then(()=>sbRender(code,S.room?S.stages:null),()=>{const el=document.getElementById('sbv');if(el){el.innerHTML='⚠️ Zeit konnte nicht gesendet werden. <button class="btn ghost sm" id="rt">Nochmal senden</button>';$('#rt').onclick=()=>{el.textContent='Sende Zeit …';up()}}});up()}
 }
 menu();
