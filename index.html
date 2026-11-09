@@ -978,11 +978,21 @@ function applyTheme(){const k=THM[DB.thm]&&thmOk(DB.thm)?DB.thm:'std',t=THM[k],s
  ['--b1','--b2','--c1','--c2','--tb','--g1','--g2'].forEach((v,i)=>st.setProperty(v,t.v[i]));
  const m=document.querySelector('meta[name=theme-color]');if(m)m.content=t.v[6]}
 /* ===== Freunde & Postfach ===== */
-let FR=[],IB=[],FF=false;
+let FR=[],IB=[],FF=false,FRD='';const IBSEEN=new Set();
 async function frLoad(){if(!DB.acct){FR=[];return}try{const r=await rpc('friends_list',{p_name:DB.acct.name,p_pin:DB.acct.pin});FR=Array.isArray(r)?r:[]}catch(e){}}
-async function ibLoad(){if(!DB.acct){IB=[];ibBadge();return}try{const r=await rpc('inbox_list',{p_name:DB.acct.name,p_pin:DB.acct.pin});IB=Array.isArray(r)?r:[];ibBadge()}catch(e){}}
+async function ibLoad(){if(!DB.acct){IB=[];ibBadge();return}try{const r=await rpc('inbox_list',{p_name:DB.acct.name,p_pin:DB.acct.pin});IB=Array.isArray(r)?r:[];ibBadge();ibBanner()}catch(e){}}
 function ibBadge(){const b=document.getElementById('ib');if(b)b.textContent=IB.length?'📬 '+IB.length:'👥'}
-setInterval(()=>{if(document.getElementById('ib'))ibLoad()},30000);
+function ibBanner(){if(!document.getElementById('ib')&&!document.getElementById('fr'))return;
+ const fresh=IB.filter(x=>!IBSEEN.has(x.id));IB.forEach(x=>IBSEEN.add(x.id));
+ const i=fresh.find(x=>Date.now()-Date.parse(x.c)<120000);if(!i)return;
+ const old=document.getElementById('ibn');if(old)old.remove();
+ const d=document.createElement('div'),inv=i.k=='invite';d.id='ibn';d.style.cssText='position:fixed;left:10px;right:10px;top:calc(10px + env(safe-area-inset-top,0px));max-width:460px;margin:0 auto;z-index:1000;background:linear-gradient(180deg,var(--c1),var(--c2));border:2px solid var(--yel);border-radius:18px;padding:12px 14px 16px;box-shadow:0 8px 24px #000a;cursor:pointer;animation:in .3s;text-align:left;overflow:hidden';
+ d.innerHTML=`<div style="display:flex;gap:10px;align-items:center"><div style="font-size:28px">${inv?'🥊':'🙋'}</div><div style="flex:1;min-width:0"><b>${nmx(i.f)}</b><br><span class="mut">${inv?(/^DUELL-/.test(i.p||'')?'hat dich zum Duell herausgefordert':pyTxt(i.p||'').slice(2)):'möchte dein Freund sein'}</span></div><b style="color:var(--yel)">${inv?'▶ Tippen':'Ansehen'}</b></div><div style="position:absolute;left:0;bottom:0;height:6px;width:100%;background:var(--yel);transition:width 10s linear"></div>`;
+ document.body.append(d);sfx('ok');vib('tap2');const bar=d.lastChild;setTimeout(()=>{bar.style.width='0'},50);
+ const gone=setTimeout(()=>d.remove(),10100);
+ d.onclick=async()=>{clearTimeout(gone);d.remove();ac();if(!inv){friendsScreen();return}
+  try{await rpc('inbox_answer',{p_name:DB.acct.name,p_pin:DB.acct.pin,p_id:i.id,p_accept:true})}catch(e){}IB=IB.filter(x=>x.id!=i.id);ibBadge();joinPayload(i.p)}}
+setInterval(async()=>{if(document.getElementById('ib')||document.getElementById('fr')){const n=IB.length;await ibLoad();const f=document.getElementById('fr');if(f&&IB.length!=n&&!document.activeElement.matches('input'))frDraw()}},6000);
 const pyTxt=p=>/^DUELL-/.test(p)?'🥊 lädt dich zum 1v1-Duell ein':/^RAUM-/.test(p)?'🌍 lädt dich in einen Raum ein':'⚡ schickt dir eine Challenge';
 async function joinPayload(p){ac();const nm=DB.acct.name,msg=t=>{const m=document.getElementById('fm');if(m)m.textContent=t};
  try{if(/^DUELL-[A-Z0-9]{4}$/i.test(p))await duJoin(duCode(p.slice(6)),nm,true);else if(/^RAUM-/i.test(p))await roomJoin(p,nm);else fern(p)}
@@ -994,15 +1004,16 @@ function frDraw(back){const el=document.getElementById('fr');if(!el)return;const
  el.className='';el.style.cssText='display:flex;flex-direction:column;gap:12px';
  el.innerHTML=`<div class="card${IB.length?' glow':''}" style="padding:12px;${IB.length?'border:2px solid var(--yel)':''}"><b>${IB.length?'📬 Neu für dich ('+IB.length+')':'📭 Postfach leer'}</b>${IB.map(i=>`<div style="margin-top:10px;display:flex;gap:8px;align-items:center">${av((FR.find(f=>skey(f.n)==skey(i.f))||{}).a)}<div style="flex:1;min-width:0;text-align:left"><b>${esc(i.f)}</b><br><span class="mut">${i.k=='friend'?'🙋 möchte dein Freund sein':pyTxt(i.p||'')}</span></div><button class="btn sm" data-i="${i.id}" data-a="1" style="flex:none;width:auto;padding:10px 14px">${i.k=='friend'?'✔ Annehmen':'▶ Los!'}</button><button class="btn ghost sm" data-i="${i.id}" data-a="0" style="flex:none;width:auto;padding:10px 12px">✖</button></div>`).join('')}<div class="hint" id="fm"></div></div>
  <div style="display:flex;justify-content:space-between;align-items:baseline"><h3 style="margin:4px 0 0">👥 Meine Freunde (${FR.length})</h3></div>
- ${FR.length?`<div class="card" style="padding:10px;margin:0"><div class="c mut" style="margin-bottom:6px">🥊 Runden pro Duell, wenn du herausforderst:</div><div class="row" id="frr">${[1,3,5,7,10].map(r=>`<button class="btn ghost sm" data-n="${r}" style="padding:8px 0">${(DB.vr||5)==r?'✔ ':''}${r}</button>`).join('')}</div></div>`:''}
- ${FR.length?FR.map(f=>`<div class="card" style="padding:10px;display:flex;align-items:center;gap:10px;margin:0">${av(f.a)}<b style="flex:1;min-width:0;text-align:left;overflow:hidden;text-overflow:ellipsis">${esc(f.n)}</b><button class="btn sm" data-d="${esc(f.n)}" style="flex:none;width:auto;padding:8px 12px">🥊 Duell</button><button class="btn ghost sm" data-r="${esc(f.n)}" style="flex:none;width:auto;padding:8px 10px" aria-label="entfernen">✖</button></div>`).join(''):'<div class="card mut" style="padding:14px">Noch keine Freunde. Schick unten eine Anfrage – danach lädst du sie mit einem Tipp zum Duell ein.</div>'}
+
+ ${FR.length?FR.map(f=>`<div class="card" style="padding:10px;margin:0${FRD==f.n?';border:2px solid var(--yel)':''}"><div style="display:flex;align-items:center;gap:10px">${av(f.a)}<b style="flex:1;min-width:0;text-align:left;overflow:hidden;text-overflow:ellipsis">${esc(f.n)}</b><button class="btn sm${FRD==f.n?'':' pink'}" data-d="${esc(f.n)}" style="flex:none;width:auto;padding:8px 12px">${FRD==f.n?'▲':'🥊 Duell'}</button><button class="btn ghost sm" data-r="${esc(f.n)}" style="flex:none;width:auto;padding:8px 10px" aria-label="entfernen">✖</button></div>${FRD==f.n?`<div class="c mut" style="margin:10px 0 6px">Runden pro Duell:</div><div class="row" id="frr">${[1,3,5,7,10].map(r=>`<button class="btn ghost sm" data-n="${r}" style="padding:8px 0">${(DB.vr||5)==r?'✔ ':''}${r}</button>`).join('')}</div><button class="btn pink" id="frgo" style="margin-top:10px">⚔️ ${esc(f.n)} herausfordern</button>`:''}</div>`).join(''):'<div class="card mut" style="padding:14px">Noch keine Freunde. Schick unten eine Anfrage – danach lädst du sie mit einem Tipp zum Duell ein.</div>'}
  <div class="card" style="padding:12px"><b>➕ Freund hinzufügen</b><div style="display:flex;gap:8px;margin-top:8px"><div class="pl" style="flex:1;margin:0"><input id="fn" maxlength="14" placeholder="Name des Freundes" autocomplete="off" autocapitalize="off"></div><button class="btn sm" id="fa" style="flex:none;width:auto;padding:0 16px">📨</button></div><div class="hint" id="fh"></div></div><div style="height:14px;flex:none"></div>`;
  el.querySelectorAll('[data-i]').forEach(b=>b.onclick=async()=>{const i=IB.find(x=>String(x.id)==b.dataset.i);if(!i)return;const acc=b.dataset.a=='1';el.querySelectorAll('button').forEach(x=>x.disabled=true);
   try{await rpc('inbox_answer',{p_name:me.name,p_pin:me.pin,p_id:i.id,p_accept:acc})}catch(e){}
   IB=IB.filter(x=>x.id!=i.id);ibBadge();if(i.k=='friend'&&acc)await frLoad();frDraw(back);if(i.k=='invite'&&acc)joinPayload(i.p)});
  el.querySelectorAll('#frr [data-n]').forEach(b=>b.onclick=()=>{DB.vr=+b.dataset.n;save();sfx('ok');frDraw(back)});
- el.querySelectorAll('[data-d]').forEach(b=>b.onclick=async()=>{ac();const who=b.dataset.d;el.querySelectorAll('button').forEach(x=>x.disabled=true);const m=document.getElementById('fh');if(m)m.textContent='Eröffne Duell …';
-  try{const c=await duCreate(me.name,DB.vr||5);await rpc('send_invite',{p_name:me.name,p_pin:me.pin,p_to:who,p_payload:'DUELL-'+c.slice(1)})}catch(e){frDraw(back);const h=document.getElementById('fh');if(h)h.textContent='⚠️ Duell konnte nicht eröffnet werden.'}});
+ el.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{ac();FRD=FRD==b.dataset.d?'':b.dataset.d;frDraw(back)});
+ const go=document.getElementById('frgo');if(go)go.onclick=async()=>{ac();const who=FRD;el.querySelectorAll('button').forEach(x=>x.disabled=true);const m=document.getElementById('fh');if(m)m.textContent='Eröffne Duell …';
+  try{const c=await duCreate(me.name,DB.vr||5);await rpc('send_invite',{p_name:me.name,p_pin:me.pin,p_to:who,p_payload:'DUELL-'+c.slice(1)})}catch(e){frDraw(back);const h=document.getElementById('fh');if(h)h.textContent='⚠️ Duell konnte nicht eröffnet werden.'}};
  el.querySelectorAll('[data-r]').forEach(b=>b.onclick=async()=>{if(b.dataset.s!='1'){b.dataset.s='1';b.textContent='sicher?';return}
   try{await rpc('friend_remove',{p_name:me.name,p_pin:me.pin,p_who:b.dataset.r})}catch(e){}await frLoad();frDraw(back)});
  $('#fa').onclick=async()=>{const v=$('#fn').value.trim(),h=$('#fh');if(!v)return;h.textContent='Sende …';
