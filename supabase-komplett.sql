@@ -178,3 +178,19 @@ create or replace function public.cleanup_old() returns text language plpgsql se
 revoke execute on function public.cleanup_old() from anon, authenticated, public;
 
 grant execute on function public.elo_apply(text), public.elo_result(text, text), public.forfeit(text, text, text), public.find_match(text, text, integer, jsonb) to anon, authenticated;
+
+-- 12) Push-Benachrichtigungen (Tabellen, RPCs, Trigger). Die Edge Function "push" erzeugt ihre Schlüssel selbst.
+create extension if not exists pg_net with schema extensions;
+create table if not exists public.push_cfg (k text primary key, v text not null);
+alter table public.push_cfg enable row level security;
+insert into public.push_cfg(k, v) values ('hook', gen_random_uuid()::text || gen_random_uuid()::text) on conflict do nothing;
+create table if not exists public.push_subs (endpoint text primary key, name_key text not null, p256dh text not null, auth text not null, created_at timestamptz not null default now());
+create index if not exists push_subs_name_idx on public.push_subs (name_key);
+alter table public.push_subs enable row level security;
+create or replace function public.save_push(p_name text, p_pin text, p_sub jsonb) returns text language plpgsql security definer set search_path = public, extensions as $$ declare s text; ep text; k1 text; k2 text; begin s := public._auth(p_name, p_pin, false); if s not like 'ok:%' then return s; end if; ep := p_sub ->> 'endpoint'; k1 := p_sub -> 'keys' ->> 'p256dh'; k2 := p_sub -> 'keys' ->> 'auth'; if ep is null or k1 is null or k2 is null or char_length(ep) > 600 or ep !~ '^https://' then return 'invalid'; end if; delete from public.push_subs where name_key = lower(substr(s, 4)) and endpoint <> ep and created_at < now() - interval '60 days'; insert into public.push_subs(endpoint, name_key, p256dh, auth) values (ep, lower(substr(s, 4)), k1, k2) on conflict (endpoint) do update set name_key = excluded.name_key, p256dh = excluded.p256dh, auth = excluded.auth, created_at = now(); return 'ok'; end $$;
+create or replace function public.drop_push(p_name text, p_pin text, p_endpoint text) returns text language plpgsql security definer set search_path = public, extensions as $$ declare s text; begin s := public._auth(p_name, p_pin, false); if s not like 'ok:%' then return s; end if; delete from public.push_subs where endpoint = p_endpoint and name_key = lower(substr(s, 4)); return 'ok'; end $$;
+create or replace function public.inbox_push() returns trigger language plpgsql security definer set search_path = public, extensions as $$ declare h text; begin if not exists (select 1 from public.push_subs where name_key = lower(new.to_key)) then return new; end if; select v into h from public.push_cfg where k = 'hook'; perform net.http_post(url := 'https://hiweloxyqbjemegabfdz.supabase.co/functions/v1/push', headers := jsonb_build_object('Content-Type', 'application/json', 'x-hook', h), body := jsonb_build_object('to', lower(new.to_key), 'from', new.from_name, 'kind', new.kind)); return new; exception when others then return new; end $$;
+drop trigger if exists inbox_push_trg on public.inbox;
+create trigger inbox_push_trg after insert on public.inbox for each row execute function public.inbox_push();
+revoke execute on function public.inbox_push() from anon, authenticated, public;
+grant execute on function public.save_push(text, text, jsonb), public.drop_push(text, text, text) to anon, authenticated;
