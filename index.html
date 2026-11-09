@@ -523,7 +523,7 @@ doppel:{name:'Doppelgänger',emoji:'👯',hint:'Welches Symbol war schon in der 
 });
 
 /* ===== Spiellogik ===== */
-const OFF=['rhythmus','stop0'];/* aus der Auswahl genommen – bleiben in STG, damit alte Codes gültig bleiben */
+const OFF=['rhythmus','stop0','balance'];/* aus der Auswahl genommen – bleiben in STG, damit alte Codes gültig bleiben */
 const POOL=()=>Object.keys(STG).filter(k=>!OFF.includes(k));
 let S={names:[],seed:0,stages:[],cur:0,res:[]};
 const names=()=>DB.names;
