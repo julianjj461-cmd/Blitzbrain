@@ -666,25 +666,34 @@ function duelStats(back){back=back||duelHub;
   catch(e){if(box())box().textContent='⚠️ Online-Bilanz nicht erreichbar (Internet oder Server pausiert?).'}})();
 }
 const league=r=>r>=1250?{e:'💎',n:'Diamant'}:r>=1100?{e:'🥇',n:'Gold'}:r>=950?{e:'🥈',n:'Silber'}:{e:'🥉',n:'Bronze'};
-let RKC='';
+let RKC='',ELM={},eloT=0;
+async function eloLoad(){if(Date.now()-eloT<120000)return;eloT=Date.now();try{const r=await rpc('elo_map',{});if(Array.isArray(r)){ELM={};r.forEach(x=>ELM[skey(x.n)]=x.r)}}catch(e){}}
+const ring=n=>{const r=ELM[skey(n)];if(r==null)return'';const c=r>=1250?'#5ce1ff':r>=1100?'#ffd23f':r>=950?'#cfd6e0':'#cd7f32';return`;box-shadow:0 0 0 3px ${c}`};
 function connMsg(el,n,retry){if(!el)return;el.innerHTML=(n>=8?'📡 Keine Verbindung – prüfe dein Internet. ':'⚠️ Verbindung wackelt … ')+'<button class="btn ghost sm" id="rtb" style="width:auto;display:inline-block;padding:4px 12px;margin-left:6px">🔄 Erneut versuchen</button>';const b=el.querySelector('#rtb');if(b)b.onclick=()=>{el.textContent='Verbinde …';retry()}}
 async function eloShow(code,me){const box=()=>document.getElementById('elr');
  for(let i=0;i<6;i++){try{await rpc('elo_apply',{p_code:code});const L=await rpc('elo_result',{p_code:code,p_name:me});
    if(Array.isArray(L)&&L[0]){const x=L[0],b=box();if(!b)return;if(x.lim){b.innerHTML='<span class="mut">🏅 Gleicher Gegner zu oft in 24 h – diesmal keine Elo-Wertung.</span>';return}
-    const lg=league(x.r);b.innerHTML=`🏅 <b style="color:${x.d>=0?'var(--grn)':'var(--pink)'}">${x.d>0?'+':''}${x.d} Elo</b> → <b>${x.r}</b> · ${lg.e} ${lg.n}`;return}}catch(e){}
+    const lg=league(x.r);b.innerHTML=`🏅 <b style="color:${x.d>=0?'var(--grn)':'var(--pink)'}">${x.d>0?'+':''}${x.d} Elo</b> → <b>${x.r}</b> · ${lg.e} ${lg.n}${x.ws>=3?`<br>🔥 ${x.ws}er-Serie${x.b?` · +${x.b} Bonus-Elo`:''}`:''}`;return}}catch(e){}
   await new Promise(z=>setTimeout(z,2000));if(!box())return}
  const b=box();if(b)b.innerHTML='<span class="mut">🏅 Elo-Wertung folgt …</span>'}
 function duForfeitWin(){const D=DU;duStop();const me=D.name,code=D.code;sfx('rec');confetti(220);
  app.innerHTML=`<div class="scr"><div class="mid"><div class="big bounce" style="font-size:70px">🏆</div><div class="big" style="font-size:30px;color:var(--yel)">Sieg!</div><div class="c mut">Dein Gegner hat das Ranked-Duell abgebrochen – es zählt für dich als Sieg.</div><div class="card c" id="elr">🏅 Elo wird berechnet …</div></div><button class="btn pink" id="kb">🏠 Zum Hauptmenü</button></div>`;
  DB.sess=null;save();h2hAdd(me,(D.rows.find(x=>x.name!==me)||{}).name||'?',me);eloShow(code,me);DU=null;$('#kb').onclick=menu}
+async function rankedSeason(){const e=()=>document.getElementById('rss'),S0=seasonInfo();if(!e())return;
+ let h=`🗓️ <b>Saison ${S0.n}</b> · noch ${S0.left} Tag${S0.left>1?'e':''}<div class="mut">Zum Saisonende wird deine Elo halb Richtung 1000 gezogen. Die Top 3 bekommen das Abzeichen 👑.</div>`;e().innerHTML=h;
+ try{if(S0.n>1){const pv=await rpc('elo_season_top',{p_season:S0.n-1});if(Array.isArray(pv)&&pv.length)h+=`<div style="margin-top:6px"><b style="color:var(--yel)">Letzte Saison:</b> `+pv.map(x=>['🥇','🥈','🥉'][x.pos-1]+' '+esc(x.n)+' ('+x.r+')').join(' · ')+'</div>'}
+  const hl=await rpc('elo_hall',{p_name:DB.acct.name});if(Array.isArray(hl)){if((DB.rkc||0)!==hl.length){DB.rkc=hl.length;save()}if(hl.length)h+=`<div style="margin-top:6px">👑 Du warst ${hl.length}× in den Top 3!</div>`}
+  if(e())e().innerHTML=h}catch(x){}}
 async function rankedHub(){if(needAcct(rankedHub))return;
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🏆 Ranked</h2><div class="mut">Zufälliger Gegner · 3 Spiele · wer schneller ist, gewinnt Elo.</div>
  <div class="card c" id="rme" style="padding:14px"><span class="mut">Lade deinen Rang …</span></div>
+ <div class="card c" id="rss" style="padding:10px;font-size:14px"></div>
  <button class="btn pink glow" id="rgo" style="padding:22px">🔍 MATCH SUCHEN<br><small style="font-weight:700;opacity:.9">Du wirst jemandem mit ähnlicher Elo zugelost</small></button>
  <h3 style="margin:6px 0 0">Bestenliste</h3><div id="rtop" class="mut">Lade …</div>
  <details class="card" style="padding:12px"><summary style="cursor:pointer"><b>ℹ️ So funktioniert Ranked</b></summary><div class="mut" style="margin-top:8px;line-height:1.6">Start bei 1000 Elo. Gegen stärkere Gegner gibt es mehr Punkte. Ligen: 🥉 Bronze unter 950 · 🥈 Silber · 🥇 Gold ab 1100 · 💎 Diamant ab 1250. Gegen denselben Gegner zählen höchstens 3 Duelle pro 24 Stunden. Wer 95 Sekunden nach dem Gegner nicht weiterspielt, verliert.</div></details>
  ${bar('⬅ Hauptmenü')}</div>`;
  $('#rgo').onclick=()=>randGo(rankedHub);$('#bt').onclick=menu;
+ rankedSeason();
  (async()=>{try{const L=await rpc('elo_rank',{p_name:DB.acct.name}),e=document.getElementById('rme');if(!e)return;
    if(Array.isArray(L)&&L[0]){const x=L[0],lg=league(x.r),nx=x.r>=1250?null:x.r>=1100?1250:x.r>=950?1100:950;e.innerHTML=`<div style="font-size:48px">${lg.e}</div><div class="big" style="font-size:28px">${lg.n}</div><div style="font-size:22px"><b>${x.r}</b> Elo · Platz <b>${x.pos}</b></div><div class="mut">${x.w} Siege aus ${x.g} Duellen${nx?` · noch ${nx-x.r} bis zur nächsten Liga`:''}</div>`}
    else e.innerHTML='<div style="font-size:40px">🥈</div><div>Noch kein gewertetes Duell</div><div class="mut">Du startest bei 1000 Elo.</div>'}catch(x){const e=document.getElementById('rme');if(e)e.textContent='Rang gerade nicht erreichbar.'}})();
@@ -756,7 +765,11 @@ function duelEnd(){
 function duelRandom(name,n,back){back=back||menu;
  let alive=true,t0=Date.now();const games=shuffle(POOL(),Math.random).slice(0,n);
  app.innerHTML=`<div class="scr"><div class="mid"><div class="big bounce" style="font-size:70px">🎲</div><div class="big" style="font-size:28px">Ranked: Suche Gegner …</div><div class="c mut">${n} Runden · wer gerade ebenfalls sucht, wird dir zugelost.</div><div class="c" id="rs" style="font-size:22px">0 s</div></div><button class="btn ghost" id="rc">✖ Abbrechen</button></div>`;
- const done=c=>{alive=false;clearInterval(tm);if(c){sfx('go');RKC=c;duEnter(c,name,{})}else back()};
+ const done=async c=>{alive=false;clearInterval(tm);if(!c){back();return}
+  RKC=c;sfx('go');let on='',or=null;
+  try{const pk=await api('GET',`picks?code=eq.${encodeURIComponent(c)}&select=name`);on=((pk||[]).find(x=>x.name!==name)||{}).name||'';if(on){const L=await rpc('elo_rank',{p_name:on});or=Array.isArray(L)&&L[0]?L[0].r:1000}}catch(e){}
+  if(on){const lg=league(or||1000);app.innerHTML=`<div class="scr"><div class="mid"><div class="c mut">🏆 Ranked · Gegner gefunden</div><div class="big pop" style="font-size:clamp(32px,10vw,46px)">${esc(name)}<br><span style="color:var(--pink)">VS</span><br>${esc(on)}</div><div class="card c" style="font-size:20px">${lg.e} ${lg.n} · ${or||1000} Elo</div></div></div>`;await new Promise(z=>setTimeout(z,2200))}
+  duEnter(c,name,{})};
  const mc=r=>typeof r==='string'&&r.startsWith('match:')?r.slice(6):null;
  const fail=m=>{alive=false;clearInterval(tm);app.innerHTML=`<div class="scr"><div class="mid"><div class="big" style="font-size:60px">😕</div><div class="big" style="font-size:26px">${m}</div></div><button class="btn pink" id="ra">🎲 Nochmal suchen</button>${bar('⬅ Zurück')}</div>`;$('#ra').onclick=()=>duelRandom(name,n,back);$('#bt').onclick=back};
  let tm=0;
@@ -1003,9 +1016,9 @@ function daily(){S.code=null;S.room=null;if(needAcct(daily,''))return;const D=da
  (async()=>{let h;try{const rows=await sbGet(D.code),b={};rows.forEach(x=>{if(!b[x.name]||x.total_ms<b[x.name].total_ms)b[x.name]=x});const L=Object.values(b).sort((x,y)=>x.total_ms-y.total_ms).slice(0,3),med=['🥇','🥈','🥉'];
   h=L.length?L.map((x,i)=>`<div class="rk${i==0?' w':''}"><span>${med[i]}</span><b>${esc(x.name)}</b><span>${f3(x.total_ms)}</span></div>`).join(''):'Noch niemand – sei der Erste!'}catch(e){h='⚠️ Nicht erreichbar.'}
   const el=document.getElementById('dtop');if(el)el.innerHTML=h})()}
-async function profile(){if(!DB.acct){loginScreen(profile);return}
+async function profile(){if(!DB.acct){loginScreen(profile);return}await Promise.race([eloLoad(),new Promise(z=>setTimeout(z,800))]);
  const nm=DB.acct.name,sk=streakNow(nm),best=(DB.streak&&DB.streak[skey(nm)]||{}).best||sk.n;
- app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">${DB.av||'👤'} ${esc(nm)}</h2>
+ app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0"><span style="border-radius:50%;display:inline-block${ring(nm)}">${DB.av||'👤'}</span> ${esc(nm)}</h2>
  <div class="card" style="padding:12px"><b>🔥 Tagesserie</b><div style="margin-top:4px">${streakTxt(sk)}${sk.n?(sk.today?' ✔ heute gespielt':' – heute noch spielen!'):''}</div><div class="mut" style="margin-top:2px">Rekord: ${best} Tage · 🥉 ab 3 · 🥈 ab 7 · 🥇 ab 30</div></div>
  <div class="card" style="padding:12px"><b>🙂 Avatar</b><div id="avg" style="display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-top:8px">${AVS.map(a=>`<button class="btn ghost sm vb${DB.av===a?' sel':''}" data-a="${a}" style="padding:6px 0;font-size:22px;width:auto;flex:none">${a}</button>`).join('')}</div><div class="hint" id="avh"></div></div>
  <div class="card" style="padding:12px"><b>🎨 Farbthema</b><div id="thg" style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">${Object.entries(THM).map(([k,t])=>`<button class="btn ghost sm vb${(THM[DB.thm]&&thmOk(DB.thm)?DB.thm:'std')==k?' sel':''}" data-t="${k}" style="flex:1;width:auto;padding:8px 6px;min-width:70px">${thmOk(k)?t.e+' '+t.n:'🔒 '+t.u+' Tage'}</button>`).join('')}</div><div class="hint" id="thh">Themen schaltest du mit deiner Tagesserie frei (Rekord: ${best} Tage).</div></div>
@@ -1076,9 +1089,9 @@ const THM={std:{n:'Standard',e:'🟣',u:0,v:['#5a2fe0','#7a4dff','#3a2380','#2a1
  nacht:{n:'Nacht',e:'🌑',u:30,v:['#55556a','#7a7a95','#3a3a4a','#22222d','#14141b','#2a2a35','#0b0b10']}};
 const BDG=[['🎮','Neuling','Das erste Spiel gespielt',c=>c.runs>=1],['🔟','Stammspieler','25 Runden gespielt',c=>c.runs>=25],['💯','Dauerbrenner','100 Runden gespielt',c=>c.runs>=100],['✨','Makellos','Eine Runde ohne Fehler',c=>c.clean],
  ['🔥','3 Tage Serie','Tagesaufgabe 3 Tage in Folge',c=>c.streak>=3],['🌟','7 Tage Serie','Tagesaufgabe 7 Tage in Folge',c=>c.streak>=7],['👑','30 Tage Serie','Tagesaufgabe 30 Tage in Folge',c=>c.streak>=30],
- ['🥊','Duellant','Ein Duell gewonnen',c=>c.dw>=1],['🏅','Duell-Held','10 Duelle gewonnen',c=>c.dw>=10],['👥','Beliebt','3 Freunde hinzugefügt',c=>c.fr>=3],['🏆','Rekordhalter','Platz 1 in einem Spiel',c=>c.firsts>=1],['🎯','Quest-Held','5 Tages-Quests geschafft',c=>c.q>=5],['🌍','Weltenbummler','20 Spiele online gespielt',c=>c.online>=20],['🏅','Saisonsieger','Eine Saison auf Platz 1 beendet',c=>c.ssw>=1]];
+ ['🥊','Duellant','Ein Duell gewonnen',c=>c.dw>=1],['🏅','Duell-Held','10 Duelle gewonnen',c=>c.dw>=10],['👥','Beliebt','3 Freunde hinzugefügt',c=>c.fr>=3],['🏆','Rekordhalter','Platz 1 in einem Spiel',c=>c.firsts>=1],['🎯','Quest-Held','5 Tages-Quests geschafft',c=>c.q>=5],['🌍','Weltenbummler','20 Spiele online gespielt',c=>c.online>=20],['🏅','Saisonsieger','Eine Saison auf Platz 1 beendet',c=>c.ssw>=1],['👑','Ranked-Champion','In einer Ranked-Saison unter den Top 3',c=>c.rkc>=1]];
 function bindBdg(){document.querySelectorAll('#bdg button').forEach(b=>b.onclick=()=>{const h=document.getElementById('bdh');if(h)h.textContent=b.dataset.h})}
-function badgesCard(extra){const me=skey(DB.acct.name),ru=DB.runs||[],c={runs:ru.length,clean:ru.some(x=>x.pen===0),streak:bestStreak(),dw:Object.values(DB.h2h||{}).reduce((a,e)=>a+(e.w[me]||0),0),fr:DB.frN||0,q:DB.qn||0,firsts:0,online:0,ssw:DB.ssw||0,...(extra||{})},ok=BDG.filter(b=>b[3](c)).length;
+function badgesCard(extra){const me=skey(DB.acct.name),ru=DB.runs||[],c={runs:ru.length,clean:ru.some(x=>x.pen===0),streak:bestStreak(),dw:Object.values(DB.h2h||{}).reduce((a,e)=>a+(e.w[me]||0),0),fr:DB.frN||0,q:DB.qn||0,firsts:0,online:0,ssw:DB.ssw||0,rkc:DB.rkc||0,...(extra||{})},ok=BDG.filter(b=>b[3](c)).length;
  return`<div class="card" style="padding:12px"><b>🎖️ Abzeichen (${ok}/${BDG.length})</b><div id="bdg" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px">${BDG.map(b=>`<button class="btn ghost sm" data-h="${b[1]} – ${b[2]}" style="padding:8px 2px;font-size:26px;width:auto;flex:none;${b[3](c)?'':'opacity:.3;filter:grayscale(1)'}">${b[0]}</button>`).join('')}</div><div class="hint" id="bdh">Tippe ein Abzeichen an.</div></div>`}
 const bestStreak=()=>{if(!DB.acct)return 0;const e=(DB.streak||{})[skey(DB.acct.name)]||{};return Math.max(e.best||0,e.n||0)};
 const thmOk=k=>THM[k].u<=bestStreak();
@@ -1111,7 +1124,7 @@ async function joinPayload(p){ac();NBK=menu;const nm=DB.acct.name,msg=t=>{const 
  catch(e){msg(e.nf?'❌ Diese Einladung ist abgelaufen oder das Spiel gibt es nicht mehr.':e.full?'❌ Dort ist schon alles voll.':'❌ Beitritt nicht möglich – versuch es nochmal.')}}
 async function friendsScreen(back=menu){if(!DB.acct){loginScreen(()=>friendsScreen(back));return}
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">👥 Freunde</h2><div id="fr" class="c mut">Lade …</div><div class="tb"><button class="btn ghost sm" id="bt">⬅ Zurück</button></div></div>`;
- $('#bt').onclick=()=>{menu()};await Promise.all([frLoad(),ibLoad()]);frDraw(back)}
+ $('#bt').onclick=()=>{menu()};await Promise.all([frLoad(),ibLoad(),eloLoad()]);frDraw(back);fdDraw()}
 let FP=null,FPMSG='';
 function fpStop(){if(FP){clearInterval(FP.iv);FP=null}}
 async function fpCancel(msg){const x=FP;if(!x)return;fpStop();fpFloat();FPMSG=msg||'';
@@ -1134,13 +1147,13 @@ async function fpTick(){const x=FP;if(!x||x.busy)return;
   if(x.gone>=2){fpCancel('❌ '+x.who+' hat die Herausforderung nicht angenommen.');return}
   if(Date.now()-x.t0>60000){fpCancel('⌛ '+x.who+' hat nicht reagiert.')}}
  catch(e){}finally{x.busy=false}}
-function frDraw(back){const el=document.getElementById('fr');if(!el)return;const me=DB.acct,av=(a,n)=>`<div ${n?`data-p="${esc(n)}" `:''}style="cursor:pointer;font-size:28px;width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;flex:none">${a||'🙂'}</div>`;
+function frDraw(back){const el=document.getElementById('fr');if(!el)return;const me=DB.acct,av=(a,n)=>`<div ${n?`data-p="${esc(n)}" `:''}style="cursor:pointer;font-size:28px;width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;flex:none${n?ring(n):''}">${a||'🙂'}</div>`;
  el.className='';el.style.cssText='display:flex;flex-direction:column;gap:12px';
  el.innerHTML=`${FP?`<div class="card" style="padding:12px;border:2px solid var(--cyan);position:relative;overflow:hidden"><b>⏳ Warte auf ${esc(FP.who)} …</b><div class="mut">Du springst direkt ins Duell, sobald ${esc(FP.who)} annimmt.</div><button class="btn ghost sm" id="fpx" style="margin-top:8px">✖ Herausforderung abbrechen</button><div id="fpb" style="position:absolute;left:0;bottom:0;height:5px;width:${Math.max(0,100-(Date.now()-FP.t0)/600)}%;background:var(--cyan)"></div></div>`:FPMSG?`<div class="card" style="padding:12px">${esc(FPMSG)}</div>`:''}<div class="card${IB.length?' glow':''}" style="padding:12px;${IB.length?'border:2px solid var(--yel)':''}"><b>${IB.length?'📬 Neu für dich ('+IB.length+')':'📭 Postfach leer'}</b>${IB.map(i=>`<div style="margin-top:10px;display:flex;gap:8px;align-items:center">${av((FR.find(f=>skey(f.n)==skey(i.f))||{}).a)}<div style="flex:1;min-width:0;text-align:left"><b>${esc(i.f)}</b><br><span class="mut">${i.k=='friend'?'🙋 möchte dein Freund sein':pyTxt(i.p||'')}</span></div><button class="btn sm" data-i="${i.id}" data-a="1" style="flex:none;width:auto;padding:10px 14px">${i.k=='friend'?'✔ Annehmen':'▶ Los!'}</button><button class="btn ghost sm" data-i="${i.id}" data-a="0" style="flex:none;width:auto;padding:10px 12px">✖</button></div>`).join('')}<div class="hint" id="fm"></div></div>
  <div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:4px 0 0">👥 Meine Freunde (${FR.length})</h3>${FR.length>=2?`<button class="btn ghost sm" id="fgr" style="flex:none;width:auto;padding:6px 12px">${FSEL?'✖ Abbrechen':'🏠 Gruppen-Raum'}</button>`:''}</div>
  ${(()=>{const rc=Object.values(DB.h2h||{}).filter(e=>e.t).map(e=>{const k=Object.keys(e.n),o=k.find(x=>x!==skey(me.name));return{n:e.n[o],t:e.t}}).filter(x=>x.n&&FR.some(f=>skey(f.n)==skey(x.n))).sort((a,b)=>b.t-a.t).slice(0,3);return rc.length&&!FSEL?`<div class="c mut" style="text-align:left">🕘 Zuletzt gespielt:</div><div class="row">${rc.map(x=>`<button class="btn ghost sm" data-q="${esc(FR.find(f=>skey(f.n)==skey(x.n)).n)}" style="padding:8px 4px">🥊 ${esc(x.n)}</button>`).join('')}</div>`:''})()}
 
- ${FR.length?[...FR].sort((a,b)=>isOn(b)-isOn(a)).map(f=>`<div class="card" ${FSEL?`data-s="${esc(f.n)}" `:''}style="padding:10px;margin:0${FRD==f.n&&!FSEL?';border:2px solid var(--yel)':''}${FSEL&&FSEL.has(f.n)?';border:2px solid var(--grn)':''}"><div style="display:flex;align-items:center;gap:10px">${av(f.a,f.n)}<div data-p="${esc(f.n)}" style="flex:1;min-width:0;text-align:left;cursor:pointer"><b style="display:block;overflow:hidden;text-overflow:ellipsis">${esc(f.n)}${f.m?' 🔕':''}</b><span class="mut" style="font-size:13px">${isOn(f)?'<span style="color:var(--grn)">● online</span>':'○ offline'}${h2hMini(me.name,f.n)?' · '+h2hMini(me.name,f.n):''}</span></div>${FSEL?`<b style="font-size:26px">${FSEL.has(f.n)?'✅':'⬜'}</b>`:`${FP?'':`<button class="btn sm${FRD==f.n?'':' pink'}" data-d="${esc(f.n)}" style="flex:none;width:auto;padding:8px 12px">${FRD==f.n?'▲':'🥊 Duell'}</button>`}<button class="btn ghost sm" data-r="${esc(f.n)}" style="flex:none;width:auto;padding:8px 10px" aria-label="entfernen">✖</button>`}</div>${FRD==f.n?`<div class="c mut" style="margin:10px 0 6px">Spiel:</div><select id="frg" style="width:100%;border:2px solid rgba(255,255,255,.2);border-radius:14px;background:rgba(255,255,255,.1);color:#fff;font:700 16px system-ui;padding:10px"><option value="">🎲 Zufällige Spiele</option>${POOL().map(k=>`<option value="${k}"${FRG==k?' selected':''}>${STG[k].emoji} ${STG[k].name}</option>`).join('')}</select><div class="c mut" style="margin:10px 0 6px">Runden pro Duell:</div><div class="row" id="frr">${[1,3,5,7,10].map(r=>`<button class="btn ghost sm" data-n="${r}" style="padding:8px 0">${(DB.vr||5)==r?'✔ ':''}${r}</button>`).join('')}</div><button class="btn pink" id="frgo" style="margin-top:10px">⚔️ ${esc(f.n)} herausfordern</button>`:''}</div>`).join('')+(FSEL?`<button class="btn pink" id="fgo" ${FSEL.size?'':'disabled'}>🏠 Raum eröffnen${FSEL.size?' & '+FSEL.size+' einladen':' – erst Freunde antippen'}</button>`:''):'<div class="card mut" style="padding:14px">Noch keine Freunde. Schick unten eine Anfrage – danach lädst du sie mit einem Tipp zum Duell ein.</div>'}
+ ${FR.length?[...FR].sort((a,b)=>isOn(b)-isOn(a)).map(f=>`<div class="card" ${FSEL?`data-s="${esc(f.n)}" `:''}style="padding:10px;margin:0${FRD==f.n&&!FSEL?';border:2px solid var(--yel)':''}${FSEL&&FSEL.has(f.n)?';border:2px solid var(--grn)':''}"><div style="display:flex;align-items:center;gap:10px">${av(f.a,f.n)}<div data-p="${esc(f.n)}" style="flex:1;min-width:0;text-align:left;cursor:pointer"><b style="display:block;overflow:hidden;text-overflow:ellipsis">${esc(f.n)}${f.m?' 🔕':''}</b><span class="mut" style="font-size:13px">${isOn(f)?'<span style="color:var(--grn)">● online</span>':'○ offline'}${h2hMini(me.name,f.n)?' · '+h2hMini(me.name,f.n):''}</span></div>${FSEL?`<b style="font-size:26px">${FSEL.has(f.n)?'✅':'⬜'}</b>`:`${FP?'':`<button class="btn sm${FRD==f.n?'':' pink'}" data-d="${esc(f.n)}" style="flex:none;width:auto;padding:8px 12px">${FRD==f.n?'▲':'🥊 Duell'}</button>`}<button class="btn ghost sm" data-r="${esc(f.n)}" style="flex:none;width:auto;padding:8px 10px" aria-label="entfernen">✖</button>`}</div>${FRD==f.n?`<div class="c mut" style="margin:10px 0 6px">Spiel:</div><select id="frg" style="width:100%;border:2px solid rgba(255,255,255,.2);border-radius:14px;background:rgba(255,255,255,.1);color:#fff;font:700 16px system-ui;padding:10px"><option value="">🎲 Zufällige Spiele</option>${POOL().map(k=>`<option value="${k}"${FRG==k?' selected':''}>${STG[k].emoji} ${STG[k].name}</option>`).join('')}</select><div class="c mut" style="margin:10px 0 6px">Runden pro Duell:</div><div class="row" id="frr">${[1,3,5,7,10].map(r=>`<button class="btn ghost sm" data-n="${r}" style="padding:8px 0">${(DB.vr||5)==r?'✔ ':''}${r}</button>`).join('')}</div><button class="btn pink" id="frgo" style="margin-top:10px">⚔️ ${esc(f.n)} herausfordern</button><button class="btn ghost sm" id="frfd" style="margin-top:8px">⏳ Fernduell – 3 Spiele, ${esc(f.n)} spielt später</button>`:''}</div>`).join('')+(FSEL?`<button class="btn pink" id="fgo" ${FSEL.size?'':'disabled'}>🏠 Raum eröffnen${FSEL.size?' & '+FSEL.size+' einladen':' – erst Freunde antippen'}</button>`:''):'<div class="card mut" style="padding:14px">Noch keine Freunde. Schick unten eine Anfrage – danach lädst du sie mit einem Tipp zum Duell ein.</div>'}
  <div class="card" style="padding:12px"><b>➕ Freund hinzufügen</b><div style="display:flex;gap:8px;margin-top:8px"><div class="pl" style="flex:1;margin:0"><input id="fn" maxlength="14" placeholder="Name des Freundes" autocomplete="off" autocapitalize="off"></div><button class="btn sm" id="fa" style="flex:none;width:auto;padding:0 16px">📨</button></div><div class="hint" id="fh"></div></div><div style="height:14px;flex:none"></div>`;
  el.querySelectorAll('[data-i]').forEach(b=>b.onclick=async()=>{const i=IB.find(x=>String(x.id)==b.dataset.i);if(!i)return;const acc=b.dataset.a=='1';el.querySelectorAll('button').forEach(x=>x.disabled=true);
   try{await rpc('inbox_answer',{p_name:me.name,p_pin:me.pin,p_id:i.id,p_accept:acc})}catch(e){}
@@ -1150,6 +1163,7 @@ function frDraw(back){const el=document.getElementById('fr');if(!el)return;const
  {const bx=document.getElementById('fpb');if(bx&&FP){const rem=Math.max(.1,60-(Date.now()-FP.t0)/1000);bx.style.transition='width '+rem+'s linear';setTimeout(()=>{bx.style.width='0'},60)}}
  el.querySelectorAll('[data-p]').forEach(x=>x.onclick=e=>{if(FSEL)return;e.stopPropagation();friendProfile(x.dataset.p,back)});
  const fpx=document.getElementById('fpx');if(fpx)fpx.onclick=()=>{ac();fpCancel('Herausforderung abgebrochen.')};
+ const ffd=document.getElementById('frfd');if(ffd)ffd.onclick=()=>{ac();fdStart(FRD)};
  const fg=document.getElementById('fgr');if(fg)fg.onclick=()=>{ac();FSEL=FSEL?null:new Set();FRD='';frDraw(back)};
  el.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{ac();FRD=b.dataset.q;frDraw(back)});
  el.querySelectorAll('[data-s]').forEach(c=>c.onclick=()=>{const n=c.dataset.s;if(FSEL.has(n))FSEL.delete(n);else if(FSEL.size<4)FSEL.add(n);frDraw(back)});
@@ -1315,13 +1329,27 @@ function fernChallenge(pre=''){S.code=null;S.room=null;if(needAcct(fernChallenge
  $('#vw').onclick=()=>{const d=dec($('#cd').value);if(!d){$('#er').textContent='❌ Bitte oben den Code eingeben.';return}sbView(enc(d.seed,d.idx))};
  $('#bt').onclick=()=>(NBK||fern)();
 }
+let FDW='';
+async function fdStart(who){if(!who||!DB.acct)return;const code=enc((Math.random()*2e9)|0,shuffle(Object.keys(STG).map((_,i)=>i).filter(i=>!OFF.includes(Object.keys(STG)[i])),Math.random).slice(0,3));
+ const m=document.getElementById('fh');if(m)m.textContent='Sende Fernduell …';
+ try{const r=await rpc('send_invite',{p_name:DB.acct.name,p_pin:DB.acct.pin,p_to:who,p_payload:code});if(r!=='ok'){if(m)m.textContent='❌ Fernduell nicht möglich ('+r+').';return}
+  DB.fd=[{c:code,w:who,t:Date.now()},...(DB.fd||[])].slice(0,8);save();FDW=who;NBK=()=>friendsScreen();fernIntro(DB.acct.name,code,true)}
+ catch(e){if(m)m.textContent='⚠️ Server nicht erreichbar.'}}
+async function fdDraw(){const el=document.getElementById('fr');if(!el)return;const L=(DB.fd||[]).filter(x=>Date.now()-x.t<7*864e5);if(!L.length)return;
+ let box=document.getElementById('fdl');if(!box){box=document.createElement('div');box.id='fdl';box.className='card';box.style.cssText='padding:12px';el.prepend(box)}
+ box.innerHTML='<b>⏳ Fernduelle</b><div class="mut" id="fdb" style="margin-top:6px">Lade …</div>';
+ try{const rows=await Promise.all(L.slice(0,5).map(async x=>{const rs=await api('GET',`results?code=eq.${encodeURIComponent(x.c)}&select=name,total_ms&limit=20`);const best={};(rs||[]).forEach(r=>{const k=skey(r.name);if(best[k]==null||r.total_ms<best[k])best[k]=r.total_ms});return{x,me:best[skey(DB.acct.name)],th:best[skey(x.w)]}}));
+  const b=document.getElementById('fdb');if(!b)return;
+  b.innerHTML=rows.map(({x,me,th})=>`<div class="rk" data-fd="${esc(x.c)}" style="cursor:pointer;margin-top:4px;flex-wrap:wrap"><b>${esc(x.w)}</b><span>${me==null?'du hast noch nicht gespielt':th==null?'wartet auf '+esc(x.w):(me<th?'🏆 Du ':'😕 ')+f3(me)+' : '+f3(th)+(me<th?'':' · '+esc(x.w)+' gewinnt')}</span></div>`).join('');
+  b.querySelectorAll('[data-fd]').forEach(r=>r.onclick=()=>sbView(r.dataset.fd))}catch(e){const b=document.getElementById('fdb');if(b)b.textContent='Gerade nicht erreichbar.'}}
 function fernIntro(name,code,create,seed){
  const d=dec(code),K=Object.keys(STG);S.names=[name];S.daily=seed!=null;S.seed=seed!=null?seed:d.seed;S.stages=d.idx.map(i=>K[i]);S.cur=0;S.res=[];S.code=enc(d.seed,d.idx);
  if(!create){pass();return}
- app.innerHTML=`<div class="scr"><div class="mid"><div class="c mut">Deine Challenge</div><div class="big" style="font-size:clamp(28px,9vw,40px);color:var(--yel);letter-spacing:2px">${S.code}</div>
- <div class="c mut">Schick den Code (oder Link) an deine Freunde. Wer ihn eingibt, spielt exakt dieselben Aufgaben.</div>
+ app.innerHTML=`<div class="scr"><div class="mid"><div class="c mut">${FDW?'⏳ Fernduell gegen '+esc(FDW):'Deine Challenge'}</div><div class="big" style="font-size:clamp(28px,9vw,40px);color:var(--yel);letter-spacing:2px">${S.code}</div>
+ <div class="c mut">${FDW?esc(FDW)+' hat die Einladung im Postfach (24 Stunden gültig) und spielt dieselben 3 Spiele, sobald es passt.':'Schick den Code (oder Link) an deine Freunde. Wer ihn eingibt, spielt exakt dieselben Aufgaben.'}</div>
  <div class="card">${S.stages.map(k=>`${STG[k].emoji} ${STG[k].name}`).join('<br>')}</div></div>
- <button class="btn" id="sc">📤 Code teilen</button><button class="btn ghost" id="sf">👥 An Freunde senden</button><button class="btn pink" id="go2">Ich spiele jetzt ➜</button>${bar()}</div>`;
+ ${FDW?'':'<button class="btn" id="sc">📤 Code teilen</button><button class="btn ghost" id="sf">👥 An Freunde senden</button>'}<button class="btn pink" id="go2">Ich spiele jetzt ➜</button>${bar()}</div>`;
+ const fdw=FDW;FDW='';if(fdw){$('#go2').onclick=pass;$('#bt').onclick=()=>friendsScreen();return}
  $('#sc').onclick=()=>shareTxt(`⚡ BLITZBRAIN-Challenge! Code: ${S.code}${lnk(S.code)}\nUnter „Party“ → „Schnell-Challenge“ eingeben und meine Zeit schlagen.`,$('#sc'));$('#go2').onclick=pass;$('#sf').onclick=()=>inviteFriends(S.code,'Challenge');$('#bt').onclick=()=>(NBK||fernChallenge)();
 }
 /* ===== Online-Scoreboard (Supabase, nur REST – kein Server von mir nötig) ===== */
@@ -1485,7 +1513,7 @@ setTimeout(()=>{if(DB.notif&&DB.acct)pushOn()},5000);
 try{const h=decodeURIComponent((location.hash||'').slice(1));if(h&&/^DUELL-[A-Z0-9]{4}$/i.test(h))duelOnline(h.slice(6).toUpperCase());else if(h&&(dec(h)||/^RAUM-[A-Z0-9]{4,8}$/i.test(h)))fern(h)}catch(e){}
 try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&location.hostname.endsWith('github.io'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-09-9';let updPend=null,updT=0;
+const BBV='2026-11-09-10';let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;font-weight:800;text-align:center';
