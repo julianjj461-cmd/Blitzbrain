@@ -563,11 +563,11 @@ function draft(){
 }
 function pass(){
  const lead=S.res.length?[...S.res].sort((a,b)=>a.t-b.t)[0]:null;
- app.innerHTML=`<div class="scr"><div class="mid"><div class="c mut">${S.code?'Challenge '+S.code+' · du spielst als':'Handy weitergeben an'}</div><div class="big" style="font-size:clamp(40px,13vw,60px);color:var(--cyan)">${esc(S.names[S.cur])}</div>
+ app.innerHTML=`<div class="scr"><div class="mid"><div class="c mut">${S.daily&&S.code?'📅 Tagesaufgabe · du spielst als':S.code?'Challenge '+S.code+' · du spielst als':'Handy weitergeben an'}</div><div class="big" style="font-size:clamp(40px,13vw,60px);color:var(--cyan)">${esc(S.names[S.cur])}</div>
  ${lead?`<div class="c">👑 Führt: <b>${esc(lead.n)}</b> mit ${f3(lead.t)}</div>`:''}
  <div class="card">${S.stages.map((k,i)=>`<div style="padding:6px 0"><b>${i+1}. ${STG[k].emoji} ${STG[k].name}</b><br><span class="mut">${STG[k].hint}</span></div>`).join('')}<div class="mut c" style="margin-top:6px">Fehler kosten +1,5 s. Zeit läuft über alle ${S.stages.length} Spiele.</div></div></div>
  <button class="btn pink" id="rdy">BEREIT! 🔥</button>${bar('⬅ Abbrechen')}</div>`;
- $('#rdy').onclick=()=>{ac();countdown()};$('#bt').onclick=()=>S.code?fernChallenge():home();
+ $('#rdy').onclick=()=>{ac();countdown()};$('#bt').onclick=()=>S.daily&&S.code?daily():S.code?fernChallenge():home();
 }
 function countdown(cb){
  let n=3;const t=()=>{if(n==0){sfx('go');play(cb);return}
@@ -882,7 +882,7 @@ function daily(){S.code=null;S.room=null;if(needAcct(daily,''))return;const D=da
  (async()=>{let h;try{const rows=await sbGet(D.code),b={};rows.forEach(x=>{if(!b[x.name]||x.total_ms<b[x.name].total_ms)b[x.name]=x});const L=Object.values(b).sort((x,y)=>x.total_ms-y.total_ms).slice(0,3),med=['🥇','🥈','🥉'];
   h=L.length?L.map((x,i)=>`<div class="rk${i==0?' w':''}"><span>${med[i]}</span><b>${esc(x.name)}</b><span>${f3(x.total_ms)}</span></div>`).join(''):'Noch niemand – sei der Erste!'}catch(e){h='⚠️ Nicht erreichbar.'}
   const el=document.getElementById('dtop');if(el)el.innerHTML=h})()}
-function menu(){S.code=null;S.room=null;
+function menu(){S.code=null;S.room=null;S.daily=false;
  app.innerHTML=`<div class="scr"><h1 class="logo">BLITZ<span>BRAIN</span></h1><p class="sub">${POOL().length} Mini-Games · Duell gegen Freunde</p>
  <div class="mid"><button class="btn pink" id="m1" style="padding:20px">⚔️ LOKAL-DUELL<br><small style="font-weight:700;opacity:.9">Ein Handy, reihum – auch offline</small></button>
  <button class="btn" id="m4" style="padding:20px;background:linear-gradient(180deg,#b9ff6b,#8be02e);box-shadow:0 6px 0 #4c8a0e">🥊 1v1-DUELL<br><small style="font-weight:700;opacity:.8">Zu zweit · jede Runde ein anderes Spiel</small></button>
