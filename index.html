@@ -704,7 +704,7 @@ function duelEnd(){
 let DU=null,duT=0;
 const duStop=()=>{clearInterval(duT);duT=0};
 const duCode=c=>{c=String(c).trim().toUpperCase().replace(/^DUELL-/,'');return c.length==4?'1'+c:c};
-function duelOnline(pre=''){duStop();DU=null;
+function duelOnline(pre=''){duStop();DU=null;if(needAcct(duelOnline,pre))return;
  let n=DB.vr||5;
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🌍 1v1 Online</h2><div class="mut">Jeder spielt am eigenen Handy. Der Start ist für beide gleichzeitig.</div>
  ${nameField()}
@@ -720,18 +720,18 @@ function duelOnline(pre=''){duStop();DU=null;
  $('#bt').onclick=duelHub;
  $('#dmk').onclick=async()=>{ac();const v=getName();$('#er').textContent='Eröffne Duell …';try{await duCreate(v,n)}catch(e){$('#er').textContent='❌ Duell konnte nicht erstellt werden. Sind die Raum-Tabellen in Supabase angelegt?'}};
  $('#djn').onclick=async()=>{ac();const v=getName(),c=$('#dcd').value;if(c.trim().length<4){$('#er').textContent='❌ Bitte den Duell-Code eingeben.';return}
-  $('#er').textContent='Trete bei …';try{await duJoin(duCode(c),v)}catch(e){$('#er').textContent=e.nf?'❌ Duell nicht gefunden.':e.full?'❌ In diesem Duell sind schon zwei Spieler.':e.dup?'❌ Dieser Name ist im Duell schon vergeben.':'❌ Beitritt nicht möglich (Internet oder Server pausiert?).'}};
+  $('#er').textContent='Trete bei …';try{await duJoin(duCode(c),v)}catch(e){$('#er').textContent=e.auth?'❌ Anmeldung ungültig – im Hauptmenü unter 👤 neu anmelden.':e.nf?'❌ Duell nicht gefunden.':e.full?'❌ In diesem Duell sind schon zwei Spieler.':e.dup?'❌ Dieser Name ist im Duell schon vergeben.':'❌ Beitritt nicht möglich (Internet oder Server pausiert?).'}};
 }
 async function duCreate(name,rounds,nc,base,n){
  for(let i=0;i<6;i++){const code=nc||'1'+[...Array(4)].map(()=>RMCH[Math.random()*RMCH.length|0]).join('');
   const g=shuffle(Object.keys(STG),Math.random).slice(0,rounds);
   try{await api('POST','rooms',{code,seed:(Math.random()*2e9)|0,size:2,host:name,stages:{g,r:0}},'return=minimal')}catch(e){if(e.status==409){if(nc)return nc;continue}throw e}
-  await api('POST','picks',{code,name},'return=minimal');duEnter(code,name,{base,n});return code}
+  await joinPick(code,name);duEnter(code,name,{base,n});return code}
  throw new Error('Code')}
 async function duJoin(code,name,rejoin,x){
  const rm=await api('GET',`rooms?code=eq.${encodeURIComponent(code)}&select=*`);if(!rm||!rm[0])throw Object.assign(new Error('nf'),{nf:true});
  const pk=await api('GET',`picks?code=eq.${encodeURIComponent(code)}&select=name`);
- if(!pk.some(q=>q.name===name)){if(pk.length>=2)throw Object.assign(new Error('full'),{full:true});await api('POST','picks',{code,name},'return=minimal')}
+ if(!pk.some(q=>q.name===name)){if(pk.length>=2)throw Object.assign(new Error('full'),{full:true});await joinPick(code,name)}
  else if(!rejoin)throw Object.assign(new Error('dup'),{dup:true});
  duEnter(code,name,x)}
 function duEnter(code,name,x){duStop();DB.sess={t:'du',code,name,ts:Date.now()};save();DU={code,name,room:null,rows:[],res:[],phase:'',ticking:false,playing:false,played:{},seen:{},adv:{},starting:false,base:(x&&x.base)||code,n:(x&&x.n)||1};duTick();duT=setInterval(duTick,1200)}
@@ -856,9 +856,11 @@ function menu(){S.code=null;S.room=null;
  <button class="btn" id="m2" style="padding:20px">🕹️ ARCADE<br><small style="font-weight:700;opacity:.8">Solo – jedes Spiel einzeln üben</small></button></div>
  <div class="tb"><button class="btn ghost sm" id="rec">🏆 Bestenlisten</button><button class="btn ghost sm" id="mus" style="flex:0 0 64px" aria-label="Musik"></button><button class="btn ghost sm" id="snd" style="flex:0 0 64px" aria-label="Sound"></button><button class="btn ghost sm" id="hp" style="flex:0 0 64px" aria-label="So geht's">❔</button></div></div>`;
  const lab=()=>{$('#mus').textContent=DB.mus?'🎵':'🔕';$('#snd').textContent=DB.snd?'🔊':'🔇'};lab();
- const sv=DB.sess&&Date.now()-DB.sess.ts<90*60*1000?DB.sess:null;
+ const sv=DB.acct&&DB.sess&&Date.now()-DB.sess.ts<90*60*1000?DB.sess:null;
  if(sv){const mid=app.querySelector('.mid');if(mid){const b=document.createElement('button');b.className='btn ghost';b.id='rs';b.textContent='↩️ Zurück ins '+(sv.t=='du'?'Duell':'Raum')+' ('+sv.code.replace(/^1/,'')+')';mid.append(b);
   b.onclick=async()=>{ac();b.textContent='Verbinde …';try{if(sv.t=='du')await duJoin(sv.code,sv.name,true);else await roomJoin(sv.code,sv.name)}catch(e){DB.sess=null;save();b.textContent='❌ Nicht mehr verfügbar'}}}}
+ {const mid=app.querySelector('.mid');if(mid){const b=document.createElement('button');b.className='btn ghost sm';b.id='ac';b.textContent=DB.acct?'👤 '+DB.acct.name+' · abmelden':'👤 Anmelden / Registrieren';mid.append(b);
+  b.onclick=()=>{ac();if(DB.acct){DB.acct=null;DB.sess=null;save();menu()}else loginScreen(menu)}}}
  $('#hp').onclick=help;
  $('#m1').onclick=()=>{ac();home()};$('#m3').onclick=()=>{ac();fern()};$('#m2').onclick=()=>{ac();arcade()};$('#m4').onclick=()=>{ac();duelHub()};
  $('#rec').onclick=()=>{ac();bestenlisten(menu)};
@@ -868,10 +870,8 @@ function menu(){S.code=null;S.room=null;
 function arcade(){
  if(!DB.arc)DB.arc={};
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🕹️ Arcade</h2><div class="mut">Tippe ein Spiel an und teste es solo. Die Bestzeit pro Spiel wird gespeichert.</div>
- <div class="pl"><input id="an" maxlength="14" placeholder="Dein Name (für Online-Rekorde)" value="${esc(DB.fname||'')}" autocomplete="off"></div>
  <div class="grid g2" style="gap:10px;padding-bottom:12px">${Object.keys(STG).map(k=>`<button class="card ar" data-k="${k}" style="border:0;color:#fff;text-align:center;padding:12px 6px;font:inherit;background:linear-gradient(180deg,#7a4dff,#5a2fe0);box-shadow:0 4px 0 rgba(0,0,0,.3)"><div style="font-size:34px">${STG[k].emoji}</div><b>${STG[k].name}</b><div class="mut" style="font-size:12px;margin-top:2px">${DB.arc[k]?'🏅 '+f3(DB.arc[k]):'noch nicht gespielt'}</div></button>`).join('')}</div>
  <div class="tb"><button class="btn ghost sm" id="bt">⬅ Zurück</button></div></div>`;
- $('#an').oninput=e=>{DB.fname=e.target.value.trim();save()};
  const t0=performance.now();app.querySelectorAll('.ar').forEach(b=>b.onclick=e=>{const r=$('.tb').getBoundingClientRect();if(performance.now()-t0<400||(e.clientY&&e.clientY>=r.top-6))return;sfx('ok');arcIntro(b.dataset.k)});
  $('#bt').onclick=menu;
 }
@@ -910,16 +910,16 @@ const lnk=code=>/^https?:/.test(location.href)?'\n'+location.href.split('#')[0]+
 const shareTxt=(text,b)=>{const ok=()=>{if(b){const o=b.textContent;b.textContent='✔ Kopiert!';setTimeout(()=>b.textContent=o,1500)}};
  if(navigator.share){navigator.share({text}).catch(()=>{});return}
  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(ok,()=>prompt('Text kopieren:',text));else prompt('Text kopieren:',text)};
-const nameField=()=>`<div class="pl"><input id="fn" maxlength="14" placeholder="Dein Name" value="${esc(DB.fname||'')}" autocomplete="off"></div>`;
-const getName=()=>{const v=$('#fn').value.trim()||'Spieler';DB.fname=v;save();return v};
-function fern(pre=''){S.code=null;S.room=null;
+const nameField=()=>`<div class="card c" style="padding:10px">👤 Angemeldet als <b>${esc(DB.acct?DB.acct.name:'–')}</b></div>`;
+const getName=()=>DB.acct.name;
+function fern(pre=''){S.code=null;S.room=null;if(needAcct(fern,pre))return;
  if(/^RAUM-/i.test(pre))return fernRoom(pre.slice(5));if(pre)return fernChallenge(pre);
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🌍 Online-Duell</h2><div class="mut">Jeder spielt am eigenen Handy – mit denselben Aufgaben.</div>
  <div class="mid"><button class="btn pink" id="a1" style="padding:24px">🏠 RAUM<br><small style="font-weight:700;opacity:.9">Geheime Spiele-Wahl, gemeinsamer Countdown</small></button>
  <button class="btn" id="a2" style="padding:24px">⚡ SCHNELL-CHALLENGE<br><small style="font-weight:700;opacity:.8">Gleicher Code, jeder spielt wann er will</small></button></div>${bar('⬅ Hauptmenü')}</div>`;
  $('#a1').onclick=()=>fernRoom();$('#a2').onclick=()=>fernChallenge();$('#bt').onclick=menu;
 }
-function fernRoom(pre=''){S.code=null;S.room=null;
+function fernRoom(pre=''){S.code=null;S.room=null;if(needAcct(fernRoom,pre))return;
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🏠 Raum</h2><div class="mut">Jeder wählt heimlich 1 von 4 Spielen, dann startet der Countdown für alle gleichzeitig.</div>
  ${nameField()}
  <h3 style="margin:4px 0 0">Neuen Raum eröffnen</h3>
@@ -928,10 +928,10 @@ function fernRoom(pre=''){S.code=null;S.room=null;
  <div class="pl"><input id="rcd" maxlength="9" placeholder="Raum-Code, z. B. K7P2" value="${esc(pre)}" autocomplete="off" autocapitalize="characters" style="text-transform:uppercase;letter-spacing:2px"></div>
  <button class="btn" id="rjn">▶ Raum beitreten</button><div class="hint" id="er"></div>${bar()}</div>`;
  $('#rmk').onclick=async()=>{ac();const v=getName();$('#er').textContent='Eröffne Raum …';try{await roomCreate(v,+$('#rsz').value)}catch(e){$('#er').textContent='❌ Raum konnte nicht erstellt werden. Ist die Raum-Tabelle in Supabase angelegt?'}};
- $('#rjn').onclick=async()=>{ac();const v=getName(),c=$('#rcd').value;if(c.trim().length<4){$('#er').textContent='❌ Bitte den Raum-Code eingeben.';return}$('#er').textContent='Trete bei …';try{await roomJoin(c,v)}catch(e){$('#er').textContent=e.nf?'❌ Raum nicht gefunden.':e.full?'❌ Der Raum ist schon voll.':'❌ Beitritt nicht möglich (Internet oder Server pausiert?).'}};
+ $('#rjn').onclick=async()=>{ac();const v=getName(),c=$('#rcd').value;if(c.trim().length<4){$('#er').textContent='❌ Bitte den Raum-Code eingeben.';return}$('#er').textContent='Trete bei …';try{await roomJoin(c,v)}catch(e){$('#er').textContent=e.auth?'❌ Anmeldung ungültig – im Hauptmenü unter 👤 neu anmelden.':e.nf?'❌ Raum nicht gefunden.':e.full?'❌ Der Raum ist schon voll.':'❌ Beitritt nicht möglich (Internet oder Server pausiert?).'}};
  $('#bt').onclick=()=>fern();
 }
-function fernChallenge(pre=''){S.code=null;S.room=null;
+function fernChallenge(pre=''){S.code=null;S.room=null;if(needAcct(fernChallenge,pre))return;
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">⚡ Schnell-Challenge</h2><div class="mut">Gleicher Code, jeder spielt wann er will. Die Zeiten kommen ins gemeinsame Scoreboard.</div>
  ${nameField()}
  <button class="btn pink" id="mk">✨ Neue Challenge erstellen</button>
@@ -968,8 +968,27 @@ alter table public.results enable row level security;
 create policy "alle duerfen lesen" on public.results for select to anon using (true);
 create policy "alle duerfen eintragen" on public.results for insert to anon with check (true);`;
 const sbOk=()=>!!(DB.sb&&DB.sb.url&&DB.sb.key);
-async function sbSend(r,g,code){const res=await fx(DB.sb.url+'/rest/v1/results',{method:'POST',headers:{apikey:DB.sb.key,'Content-Type':'application/json',Prefer:'return=minimal'},
- body:JSON.stringify({code,name:r.n,total_ms:Math.round(r.t),pen_ms:Math.round(r.pen||0),games:g})});if(!res.ok)throw new Error(res.status)}
+async function rpc(fn,args){const r=await fx(DB.sb.url+'/rest/v1/rpc/'+fn,{method:'POST',headers:{apikey:DB.sb.key,'Content-Type':'application/json'},body:JSON.stringify(args)});
+ if(!r.ok)throw Object.assign(new Error(r.status),{status:r.status});return r.json()}
+async function sbSend(r,g,code){if(!DB.acct||String(r.n).toLowerCase()!==DB.acct.name.toLowerCase())throw new Error('kein Konto');
+ const s=await rpc('submit_result',{p_name:DB.acct.name,p_pin:DB.acct.pin,p_code:code,p_total:Math.round(r.t),p_pen:Math.round(r.pen||0),p_games:g});if(s!=='ok')throw Object.assign(new Error(s),{auth:true})}
+async function joinPick(code,name){if(!DB.acct||DB.acct.name.toLowerCase()!==String(name).toLowerCase())throw Object.assign(new Error('kein Konto'),{auth:true});
+ const s=await rpc('join_room',{p_name:DB.acct.name,p_pin:DB.acct.pin,p_code:code});if(s!=='ok')throw Object.assign(new Error(s),{auth:true})}
+function loginScreen(next,msg=''){
+ app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">👤 Anmelden</h2><div class="mut">Dein Name wird mit einer PIN geschützt, sodass niemand unter deinem Namen spielen kann. Neuer Name? Dann legst du hier gleich deine PIN fest.</div>
+ <div class="pl"><input id="an1" maxlength="14" placeholder="Dein Name" value="${esc(DB.acct?DB.acct.name:(DB.fname||''))}" autocomplete="off"></div>
+ <div class="pl"><input id="an2" type="password" inputmode="numeric" maxlength="12" placeholder="PIN (4–12 Zeichen)" autocomplete="off"></div>
+ <button class="btn pink" id="ago">✔ Anmelden / Registrieren</button><div class="hint" id="aer">${msg}</div>${bar()}</div>`;
+ $('#bt').onclick=menu;
+ $('#ago').onclick=async()=>{ac();const nm=$('#an1').value.trim(),pn=$('#an2').value,er=$('#aer');
+  if(!nm||pn.length<4){er.textContent='❌ Name und PIN (mindestens 4 Zeichen) eingeben.';return}
+  er.textContent='Prüfe …';
+  try{const r=String(await rpc('claim_name',{p_name:nm,p_pin:pn})),m=/^(new|ok):(.+)$/.exec(r);
+   if(m){DB.acct={name:m[2],pin:pn};DB.fname=m[2];save();sfx('win');(next||menu)();return}
+   er.textContent=r==='wrong'?'❌ PIN falsch – oder der Name gehört schon jemand anderem.':r==='locked'?'⏳ Zu viele Fehlversuche. Bitte 5 Minuten warten.':'❌ Name: 1–14 Zeichen, PIN: 4–12 Zeichen.'}
+  catch(e){er.textContent=e.status==404?'⚠️ Die Konto-Funktion fehlt noch in Supabase (SQL einrichten).':'⚠️ Server nicht erreichbar (Internet oder Server pausiert?).'}};
+}
+const needAcct=(f,pre)=>{if(DB.acct)return false;loginScreen(()=>f(pre));return true};
 async function sbGet(code){const r=await fx(`${DB.sb.url}/rest/v1/results?code=eq.${encodeURIComponent(code)}&select=name,total_ms,pen_ms,games&order=total_ms.asc&limit=200`,{headers:{apikey:DB.sb.key}});if(!r.ok)throw new Error(r.status);return r.json()}
 const fx=(u,o={})=>{const c=new AbortController(),t=setTimeout(()=>c.abort(),8000);return fetch(u,{...o,signal:c.signal}).finally(()=>clearTimeout(t))};
 let sbT=0;
@@ -997,12 +1016,12 @@ const rmStop=()=>{clearInterval(rmT);rmT=0};
 async function roomCreate(name,size){
  for(let i=0;i<6;i++){const code=[...Array(4)].map(()=>RMCH[Math.random()*RMCH.length|0]).join('');
   try{await api('POST','rooms',{code,seed:(Math.random()*2e9)|0,size,host:name},'return=minimal')}catch(e){if(e.status==409)continue;throw e}
-  await api('POST','picks',{code,name},'return=minimal');roomEnter(code,name);return}
+  await joinPick(code,name);roomEnter(code,name);return}
  throw new Error('Code')}
 async function roomJoin(code,name,x){code=code.trim().toUpperCase().replace(/^RAUM-/,'');
  const rm=await api('GET',`rooms?code=eq.${encodeURIComponent(code)}&select=*`);if(!rm||!rm[0])throw Object.assign(new Error('nf'),{nf:true});
  const pk=await api('GET',`picks?code=eq.${encodeURIComponent(code)}&select=name,game`);
- if(!pk.some(x=>x.name===name)){if(!rm[0].stages&&pk.length>=rm[0].size)throw Object.assign(new Error('full'),{full:true});await api('POST','picks',{code,name},'return=minimal')}
+ if(!pk.some(x=>x.name===name)){if(!rm[0].stages&&pk.length>=rm[0].size)throw Object.assign(new Error('full'),{full:true});await joinPick(code,name)}
  roomEnter(code,name,x)}
 function roomEnter(code,name,x){rmStop();DB.sess={t:'rm',code,name,ts:Date.now()};save();RM={code,name,phase:'',room:null,rows:[],pool:null,ticking:false,...(x||{})};rmTick();rmT=setInterval(rmTick,1500)}
 async function roomRematch(){const x=S.rm,er=document.getElementById('rer');if(!x)return;if(er)er.textContent='Verbinde …';
