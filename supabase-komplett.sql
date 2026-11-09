@@ -107,5 +107,10 @@ grant execute on function public.leave_room(text, text, text) to anon, authentic
 
 grant execute on function public.friend_request(text, text, text), public.inbox_list(text, text), public.inbox_answer(text, text, bigint, boolean), public.friends_list(text, text), public.friend_remove(text, text, text), public.send_invite(text, text, text, text) to anon, authenticated;
 
+-- 3c) EINMALIGES Leeren aller Bestenlisten (läuft nur beim ersten Ausführen dieser Datei, danach nie wieder)
+create table if not exists public._once (k text primary key, done_at timestamptz not null default now());
+alter table public._once enable row level security;
+do $$ begin if not exists (select 1 from public._once where k = 'reset-highscores-1') then delete from public.results; delete from public.reacts; delete from public.rooms; insert into public._once(k) values ('reset-highscores-1'); end if; end $$;
+
 -- 4) Direktes Schreiben ohne PIN sperren (alles läuft nur noch über die Funktionen oben)
 do $$ declare p record; begin for p in select policyname, tablename from pg_policies where schemaname = 'public' and ((tablename in ('results', 'picks', 'rooms') and cmd = 'INSERT') or (tablename in ('picks', 'rooms') and cmd = 'UPDATE')) loop execute format('drop policy %I on public.%I', p.policyname, p.tablename); end loop; end $$;
