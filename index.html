@@ -647,14 +647,14 @@ function h2hAdd(a,b,w){DB.h2h=DB.h2h||{};const k=h2hKey(a,b),e=DB.h2h[k]||(DB.h2
  e.n[a.toLowerCase()]=a;e.n[b.toLowerCase()]=b;if(w){const l=w.toLowerCase();e.w[l]=(e.w[l]||0)+1}else e.d++;save()}
 function h2hLine(a,b){const e=DB.h2h&&DB.h2h[h2hKey(a,b)];if(!e)return'';const x=e.w[a.toLowerCase()]||0,y=e.w[b.toLowerCase()]||0;
  return `<div class="card c">📊 Bilanz gesamt<br><b>${esc(a)} ${x} : ${y} ${esc(b)}</b>${e.d?` · ${e.d}× unentschieden`:''}</div>`}
-function duelStats(){
+function duelStats(back){back=back||duelHub;
  const L=Object.values(DB.h2h||{}).map(e=>{const k=Object.keys(e.n);return{a:e.n[k[0]],b:e.n[k[1]]||'?',x:e.w[k[0]]||0,y:e.w[k[1]]||0,d:e.d}}).sort((p,q)=>(q.x+q.y+q.d)-(p.x+p.y+p.d));
  const row=r=>`<div class="rk" style="flex-wrap:wrap"><b>${esc(r.a)}</b><span>${r.x} : ${r.y}</span><b>${esc(r.b)}</b>${r.d?`<small style="width:100%">${r.d}× unentschieden</small>`:''}</div>`;
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">📊 Duell-Bilanz</h2><div class="mut">Wer hat wie oft gegen wen gewonnen.</div>
  <h3 style="margin:6px 0 0">🌍 Online (alle Geräte)</h3><div id="onb" class="mut">Lade …</div>
  <h3 style="margin:10px 0 0">📱 Auf diesem Handy</h3>
  ${L.length?L.map(row).join(''):'<div class="c mut">Noch keine Duelle gespielt.</div>'}${bar()}</div>`;
- $('#bt').onclick=duelHub;
+ $('#bt').onclick=back;
  (async()=>{const box=()=>document.getElementById('onb');
   try{const r=await fx(DB.sb.url+'/rest/v1/results?code=like.1*-END&select=code,name,total_ms&limit=1000',{headers:{apikey:DB.sb.key}});if(!r.ok)throw new Error(r.status);
    const by={},pairs={};(await r.json()).forEach(x=>{(by[x.code]=by[x.code]||{})[x.name]=x.total_ms-500});
@@ -668,7 +668,7 @@ function duelHub(){
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🥊 1v1-Duell</h2><div class="mut">Zwei Spieler, jede Runde ein anderes Spiel – wer schneller ist, holt den Punkt.</div>
  <div class="mid"><button class="btn pink" id="h1" style="padding:24px">📱 EIN HANDY<br><small style="font-weight:700;opacity:.9">Reihum am selben Gerät</small></button>
  <button class="btn" id="h2" style="padding:24px">🌍 ONLINE · 2 HANDYS<br><small style="font-weight:700;opacity:.8">Jeder am eigenen Handy, gleicher Start</small></button><button class="btn ghost sm" id="h3">📊 Duell-Bilanz</button></div>${bar('⬅ Hauptmenü')}</div>`;
- $('#h1').onclick=duelSetup;$('#h2').onclick=()=>duelOnline();$('#h3').onclick=duelStats;$('#bt').onclick=menu;
+ $('#h1').onclick=duelSetup;$('#h2').onclick=()=>duelOnline();$('#h3').onclick=()=>duelStats();$('#bt').onclick=menu;
 }
 function duelSetup(){
  let n=DB.vr||5;const nm=DB.vn||[DB.names[0]||'',DB.names[1]||''];
@@ -810,7 +810,7 @@ function duRender0(){const r=DU.room,ph=DU.phase,N=(r.stages.g||[]).length,S2=du
  if(ph.startsWith('lobbyr')){const meR=ph[6]=='1',all=ph[7]=='1',op=DU.rows.map(x=>x.name).find(n=>n!==me)||'?';
   app.innerHTML=`<div class="scr" id="du">${head}<div class="mid"><div class="big pop" style="font-size:clamp(28px,9vw,40px)">${nmx(me)}<br><span style="color:var(--pink)">VS</span><br>${nmx(op)}</div><div class="c mut">${N} Runde${N>1?'n':''} · beide drücken „Bereit“, dann startet der Countdown</div>
    ${all?'<div class="big" style="font-size:30px;color:var(--grn)">Gleich geht’s los …</div>':meR?`<div class="c" style="font-size:20px">✔ Du bist bereit – warte auf ${esc(op)} …</div>`:'<button class="btn pink glow" id="rdy2" style="padding:20px;font-size:24px">✅ BEREIT</button>'}</div>${tb}</div>`;
-  const rb=document.getElementById('rdy2');if(rb)rb.onclick=async()=>{ac();rb.disabled=true;try{await roomRpc('set_pick',{p_code:DU.code,p_game:'ok-'+DU.name});DU.phase='';duTick()}catch(e){rb.disabled=false}};$('#bt').onclick=()=>{duStop();DU=null;DB.sess=null;save();duelOnline()};return}
+  const rb=document.getElementById('rdy2');if(rb)rb.onclick=async()=>{ac();rb.disabled=true;try{await roomRpc('set_pick',{p_code:DU.code,p_game:'ok-'+DU.name});DU.phase='';duTick()}catch(e){rb.disabled=false}};$('#bt').onclick=()=>{duStop();DU=null;DB.sess=null;save();(NBK||duelOnline)()};return}
  if(ph=='lobby'){
   app.innerHTML=`<div class="scr" id="du">${head}<div class="mid"><div class="big" style="font-size:clamp(30px,10vw,44px)">Warte auf Gegner …</div><div class="c mut">Gib deinem Gegner diesen Code:</div><div class="big" style="font-size:clamp(40px,13vw,60px);color:var(--yel);letter-spacing:4px">${esc(show)}</div><div id="plist"></div><div class="hint" id="rms"></div><button class="btn" id="inv">📤 Code teilen</button><button class="btn ghost" id="inf">👥 Freund einladen</button></div>${tb}</div>`;
   $('#inf').onclick=()=>inviteFriends('DUELL-'+show,'Duell');
@@ -843,7 +843,7 @@ function duRender0(){const r=DU.room,ph=DU.phase,N=(r.stages.g||[]).length,S2=du
    try{const nc='1'+(DU.base.slice(1)+(DU.n+1)).slice(0,7),x={base:DU.base,n:DU.n+1},nm=DU.name,N2=N;duStop();
     await duCreate(nm,N2,nc,x.base,x.n);if(DU&&DU.code!==nc||!DU)await duJoin(nc,nm,true,x)}
    catch(e){const el=document.getElementById('rer');if(el)el.textContent='⚠️ Revanche nicht möglich (Internet oder Server pausiert?).'}}}
- $('#bt').onclick=()=>{duStop();DU=null;DB.sess=null;save();duelOnline()};
+ $('#bt').onclick=()=>{duStop();DU=null;DB.sess=null;save();(NBK||duelOnline)()};
  duUpdate()}
 function duUpdate(){if(!DU||!DU.room)return;const pl=document.getElementById('plist');
  if(pl)pl.innerHTML=DU.rows.map(x=>`<div class="rk"><b>${nmx(x.name)}</b><span>✔ dabei</span></div>`).join('')+`<div class="mut c" style="font-size:13px;margin-top:6px">${DU.rows.length}/2 dabei</div>`;
@@ -947,7 +947,7 @@ async function profile(){if(!DB.acct){loginScreen(profile);return}
  <div class="card" style="padding:12px"><b>🏢 Team</b><div class="pl" style="margin-top:6px"><input id="tm" maxlength="12" list="tml" placeholder="z. B. Drachen (leer = kein Team)" value="${esc(DB.team||'')}" autocomplete="off"><datalist id="tml"></datalist></div><button class="btn sm" id="tms" style="margin-top:8px">💾 Team speichern</button><div class="hint" id="tmh"></div></div>
  <div class="card" style="padding:12px"><b>🏆 Meine Bestzeiten</b><div id="pb" class="mut" style="margin-top:6px">Lade …</div></div>
  <button class="btn ghost" id="pd">📊 Duell-Bilanz</button><button class="btn ghost" id="po">🚪 Abmelden</button>${bar('⬅ Zurück')}</div>`;
- $('#bt').onclick=menu;$('#pd').onclick=duelStats;$('#po').onclick=()=>{DB.acct=null;DB.sess=null;save();menu()};
+ $('#bt').onclick=menu;$('#pd').onclick=()=>duelStats(profile);$('#po').onclick=()=>{DB.acct=null;DB.sess=null;save();menu()};
  document.querySelectorAll('#thg button').forEach(b=>b.onclick=()=>{const k=b.dataset.t;if(!thmOk(k)){$('#thh').textContent='🔒 Noch gesperrt – spiel die Tagesaufgabe '+THM[k].u+' Tage in Folge.';return}
   DB.thm=k;save();applyTheme();document.querySelectorAll('#thg button').forEach(x=>x.classList.toggle('sel',x.dataset.t==k))});
  document.querySelectorAll('#avg button').forEach(b=>b.onclick=async()=>{const a=b.dataset.a,nw=DB.av===a?'':a,h=document.getElementById('avh');h.textContent='Speichere …';
@@ -978,7 +978,7 @@ function applyTheme(){const k=THM[DB.thm]&&thmOk(DB.thm)?DB.thm:'std',t=THM[k],s
  ['--b1','--b2','--c1','--c2','--tb','--g1','--g2'].forEach((v,i)=>st.setProperty(v,t.v[i]));
  const m=document.querySelector('meta[name=theme-color]');if(m)m.content=t.v[6]}
 /* ===== Freunde & Postfach ===== */
-let FR=[],IB=[],FF=false,FRD='';const IBSEEN=new Set();
+let NBK=null,FR=[],IB=[],FF=false,FRD='';const IBSEEN=new Set();
 async function frLoad(){if(!DB.acct){FR=[];return}try{const r=await rpc('friends_list',{p_name:DB.acct.name,p_pin:DB.acct.pin});FR=Array.isArray(r)?r:[]}catch(e){}}
 async function ibLoad(){if(!DB.acct){IB=[];ibBadge();return}try{const r=await rpc('inbox_list',{p_name:DB.acct.name,p_pin:DB.acct.pin});IB=Array.isArray(r)?r:[];ibBadge();ibBanner()}catch(e){}}
 function ibBadge(){const b=document.getElementById('ib');if(b)b.textContent=IB.length?'📬 '+IB.length:'👥'}
@@ -994,7 +994,7 @@ function ibBanner(){if(!document.getElementById('ib')&&!document.getElementById(
   try{await rpc('inbox_answer',{p_name:DB.acct.name,p_pin:DB.acct.pin,p_id:i.id,p_accept:true})}catch(e){}IB=IB.filter(x=>x.id!=i.id);ibBadge();joinPayload(i.p)}}
 setInterval(async()=>{if(document.getElementById('ib')||document.getElementById('fr')){const n=IB.length;await ibLoad();const f=document.getElementById('fr');if(f&&IB.length!=n&&!document.activeElement.matches('input'))frDraw()}},6000);
 const pyTxt=p=>/^DUELL-/.test(p)?'🥊 lädt dich zum 1v1-Duell ein':/^RAUM-/.test(p)?'🌍 lädt dich in einen Raum ein':'⚡ schickt dir eine Challenge';
-async function joinPayload(p){ac();const nm=DB.acct.name,msg=t=>{const m=document.getElementById('fm');if(m)m.textContent=t};
+async function joinPayload(p){ac();NBK=menu;const nm=DB.acct.name,msg=t=>{const m=document.getElementById('fm');if(m)m.textContent=t};
  try{if(/^DUELL-[A-Z0-9]{4}$/i.test(p))await duJoin(duCode(p.slice(6)),nm,true);else if(/^RAUM-/i.test(p))await roomJoin(p,nm);else fern(p)}
  catch(e){msg(e.nf?'❌ Diese Einladung ist abgelaufen oder das Spiel gibt es nicht mehr.':e.full?'❌ Dort ist schon alles voll.':'❌ Beitritt nicht möglich – versuch es nochmal.')}}
 async function friendsScreen(back=menu){if(!DB.acct){loginScreen(()=>friendsScreen(back));return}
@@ -1012,7 +1012,7 @@ function frDraw(back){const el=document.getElementById('fr');if(!el)return;const
   IB=IB.filter(x=>x.id!=i.id);ibBadge();if(i.k=='friend'&&acc)await frLoad();frDraw(back);if(i.k=='invite'&&acc)joinPayload(i.p)});
  el.querySelectorAll('#frr [data-n]').forEach(b=>b.onclick=()=>{DB.vr=+b.dataset.n;save();sfx('ok');frDraw(back)});
  el.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{ac();FRD=FRD==b.dataset.d?'':b.dataset.d;frDraw(back)});
- const go=document.getElementById('frgo');if(go)go.onclick=async()=>{ac();const who=FRD;el.querySelectorAll('button').forEach(x=>x.disabled=true);const m=document.getElementById('fh');if(m)m.textContent='Eröffne Duell …';
+ const go=document.getElementById('frgo');if(go)go.onclick=async()=>{ac();const who=FRD;el.querySelectorAll('button').forEach(x=>x.disabled=true);NBK=menu;const m=document.getElementById('fh');if(m)m.textContent='Eröffne Duell …';
   try{const c=await duCreate(me.name,DB.vr||5);await rpc('send_invite',{p_name:me.name,p_pin:me.pin,p_to:who,p_payload:'DUELL-'+c.slice(1)})}catch(e){frDraw(back);const h=document.getElementById('fh');if(h)h.textContent='⚠️ Duell konnte nicht eröffnet werden.'}};
  el.querySelectorAll('[data-r]').forEach(b=>b.onclick=async()=>{if(b.dataset.s!='1'){b.dataset.s='1';b.textContent='sicher?';return}
   try{await rpc('friend_remove',{p_name:me.name,p_pin:me.pin,p_who:b.dataset.r})}catch(e){}await frLoad();frDraw(back)});
@@ -1034,7 +1034,7 @@ async function inviteFriends(payload,what){ac();if(!DB.acct)return;const old=doc
 function onboard(i=0){const P=[['⚡','Schnell sein!','Mini-Spiele, die du so schnell wie möglich löst. Jeder Fehler kostet +1,5 s – die niedrigste Zeit gewinnt.'],['👥','Gemeinsam spielen','Party-Runde mit einem Handy, 1v1-Duelle oder eine Online-Arena. Mit Freunden: Einladung direkt ins Postfach oder per Code.'],['📅','Jeden Tag dabei','Die Tagesaufgabe gibt jeden Tag 3 neue Spiele. Spiel täglich für eine 🔥 Serie und schalte Farbthemen frei.']],[e,t,x]=P[i];
  app.innerHTML=`<div class="scr"><div class="mid"><div class="big pop" style="font-size:90px">${e}</div><div class="big" style="font-size:clamp(30px,10vw,42px);color:var(--yel)">${t}</div><div class="c mut" style="font-size:17px">${x}</div><div class="dots" style="width:120px;margin-top:8px">${P.map((_,j)=>`<i class="${j==i?'on':j<i?'dn':''}"></i>`).join('')}</div></div><button class="btn pink" id="on">${i<2?'Weiter ➜':'Los geht’s 🚀'}</button><button class="btn ghost sm" id="os">Überspringen</button></div>`;
  const end=()=>{DB.seen=1;save();menu()};$('#on').onclick=()=>{ac();i<2?onboard(i+1):end()};$('#os').onclick=end}
-function menu(){applyTheme();avLoad();ibLoad();S.code=null;S.room=null;S.daily=false;
+function menu(){NBK=null;applyTheme();avLoad();ibLoad();S.code=null;S.room=null;S.daily=false;
  app.innerHTML=`<div class="scr"><h1 class="logo sm">BLITZ<span>BRAIN</span></h1><div class="sub" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="white-space:nowrap">${POOL().length} Mini-Games</span><button class="btn ghost sm" id="ac" style="flex:none;width:auto;padding:6px 12px;font-size:13px"></button></div>
  <div class="mid" style="gap:10px"><button class="btn pink" id="m1" style="padding:13px">⚔️ PARTY-RUNDE<br><small style="font-weight:700;opacity:.9">Ein Handy für alle – auch offline</small></button>
  <button class="btn" id="m4" style="padding:13px;background:linear-gradient(180deg,#b9ff6b,#8be02e);box-shadow:0 6px 0 #4c8a0e">🥊 1v1-DUELL<br><small style="font-weight:700;opacity:.8">Zu zweit · lokal oder online</small></button>
@@ -1044,7 +1044,7 @@ function menu(){applyTheme();avLoad();ibLoad();S.code=null;S.room=null;S.daily=f
  const lab=()=>{$('#mus').textContent=DB.mus?'🎵':'🔕';$('#snd').textContent=DB.snd?'🔊':DB.vib===false?'🔇':'📳'};lab();
  const sv=DB.acct&&DB.sess&&Date.now()-DB.sess.ts<90*60*1000?DB.sess:null;
  if(sv){const mid=app.querySelector('.mid');if(mid){const b=document.createElement('button');b.className='btn ghost';b.id='rs';b.textContent='↩️ Zurück ins '+(sv.t=='du'?'Duell':'Raum')+' ('+sv.code.replace(/^1/,'')+')';mid.append(b);
-  b.onclick=async()=>{ac();b.textContent='Verbinde …';try{if(sv.t=='du')await duJoin(sv.code,sv.name,true);else await roomJoin(sv.code,sv.name)}catch(e){DB.sess=null;save();b.textContent='❌ Nicht mehr verfügbar'}}}}
+  b.onclick=async()=>{ac();NBK=menu;b.textContent='Verbinde …';try{if(sv.t=='du')await duJoin(sv.code,sv.name,true);else await roomJoin(sv.code,sv.name)}catch(e){DB.sess=null;save();b.textContent='❌ Nicht mehr verfügbar'}}}}
  {const mid=app.querySelector('.mid');if(mid){const b=document.createElement('button'),sk=DB.acct?streakNow(DB.acct.name):null;b.className='btn'+(sk&&!sk.today?' glow':'');b.id='dly';
   b.style.cssText='padding:12px;background:linear-gradient(180deg,var(--c1),var(--c2));border:2px solid var(--yel);box-shadow:0 5px 0 var(--g2);color:#fff';
   b.innerHTML='📅 HEUTE · TAGESAUFGABE<br><small style="font-weight:700;opacity:.9">'+(sk?(sk.today?'✔ heute gespielt · ':'')+streakTxt(sk):'3 neue Spiele jeden Tag · jetzt anmelden')+'</small>';mid.prepend(b);b.onclick=()=>{ac();daily()}}}
@@ -1123,7 +1123,7 @@ function fernRoom(pre=''){S.code=null;S.room=null;if(needAcct(fernRoom,pre))retu
  <button class="btn" id="rjn">▶ Raum beitreten</button><div class="hint" id="er"></div>${bar()}</div>`;
  $('#rmk').onclick=async()=>{ac();const v=getName();$('#er').textContent='Eröffne Raum …';try{await roomCreate(v,+$('#rsz').value)}catch(e){$('#er').textContent='❌ Raum konnte nicht erstellt werden. Ist die Raum-Tabelle in Supabase angelegt?'}};
  $('#rjn').onclick=async()=>{ac();const v=getName(),c=$('#rcd').value;if(c.trim().length<4){$('#er').textContent='❌ Bitte den Raum-Code eingeben.';return}$('#er').textContent='Trete bei …';try{await roomJoin(c,v)}catch(e){$('#er').textContent=e.auth?'❌ Anmeldung ungültig – im Hauptmenü unter 👤 neu anmelden.':e.nf?'❌ Raum nicht gefunden.':e.full?'❌ Der Raum ist schon voll.':'❌ Beitritt nicht möglich (Internet oder Server pausiert?).'}};
- $('#bt').onclick=()=>fern();
+ $('#bt').onclick=()=>(NBK||fern)();
 }
 function fernChallenge(pre=''){S.code=null;S.room=null;if(needAcct(fernChallenge,pre))return;
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">⚡ Schnell-Challenge</h2><div class="mut">Gleicher Code, jeder spielt wann er will. Die Zeiten kommen ins gemeinsame Scoreboard.</div>
@@ -1136,7 +1136,7 @@ function fernChallenge(pre=''){S.code=null;S.room=null;if(needAcct(fernChallenge
  $('#mk').onclick=()=>{ac();const v=getName();fernIntro(v,enc((Math.random()*2e9)|0,shuffle(Object.keys(STG).map((_,i)=>i).filter(i=>!OFF.includes(Object.keys(STG)[i])),Math.random).slice(0,3)),true)};
  $('#jn').onclick=()=>{ac();const v=getName(),c=$('#cd').value;if(!dec(c)){$('#er').textContent='❌ Dieser Code ist ungültig.';return}fernIntro(v,c,false)};
  $('#vw').onclick=()=>{const d=dec($('#cd').value);if(!d){$('#er').textContent='❌ Bitte oben den Code eingeben.';return}sbView(enc(d.seed,d.idx))};
- $('#bt').onclick=()=>fern();
+ $('#bt').onclick=()=>(NBK||fern)();
 }
 function fernIntro(name,code,create,seed){
  const d=dec(code),K=Object.keys(STG);S.names=[name];S.daily=seed!=null;S.seed=seed!=null?seed:d.seed;S.stages=d.idx.map(i=>K[i]);S.cur=0;S.res=[];S.code=enc(d.seed,d.idx);
@@ -1145,7 +1145,7 @@ function fernIntro(name,code,create,seed){
  <div class="c mut">Schick den Code (oder Link) an deine Freunde. Wer ihn eingibt, spielt exakt dieselben Aufgaben.</div>
  <div class="card">${S.stages.map(k=>`${STG[k].emoji} ${STG[k].name}`).join('<br>')}</div></div>
  <button class="btn" id="sc">📤 Code teilen</button><button class="btn ghost" id="sf">👥 An Freunde senden</button><button class="btn pink" id="go2">Ich spiele jetzt ➜</button>${bar()}</div>`;
- $('#sc').onclick=()=>shareTxt(`⚡ BLITZBRAIN-Challenge! Code: ${S.code}${lnk(S.code)}\nUnter „Online-Arena“ eingeben und meine Zeit schlagen.`,$('#sc'));$('#go2').onclick=pass;$('#sf').onclick=()=>inviteFriends(S.code,'Challenge');$('#bt').onclick=()=>fernChallenge();
+ $('#sc').onclick=()=>shareTxt(`⚡ BLITZBRAIN-Challenge! Code: ${S.code}${lnk(S.code)}\nUnter „Online-Arena“ eingeben und meine Zeit schlagen.`,$('#sc'));$('#go2').onclick=pass;$('#sf').onclick=()=>inviteFriends(S.code,'Challenge');$('#bt').onclick=()=>(NBK||fernChallenge)();
 }
 /* ===== Online-Scoreboard (Supabase, nur REST – kein Server von mir nötig) ===== */
 const SQL=`create table public.results (
@@ -1282,7 +1282,7 @@ function rmRender(){const r=RM.room,host=r.host===RM.name,ph=RM.phase;
    const at=new Date(Date.now()+6000).toISOString();try{await roomRpc('set_room',{p_code:RM.code,p_stages:null,p_start:at,p_expect:null});RM.room.start_at=at;RM.phase='count';rmRender()}catch(e){const st=document.getElementById('rms');if(st)st.textContent='⚠️ Start konnte nicht gesendet werden.'}}}
  if($('#inf'))$('#inf').onclick=()=>inviteFriends('RAUM-'+RM.code,'Raum');
  if($('#inv'))$('#inv').onclick=()=>shareTxt(`⚡ BLITZBRAIN-Raum! Code: ${RM.code}${lnk('RAUM-'+RM.code)}\nUnter „Online-Arena“ → „Raum beitreten“ eingeben.`,$('#inv'));
- $('#bt').onclick=()=>{rmStop();RM=null;DB.sess=null;save();fernRoom()};
+ $('#bt').onclick=()=>{rmStop();RM=null;DB.sess=null;save();(NBK||fernRoom)()};
  rmUpdate()}
 function remoteEnd(){
  const r=S.res[0],g=(DB.runs[DB.runs.length-1]||{}).g||{},code=S.code,on=sbOk(),dly=!!S.daily&&!S.room,sk=dly?streakTouch(S.res[0].n):null;
