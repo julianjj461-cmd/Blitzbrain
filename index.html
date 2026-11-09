@@ -56,7 +56,7 @@ body{background:radial-gradient(120% 80% at 50% 0,#3b1a8f,#120b2e 70%) fixed;col
 .word{font:900 clamp(46px,15vw,76px) system-ui;text-align:center;margin-bottom:8px;-webkit-text-stroke:2px rgba(0,0,0,.35)}
 .eq{font:900 clamp(40px,13vw,60px) system-ui;text-align:center;margin-bottom:24px}
 .rx{position:fixed;bottom:140px;font-size:58px;text-align:center;pointer-events:none;z-index:99;animation:rxf 2s ease-out forwards}.rx small{display:block;font-size:14px;font-weight:800;color:#fff;text-shadow:0 1px 3px #000}@keyframes rxf{0%{opacity:0;transform:translateY(20px) scale(.6)}15%{opacity:1;transform:translateY(0) scale(1.1)}100%{opacity:0;transform:translateY(-170px) scale(1)}}
-.pop{animation:pop .7s cubic-bezier(.2,1.7,.4,1) both}@keyframes pop{0%{transform:scale(.2) rotate(-12deg);opacity:0}100%{transform:none;opacity:1}}.bounce{display:inline-block;animation:bnc 1.1s ease-in-out infinite}@keyframes bnc{50%{transform:translateY(-12px) scale(1.12)}}.glow{animation:glw 1.4s ease-in-out infinite}@keyframes glw{50%{box-shadow:0 0 0 4px rgba(255,210,63,.55)}}@media (prefers-reduced-motion:reduce){.pop,.bounce,.glow{animation:none}}
+.pop{animation:pop2 .7s cubic-bezier(.2,1.7,.4,1) both}@keyframes pop2{0%{transform:scale(.2) rotate(-12deg);opacity:0}100%{transform:none;opacity:1}}.pod{display:flex;align-items:flex-end;justify-content:center;gap:6px;margin:10px 0 4px}.pod>div{flex:1;text-align:center;border-radius:12px 12px 0 0;padding:6px 4px;background:linear-gradient(180deg,#3a2380,#2a1768);border:2px solid #5a3fb0;border-bottom:0;min-width:0}.pod b{display:block;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pod .e{font-size:26px}.pod .p1{height:104px;border-color:var(--yel)}.pod .p2{height:84px}.pod .p3{height:70px}.cd{animation:cdp .8s ease-out both}@keyframes cdp{0%{transform:scale(1.8);opacity:0}30%{opacity:1}100%{transform:scale(1)}}.cdb{height:6px;border-radius:3px;background:#ffffff22;margin:18px 24px 0;overflow:hidden}.cdb i{display:block;height:100%;background:var(--yel);transition:width .8s linear}.bounce{display:inline-block;animation:bnc 1.1s ease-in-out infinite}@keyframes bnc{50%{transform:translateY(-12px) scale(1.12)}}.glow{animation:glw 1.4s ease-in-out infinite}@keyframes glw{50%{box-shadow:0 0 0 4px rgba(255,210,63,.55)}}@media (prefers-reduced-motion:reduce){.pop,.bounce,.glow{animation:none}}
 .vb.sel{outline:3px solid var(--yel)}
 .shake{animation:sh .25s}@keyframes sh{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
 .flash{animation:fl .3s}@keyframes fl{0%{box-shadow:inset 0 0 0 100vmax rgba(255,77,77,.35)}}
@@ -579,7 +579,7 @@ function pass(){
 }
 function countdown(cb){
  let n=3;const t=()=>{if(n==0){sfx('go');play(cb);return}
-  app.innerHTML=`<div class="scr"><div class="mid"><div class="cd">${n}</div></div></div>`;sfx('cd');n--;setTimeout(t,800)};t();
+  app.innerHTML=`<div class="scr"><div class="mid"><div class="cd">${n}</div><div class="cdb"><i style="width:${(3-n)/3*100}%"></i></div></div></div>`;const bi=app.querySelector('.cdb i');setTimeout(()=>{if(bi)bi.style.width=(4-n)/3*100+'%'},30);sfx('cd');n--;setTimeout(t,800)};t();
 }
 function play(cb){
  app.innerHTML=`<div class="scr play"><div class="hud"><span>${esc(S.names[S.cur])}</span><span id="tm">0,000 s</span></div><div class="dots">${S.stages.map(()=>'<i></i>').join('')}</div><div class="hint" id="hint"></div><div id="stg"></div></div>`;
@@ -868,13 +868,14 @@ function gboard(back){
  all.sort((a,b)=>(b.b.length>0)-(a.b.length>0));
  const champ=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,5),wk=champOf(WK),TM={},tmAll=teamChamp(R),tmWk=teamChamp(WK);R.forEach(x=>{if(x.team)TM[x.n]=x.team});
  const row=(i,n,t,sub)=>`<div class="rk${i==0?' w':''}" style="margin-top:6px;padding:8px 12px"><span>${med[i]||i+1+'.'}</span><b>${(avOf(n.split(' · ')[0])?avOf(n.split(' · ')[0])+' ':'')+esc(n)}</b><span>${sub||f3(t)}</span></div>`;
+ const pod=L=>L.length<2?'':`<div class="pod">${[1,0,2].filter(i=>L[i]).map(i=>`<div class="p${i+1}"><div class="e">${med[i]}</div><b>${esc(L[i][0])}</b><span class="mut">${L[i][1]} 🏅</span></div>`).join('')}</div>`;
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🏆 Bestenlisten</h2>${srcBar()}
  <div style="display:flex;gap:8px"><button class="btn sm" id="g0" style="flex:1">👑 Champions</button><button class="btn sm" id="g1" style="flex:1">🎮 Pro Spiel</button></div>
  <div id="gc"></div>
  <div class="tb"><button class="btn ghost sm" id="bt">⬅ Zurück</button><button class="btn ghost sm" id="rt">🔄 Aktualisieren</button></div></div>`;
  const tabs=()=>[0,1].forEach(i=>{const b=$('#g'+i);b.className='btn sm'+(GTAB==i?'':' ghost');b.style.flex='1'});
  const champs=()=>{$('#gc').innerHTML=`<h3 style="margin:8px 0 2px">🏆 Wochen-Champion</h3><div class="mut">Meiste Bestzeiten der letzten 7 Tage</div>
-  ${wk.length?wk.slice(0,3).map(([n,c],i)=>row(i,n+(TM[n]?' · '+TM[n]:''),0,c+' 🏅')).join(''):'<div class="mut" style="margin-top:6px">Diese Woche noch keine Zeiten – wer holt sich die Krone?</div>'}
+  ${wk.length?pod(wk.slice(0,3))+wk.slice(3,5).map(([n,c],i)=>row(i+3,n+(TM[n]?' · '+TM[n]:''),0,c+' 🏅')).join(''):'<div class="mut" style="margin-top:6px">Diese Woche noch keine Zeiten – wer holt sich die Krone?</div>'}
   <h3 style="margin:16px 0 2px">👑 Gesamt-Rekordhalter</h3><div class="mut">Meiste Spiele mit Bestzeit aller Zeiten</div>
   ${champ.length?champ.map(([n,c],i)=>row(i,n+(TM[n]?' · '+TM[n]:''),0,c+' 🏅')).join(''):'<div class="mut" style="margin-top:6px">Noch keine Daten – spielt eine Runde!</div>'}
   <h3 style="margin:16px 0 2px">🏢 Team-Wertung</h3><div class="mut">Welches Team hält die meisten Spiel-Rekorde?</div>
