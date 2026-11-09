@@ -273,7 +273,7 @@ const rom=n=>{let s='';[[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']].forEach(([v,
 const H=m=>{m=((m%1440)+1440)%1440;return String(m/60|0).padStart(2,'0')+':'+String(m%60).padStart(2,'0')};
 const ALPHA='ABCDEFGHIJKLMNOPQRSTUVWXYZ',DAYS=['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
 const ANTI=[['kalt','heiß'],['klein','groß'],['hell','dunkel'],['schnell','langsam'],['laut','leise'],['alt','jung'],['voll','leer'],['hoch','tief'],['nah','fern'],['dick','dünn'],['stark','schwach'],['früh','spät'],['leicht','schwer'],['reich','arm'],['offen','zu'],['oben','unten'],['hart','weich'],['nass','trocken'],['gut','schlecht'],['sauber','schmutzig'],['süß','sauer'],['vorne','hinten']];
-const WORDS=['BÜRO','KAFFEE','MAUS','TASTE','PAPIER','DRUCKER','CHEF','PAUSE','POST','LAPTOP','AKTE','MEETING','KANTINE','PROJEKT','FORMULAR'];
+const WORDS=['PIRAT','ROBOTER','KOMET','VULKAN','PIZZA','DRACHE','ZIRKUS','GITARRE','RAKETE','SCHOKO','TAUCHER','WINTER','SOMMER','LAGUNE','ABENTEUER'];
 const PRIMES=[11,13,17,19,23,29,31,37,41,43,47,53],COMP=[21,27,33,39,49,51,57,63,69,77,87,91];
 const ANIM=['🐶','🐱','🐭','🐰','🦊','🐻','🐼','🐸','🐵','🦁','🐯','🐮'],THING=['🚗','🏠','⚽','📱','💡','🔑','📚','✂️','🪑','🎸','⌚','🔨'];
 const SYM=['▲','●','■','★','◆','✚'];
@@ -595,11 +595,11 @@ function play(cb){
   g.run(el,mulberry(S.seed*31+si*7919+1),()=>{const now=performance.now()-t0+pen;gt[S.stages[si]]=Math.round(now-ts);ts=now;si++;sfx('ok');next()},err)};
  next();
 }
-const CM={rec:['🌍 NEUER ALLZEIT-REKORD! Das Handy bebt!','🚀 REKORD! Legende. Gehaltserhöhung fällig.','👑 Allzeit-Bestzeit – unfassbar!'],
- day:['🔥 Tagesrekord! Heute bist du der Chef.','⚡ Neue Tagesbestzeit!'],
+const CM={rec:['🌍 NEUER ALLZEIT-REKORD! Das Handy bebt!','🚀 REKORD! Legende. Das Siegerpodest wackelt.','👑 Allzeit-Bestzeit – unfassbar!'],
+ day:['🔥 Tagesrekord! Heute gehört dir die Krone.','⚡ Neue Tagesbestzeit!'],
  pb:['📈 Persönliche Bestzeit! Du wirst besser.','💪 Neuer Eigenrekord!'],
  lead:['😎 Du führst – noch.','🏁 Platz 1! Die anderen schwitzen.'],
- last:['🐌 Das Faultier hat angerufen.','🥔 Bist du mit dem Daumen im Home-Office?','☕ Erst Kaffee, dann Duell?','🙈 Autsch. Revanche?'],
+ last:['🐌 Das Faultier hat angerufen.','🥔 Bist du mit dem Daumen im Winterschlaf?','🥱 Erst wach werden, dann Duell?','🙈 Autsch. Revanche?'],
  mid:['👍 Solide. Aber nicht legendär.','🤏 Knapp dran!','🎯 Da geht noch was!']};
 function finish(t,pen,gt){
  const n=S.names[S.cur],d=today(),R=DB.runs,mn=a=>Math.min(Infinity,...a.map(x=>x.t));
@@ -925,7 +925,7 @@ async function profile(){if(!DB.acct){loginScreen(profile);return}
  const nm=DB.acct.name,sk=streakNow(nm),best=(DB.streak&&DB.streak[skey(nm)]||{}).best||sk.n;
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">👤 ${esc(nm)}</h2>
  <div class="card" style="padding:12px"><b>🔥 Tagesserie</b><div style="margin-top:4px">${streakTxt(sk)}${sk.n?(sk.today?' ✔ heute gespielt':' – heute noch spielen!'):''}</div><div class="mut" style="margin-top:2px">Rekord: ${best} Tage · 🥉 ab 3 · 🥈 ab 7 · 🥇 ab 30</div></div>
- <div class="card" style="padding:12px"><b>🏢 Team</b><div class="pl" style="margin-top:6px"><input id="tm" maxlength="12" list="tml" placeholder="z. B. Vertrieb (leer = kein Team)" value="${esc(DB.team||'')}" autocomplete="off"><datalist id="tml"></datalist></div><button class="btn sm" id="tms" style="margin-top:8px">💾 Team speichern</button><div class="hint" id="tmh"></div></div>
+ <div class="card" style="padding:12px"><b>🏢 Team</b><div class="pl" style="margin-top:6px"><input id="tm" maxlength="12" list="tml" placeholder="z. B. Drachen (leer = kein Team)" value="${esc(DB.team||'')}" autocomplete="off"><datalist id="tml"></datalist></div><button class="btn sm" id="tms" style="margin-top:8px">💾 Team speichern</button><div class="hint" id="tmh"></div></div>
  <div class="card" style="padding:12px"><b>🏆 Meine Bestzeiten</b><div id="pb" class="mut" style="margin-top:6px">Lade …</div></div>
  <button class="btn ghost" id="pd">📊 Duell-Bilanz</button><button class="btn ghost" id="po">🚪 Abmelden</button>${bar('⬅ Zurück')}</div>`;
  $('#bt').onclick=menu;$('#pd').onclick=duelStats;$('#po').onclick=()=>{DB.acct=null;DB.sess=null;save();menu()};
