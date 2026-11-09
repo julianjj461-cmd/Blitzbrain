@@ -2,6 +2,8 @@
 <html lang="de"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>BLITZBRAIN</title>
+<meta name="theme-color" content="#120b2e"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="BLITZBRAIN">
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="icon-192.png">
 <style>
 :root{--pink:#ff3d8b;--yel:#ffd23f;--cyan:#27e1ff;--grn:#3dffa0;--red:#ff4d4d;--mut:#b9a9f5;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
@@ -725,7 +727,7 @@ function duelOnline(pre=''){duStop();DU=null;if(needAcct(duelOnline,pre))return;
 async function duCreate(name,rounds,nc,base,n){
  for(let i=0;i<6;i++){const code=nc||'1'+[...Array(4)].map(()=>RMCH[Math.random()*RMCH.length|0]).join('');
   const g=shuffle(Object.keys(STG),Math.random).slice(0,rounds);
-  try{await api('POST','rooms',{code,seed:(Math.random()*2e9)|0,size:2,host:name,stages:{g,r:0}},'return=minimal')}catch(e){if(e.status==409){if(nc)return nc;continue}throw e}
+  try{await roomRpc('create_room',{p_code:code,p_seed:(Math.random()*2e9)|0,p_size:2,p_stages:{g,r:0}})}catch(e){if(e.status==409){if(nc)return nc;continue}throw e}
   await joinPick(code,name);duEnter(code,name,{base,n});return code}
  throw new Error('Code')}
 async function duJoin(code,name,rejoin,x){
@@ -740,7 +742,7 @@ function duStats(){const T=duTimes(),r=DU.room,N=(r.stages&&r.stages.g||[]).leng
  for(let i=1;i<=N;i++){const t=T[i]||{};if(P.length<2||!P.every(p=>t[p]!=null))break;
   const a=t[P[0]],b=t[P[1]],w=a<b?P[0]:b<a?P[1]:null;if(w)sc[w]++;P.forEach(p=>tot[p]+=t[p]);hist.push({i,k:r.stages.g[i-1],t,w})}
  return{T,N,P,sc,tot,hist}}
-async function duPatch(R,body){await api('PATCH',`rooms?code=eq.${DU.code}&stages->>r=eq.${R}`,body,'return=minimal')}
+async function duPatch(R,body){await roomRpc('set_room',{p_code:DU.code,p_stages:body.stages||null,p_start:body.start_at||null,p_expect:R})}
 async function duTick(){
  if(!DU||DU.playing||DU.ticking)return;const D=DU;
  if(DU.phase&&!document.getElementById('du')){duStop();DU=null;return}
@@ -812,24 +814,27 @@ function duUpdate(){if(!DU||!DU.room)return;const pl=document.getElementById('pl
  const st=document.getElementById('rms');if(st&&DU.err)st.textContent='⚠️ Verbindung wackelt …'}
 
 /* ===== Rekorde: lokal (dieses Gerät) oder online (alle Spieler, gleiche Supabase-Tabelle) ===== */
-let ONL=[],ONLERR='';
+let ONL=[],WK=[],ONLERR='';
 const RR=()=>ONL;
 async function sbAll(){const r=await fx(DB.sb.url+'/rest/v1/results?select=code,name,total_ms,games,created_at&order=created_at.desc&limit=1000',{headers:{apikey:DB.sb.key}});if(!r.ok)throw new Error(r.status);
  return(await r.json()).reverse().filter(x=>x.code!=='ARCADE-SOLO').filter(x=>x.total_ms>=700).map(x=>{const g={};Object.entries(x.games||{}).forEach(([k,v])=>{if(typeof v==='number'&&v>=700)g[k]=v});return{n:x.name,t:x.total_ms,d:String(x.created_at).slice(0,10),g,c:Object.keys(g).length}}).filter(x=>x.c>0)}
+async function sbBest(days){const r=await rpc('best_times',{p_days:days});if(!Array.isArray(r))throw new Error('rpc');return r.map(x=>({n:x.n,t:x.ms,d:x.d,g:{[x.g]:x.ms},c:1}))}
+const champOf=R=>{const m={};R.forEach(x=>{Object.entries(x.g||{}).forEach(([k,t])=>{const o=m[k];if(!o||t<o.t)m[k]={n:x.n,t}})});const c={};Object.values(m).forEach(o=>c[o.n]=(c[o.n]||0)+1);return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,5)};
 const srcBar=()=>ONLERR?'<div class="mut">'+ONLERR+'</div>':'';
 async function bestenlisten(back=menu){
  app.innerHTML='<div class="scr"><div id="rl" class="mid"><div class="c mut">Lade Bestenlisten …</div></div><button class="btn ghost sm" id="bk">⬅ Zurück</button></div>';
  $('#bk').onclick=back;
- try{ONL=await sbAll();ONLERR=''}catch(e){ONL=[];ONLERR='⚠️ Bestenlisten nicht erreichbar (Internet oder Server pausiert?).'}
+ try{try{[ONL,WK]=await Promise.all([sbBest(null),sbBest(7)])}catch(e){ONL=await sbAll();const cut=new Date(Date.now()-7*864e5).toISOString().slice(0,10);WK=ONL.filter(x=>x.d>=cut)}ONLERR=''}catch(e){ONL=[];WK=[];ONLERR='⚠️ Bestenlisten nicht erreichbar (Internet oder Server pausiert?).'}
  if(document.getElementById('rl'))gboard(back);
 }
 function gboard(back){
  const R=RR(),best=k=>{const m={};R.forEach(x=>{const t=x.g&&x.g[k];if(t!=null&&(!(x.n in m)||t<m[x.n].t))m[x.n]={n:x.n,t}});return Object.values(m).sort((a,b)=>a.t-b.t)};
  const all=Object.keys(STG).map(k=>({k,b:best(k)})),cnt={},med=['🥇','🥈','🥉'];
  all.forEach(g=>{if(g.b.length)cnt[g.b[0].n]=(cnt[g.b[0].n]||0)+1});
- const champ=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,5);
+ const champ=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,5),wk=champOf(WK);
  all.sort((a,b)=>(b.b.length>0)-(a.b.length>0));
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🎮 Bestenlisten pro Spiel</h2>${srcBar()}<div class="mut">Online-Bestzeiten aller Spieler pro Mini-Game (inkl. Strafzeit)</div>
+ <h3>🏆 Wochen-Champion</h3><div class="mut" style="margin-bottom:6px">Meiste Bestzeiten der letzten 7 Tage</div>${wk.length?wk.slice(0,3).map(([n,c],i)=>`<div class="rk${i==0?' w':''}"><span>${med[i]}</span><b>${esc(n)}</b><span>${c} 🏅</span></div>`).join(''):'<div class="mut">Diese Woche noch keine Zeiten – wer holt sich die Krone?</div>'}
  <h3>👑 Meiste Spiel-Rekorde</h3>${champ.length?champ.map(([n,c],i)=>`<div class="rk"><span>${i+1}.</span><b>${esc(n)}</b><span>${c} 🏅</span></div>`).join(''):'<div class="mut">Noch keine Daten – spielt eine Runde!</div>'}
  <h3>Alle Spiele</h3>${all.map(g=>`<div class="card" style="padding:12px"><b>${STG[g.k].emoji} ${STG[g.k].name}</b>${g.b.length?g.b.slice(0,5).map((x,i)=>`<div class="rk${i==0?' w':''}" style="margin-top:6px;padding:8px 12px"><span>${med[i]||i+1+'.'}</span><b>${esc(x.n)}</b><span>${f3(x.t)}</span></div>`).join(''):'<div class="mut" style="margin-top:4px">Noch nicht gespielt</div>'}</div>`).join('')}
  <div class="tb"><button class="btn ghost sm" id="bt">⬅ Zurück</button><button class="btn ghost sm" id="rt">🔄 Aktualisieren</button></div></div>`;
@@ -848,6 +853,13 @@ function help(){
  Alle Spiele laufen ohne Farben. Der Ton lässt sich unten ein- und ausschalten.</div>${bar('⬅ Zurück')}</div>`;
  $('#bt').onclick=menu;
 }
+function dayInfo(){let p;try{p=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Berlin',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())}catch(e){p=new Date().toISOString().slice(0,10)}
+ const seed=+p.replace(/-/g,''),idx=shuffle(Object.keys(STG).map((_,i)=>i),mulberry(seed)).slice(0,3);return{p,code:enc(seed,idx),idx}}
+function daily(){S.code=null;S.room=null;if(needAcct(daily,''))return;const D=dayInfo(),K=Object.keys(STG),dt=D.p.split('-').reverse().join('.');
+ app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">📅 Tagesaufgabe</h2><div class="mut">Heute, ${dt}: für alle dieselben 3 Spiele. Deine Zeit kommt ins Tages-Scoreboard – morgen gibt es neue Aufgaben.</div>
+ <div class="card">${D.idx.map(i=>`<div style="padding:4px 0">${STG[K[i]].emoji} <b>${STG[K[i]].name}</b></div>`).join('')}</div>
+ <button class="btn pink" id="dg">▶ Jetzt spielen</button><button class="btn ghost" id="dv">📊 Heutiges Scoreboard</button><div class="hint">Du kannst mehrmals spielen – es zählt deine beste Zeit.</div>${bar()}</div>`;
+ $('#dg').onclick=()=>{ac();fernIntro(DB.acct.name,D.code,false)};$('#dv').onclick=()=>sbView(D.code,daily);$('#bt').onclick=menu}
 function menu(){S.code=null;S.room=null;
  app.innerHTML=`<div class="scr"><h1 class="logo">BLITZ<span>BRAIN</span></h1><p class="sub">${Object.keys(STG).length} Mini-Games · Duell gegen Freunde</p>
  <div class="mid"><button class="btn pink" id="m1" style="padding:20px">⚔️ LOKAL-DUELL<br><small style="font-weight:700;opacity:.9">Ein Handy, reihum – auch offline</small></button>
@@ -859,6 +871,7 @@ function menu(){S.code=null;S.room=null;
  const sv=DB.acct&&DB.sess&&Date.now()-DB.sess.ts<90*60*1000?DB.sess:null;
  if(sv){const mid=app.querySelector('.mid');if(mid){const b=document.createElement('button');b.className='btn ghost';b.id='rs';b.textContent='↩️ Zurück ins '+(sv.t=='du'?'Duell':'Raum')+' ('+sv.code.replace(/^1/,'')+')';mid.append(b);
   b.onclick=async()=>{ac();b.textContent='Verbinde …';try{if(sv.t=='du')await duJoin(sv.code,sv.name,true);else await roomJoin(sv.code,sv.name)}catch(e){DB.sess=null;save();b.textContent='❌ Nicht mehr verfügbar'}}}}
+ {const mid=app.querySelector('.mid');if(mid){const b=document.createElement('button');b.className='btn ghost';b.id='dly';b.innerHTML='📅 Tagesaufgabe';mid.append(b);b.onclick=()=>{ac();daily()}}}
  {const mid=app.querySelector('.mid');if(mid){const b=document.createElement('button');b.className='btn ghost sm';b.id='ac';b.textContent=DB.acct?'👤 '+DB.acct.name+' · abmelden':'👤 Anmelden / Registrieren';mid.append(b);
   b.onclick=()=>{ac();if(DB.acct){DB.acct=null;DB.sess=null;save();menu()}else loginScreen(menu)}}}
  $('#hp').onclick=help;
@@ -1004,18 +1017,22 @@ function sbRender(code,ks0){clearInterval(sbT);
     +`<div class="mut c" style="margin-top:8px;font-size:13px">${L.length} Spieler · aktualisiert sich automatisch</div>`;
   }catch(e){const el=document.getElementById('sbv');if(el)el.textContent='⚠️ Scoreboard nicht erreichbar.'}};
  draw();sbT=setInterval(draw,5000)}
-function sbView(code){
+function sbView(code,back){
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">📊 Scoreboard</h2><div class="mut">Code ${code}</div><div id="sbv" class="c mut">Lade …</div>${bar()}</div>`;
- $('#bt').onclick=()=>fernChallenge();sbRender(code);
+ $('#bt').onclick=back||(()=>fernChallenge());sbRender(code);
 }
 /* ===== Raum-Modus: geheime Spiele-Wahl auf dem eigenen Handy + gemeinsamer Countdown (Supabase-Tabellen rooms & picks) ===== */
 const api=async(method,path,body,prefer)=>{const r=await fx(DB.sb.url+'/rest/v1/'+path,{method,headers:{apikey:DB.sb.key,'Content-Type':'application/json',...(prefer?{Prefer:prefer}:{})},body:body?JSON.stringify(body):undefined});
  if(!r.ok){const e=new Error('HTTP '+r.status);e.status=r.status;throw e}const t=await r.text();return t?JSON.parse(t):null};
+async function roomRpc(fn,args){if(!DB.acct)throw Object.assign(new Error('kein Konto'),{auth:true});
+ const s=await rpc(fn,{p_name:DB.acct.name,p_pin:DB.acct.pin,...args});
+ if(s==='exists'||s==='taken')throw Object.assign(new Error('HTTP 409'),{status:409});
+ if(s!=='ok'&&s!=='stale')throw Object.assign(new Error(String(s)),{auth:true});return s}
 const RMCH='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let RM=null,rmT=0;
 const rmStop=()=>{clearInterval(rmT);rmT=0};
 async function roomCreate(name,size){
  for(let i=0;i<6;i++){const code=[...Array(4)].map(()=>RMCH[Math.random()*RMCH.length|0]).join('');
-  try{await api('POST','rooms',{code,seed:(Math.random()*2e9)|0,size,host:name},'return=minimal')}catch(e){if(e.status==409)continue;throw e}
+  try{await roomRpc('create_room',{p_code:code,p_seed:(Math.random()*2e9)|0,p_size:size,p_stages:null})}catch(e){if(e.status==409)continue;throw e}
   await joinPick(code,name);roomEnter(code,name);return}
  throw new Error('Code')}
 async function roomJoin(code,name,x){code=code.trim().toUpperCase().replace(/^RAUM-/,'');
@@ -1026,11 +1043,11 @@ async function roomJoin(code,name,x){code=code.trim().toUpperCase().replace(/^RA
 function roomEnter(code,name,x){rmStop();DB.sess={t:'rm',code,name,ts:Date.now()};save();RM={code,name,phase:'',room:null,rows:[],pool:null,ticking:false,...(x||{})};rmTick();rmT=setInterval(rmTick,1500)}
 async function roomRematch(){const x=S.rm,er=document.getElementById('rer');if(!x)return;if(er)er.textContent='Verbinde …';
  const nc=x.base+(x.n+1);
- try{try{await api('POST','rooms',{code:nc,seed:(Math.random()*2e9)|0,size:x.size,host:x.name},'return=minimal')}catch(e){if(e.status!==409)throw e}
+ try{try{await roomRpc('create_room',{p_code:nc,p_seed:(Math.random()*2e9)|0,p_size:x.size,p_stages:null})}catch(e){if(e.status!==409)throw e}
   await roomJoin(nc,x.name,{base:x.base,n:x.n+1,lobby:true})}
  catch(e){const el=document.getElementById('rer');if(el)el.textContent='⚠️ Revanche nicht möglich (Internet oder Server pausiert?).'}}
 async function rmReveal(){const st=RM.rows.filter(x=>x.game).sort((a,b)=>String(a.picked_at).localeCompare(String(b.picked_at))).map(x=>x.game);
- if(!st.length)return null;await api('PATCH',`rooms?code=eq.${RM.code}`,{stages:st},'return=minimal');return st}
+ if(!st.length)return null;await roomRpc('set_room',{p_code:RM.code,p_stages:st,p_start:null,p_expect:null});return st}
 async function rmTick(){
  if(!RM||RM.ticking)return;
  if(RM.phase&&!document.getElementById('rm')){rmStop();RM=null;return}
@@ -1068,7 +1085,7 @@ function rmRender(){const r=RM.room,host=r.host===RM.name,ph=RM.phase;
   <div class="grid g2" style="gap:12px">${RM.pool.map(k=>`<button class="card dp" data-k="${k}" style="border:0;color:#fff;text-align:center;padding:16px 8px;font:inherit;background:linear-gradient(180deg,#7a4dff,#5a2fe0);box-shadow:0 5px 0 rgba(0,0,0,.3)"><div style="font-size:44px">${STG[k].emoji}</div><b>${STG[k].name}</b><div class="mut" style="font-size:13px;margin-top:4px">${STG[k].hint}</div></button>`).join('')}</div>
   <div class="hint" id="rms"></div><div id="plist"></div>${inv}${tb}</div>`;
   app.querySelectorAll('.dp').forEach(b=>b.onclick=async()=>{const k=b.dataset.k;
-   try{await api('PATCH',`picks?code=eq.${RM.code}&name=eq.${encodeURIComponent(RM.name)}`,{game:k,picked_at:new Date().toISOString()},'return=minimal');sfx('ok');
+   try{await roomRpc('set_pick',{p_code:RM.code,p_game:k});sfx('ok');
     RM.rows=RM.rows.map(x=>x.name===RM.name?{...x,game:k}:x);RM.phase='wait';rmRender()}
    catch(e){sfx('bad');if(e.status==409){RM.pool=null;RM.phase='';await rmTick();const st=document.getElementById('rms');if(st)st.textContent='Das Spiel war gerade vergeben – neue Auswahl!'}else{const st=document.getElementById('rms');if(st)st.textContent='⚠️ Wahl konnte nicht gesendet werden.'}}})}
  else if(ph=='wait'){
@@ -1081,7 +1098,7 @@ function rmRender(){const r=RM.room,host=r.host===RM.name,ph=RM.phase;
   <div id="plist"></div><div class="hint" id="rms"></div></div>
   ${ph=='late'?'<button class="btn pink" id="go">▶ Trotzdem mitspielen</button>':host?'<button class="btn pink" id="go">🚀 Gemeinsamen Countdown starten</button>':'<div class="hint">Warte, bis der Host den Countdown startet …</div>'}${tb}</div>`;
   if($('#go'))$('#go').onclick=async()=>{if(ph=='late'){rmStop();rmCount(Date.now()+3500);return}
-   const at=new Date(Date.now()+6000).toISOString();try{await api('PATCH',`rooms?code=eq.${RM.code}`,{start_at:at},'return=minimal');RM.room.start_at=at;RM.phase='count';rmRender()}catch(e){const st=document.getElementById('rms');if(st)st.textContent='⚠️ Start konnte nicht gesendet werden.'}}}
+   const at=new Date(Date.now()+6000).toISOString();try{await roomRpc('set_room',{p_code:RM.code,p_stages:null,p_start:at,p_expect:null});RM.room.start_at=at;RM.phase='count';rmRender()}catch(e){const st=document.getElementById('rms');if(st)st.textContent='⚠️ Start konnte nicht gesendet werden.'}}}
  if($('#inv'))$('#inv').onclick=()=>shareTxt(`⚡ BLITZBRAIN-Raum! Code: ${RM.code}${lnk('RAUM-'+RM.code)}\nUnter „Online-Duell“ → „Raum beitreten“ eingeben.`,$('#inv'));
  $('#bt').onclick=()=>{rmStop();RM=null;DB.sess=null;save();fernRoom()};
  rmUpdate()}
@@ -1100,4 +1117,5 @@ function remoteEnd(){
 }
 menu();
 try{const h=decodeURIComponent((location.hash||'').slice(1));if(h&&/^DUELL-[A-Z0-9]{4}$/i.test(h))duelOnline(h.slice(6).toUpperCase());else if(h&&(dec(h)||/^RAUM-[A-Z0-9]{4,8}$/i.test(h)))fern(h)}catch(e){}
+try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&location.hostname.endsWith('github.io'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
 </script></body></html>
