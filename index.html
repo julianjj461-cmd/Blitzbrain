@@ -652,10 +652,12 @@ function duelStats(back){back=back||duelHub;
  const L=Object.values(DB.h2h||{}).map(e=>{const k=Object.keys(e.n);return{a:e.n[k[0]],b:e.n[k[1]]||'?',x:e.w[k[0]]||0,y:e.w[k[1]]||0,d:e.d}}).sort((p,q)=>(q.x+q.y+q.d)-(p.x+p.y+p.d));
  const row=r=>`<div class="rk" style="flex-wrap:wrap"><b>${esc(r.a)}</b><span>${r.x} : ${r.y}</span><b>${esc(r.b)}</b>${r.d?`<small style="width:100%">${r.d}× unentschieden</small>`:''}</div>`;
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">📊 Duell-Bilanz</h2><div class="mut">Wer hat wie oft gegen wen gewonnen.</div>
- <h3 style="margin:6px 0 0">🌍 Online (alle Geräte)</h3><div id="onb" class="mut">Lade …</div>
+ <h3 style="margin:6px 0 0">🏅 Duell-Rangliste (Elo)</h3><div id="elo" class="mut">Lade …</div>
+ <h3 style="margin:10px 0 0">🌍 Online (alle Geräte)</h3><div id="onb" class="mut">Lade …</div>
  <h3 style="margin:10px 0 0">📱 Auf diesem Handy</h3>
  ${L.length?L.map(row).join(''):'<div class="c mut">Noch keine Duelle gespielt.</div>'}${bar()}</div>`;
  $('#bt').onclick=back;
+ (async()=>{try{const L=await rpc('elo_top',{});const e=document.getElementById('elo');if(e)e.innerHTML=Array.isArray(L)&&L.length?L.slice(0,10).map((x,i)=>`<div class="rk"><span>${i<3?['🥇','🥈','🥉'][i]:i+1}</span><b>${esc(x.n)}</b><span>${x.r}</span><small>${x.w}/${x.g} Siege</small></div>`).join('')+'<div class="mut" style="font-size:12px">Start 1000 Punkte. Zählt nur bei Online-Duellen.</div>':'Noch keine gewerteten Duelle.'}catch(e){const el=document.getElementById('elo');if(el)el.textContent='Nicht erreichbar.'}})();
  (async()=>{const box=()=>document.getElementById('onb');
   try{const r=await fx(DB.sb.url+'/rest/v1/results?code=like.1*-END&select=code,name,total_ms&limit=1000',{headers:{apikey:DB.sb.key}});if(!r.ok)throw new Error(r.status);
    const by={},pairs={};(await r.json()).forEach(x=>{(by[x.code]=by[x.code]||{})[x.name]=x.total_ms-500});
@@ -726,6 +728,21 @@ function duelEnd(){
  $('#r1').onclick=()=>agree(N,'Revanche?',duelStart,duelEnd);$('#r2').onclick=duelSetup;$('#bt').onclick=menu;
 }
 
+function duelRandom(name,n){
+ let alive=true,t0=Date.now();const games=shuffle(POOL(),Math.random).slice(0,n);
+ app.innerHTML=`<div class="scr"><div class="mid"><div class="big bounce" style="font-size:70px">🎲</div><div class="big" style="font-size:28px">Suche Gegner …</div><div class="c mut">${n} Runden · wer gerade ebenfalls sucht, wird dir zugelost.</div><div class="c" id="rs" style="font-size:22px">0 s</div></div><button class="btn ghost" id="rc">✖ Abbrechen</button></div>`;
+ const done=c=>{alive=false;clearInterval(tm);if(c){sfx('go');duEnter(c,name,{})}else duelOnline()};
+ const mc=r=>typeof r==='string'&&r.startsWith('match:')?r.slice(6):null;
+ const fail=m=>{alive=false;clearInterval(tm);app.innerHTML=`<div class="scr"><div class="mid"><div class="big" style="font-size:60px">😕</div><div class="big" style="font-size:26px">${m}</div></div><button class="btn pink" id="ra">🎲 Nochmal suchen</button>${bar('⬅ Zurück')}</div>`;$('#ra').onclick=()=>duelRandom(name,n);$('#bt').onclick=duelOnline};
+ let tm=0;
+ $('#rc').onclick=async()=>{if(!alive)return;alive=false;clearInterval(tm);let r='';try{r=await rpc('cancel_match',{p_name:DB.acct.name,p_pin:DB.acct.pin})}catch(e){}done(mc(r))};
+ (async()=>{let r;try{r=await rpc('find_match',{p_name:DB.acct.name,p_pin:DB.acct.pin,p_rounds:n,p_games:games})}catch(e){return fail('Suche nicht möglich (Internet oder Server pausiert?).')}
+  if(mc(r))return done(mc(r));if(r!=='wait')return fail('Suche nicht möglich – bitte neu anmelden.');
+  tm=setInterval(async()=>{if(!alive)return;const sec=Math.floor((Date.now()-t0)/1000);const e=document.getElementById('rs');if(e)e.textContent=sec+' s';
+   if(sec>=60){alive=false;clearInterval(tm);let c='';try{c=await rpc('cancel_match',{p_name:DB.acct.name,p_pin:DB.acct.pin})}catch(x){}if(mc(c))return done(mc(c));return fail('Gerade niemand gefunden.')}
+   try{const q=await rpc('match_status',{p_name:DB.acct.name,p_pin:DB.acct.pin});if(!alive)return;if(mc(q))done(mc(q));else if(q==='none'&&sec>3)fail('Gerade niemand gefunden.')}catch(x){}},2000)})();
+}
+
 /* ===== Online-1v1: zwei Handys, gleicher Start, jede Runde ein anderes Spiel (Supabase: rooms + picks + results) ===== */
 let DU=null,duT=0;
 const duStop=()=>{clearInterval(duT);duT=0};
@@ -738,12 +755,14 @@ function duelOnline(pre=''){duStop();DU=null;if(needAcct(duelOnline,pre))return;
  <div class="c mut">Wie viele Runden?</div>
  <div class="row" id="vr">${[1,3,5,7,10].map(r=>`<button class="btn ghost sm" data-r="${r}"></button>`).join('')}</div>
  <button class="btn pink" id="dmk">✨ Duell eröffnen</button>
+ <button class="btn" id="drn">🎲 Zufälliger Gegner</button>
  <h3 style="margin:8px 0 0">Einem Duell beitreten</h3>
  <div class="pl"><input id="dcd" maxlength="9" placeholder="Duell-Code, z. B. K7P2" value="${esc(pre)}" autocomplete="off" autocapitalize="characters" style="text-transform:uppercase;letter-spacing:2px"></div>
  <button class="btn" id="djn">▶ Beitreten</button><div class="hint" id="er"></div>${bar()}</div>`;
  const mark=()=>app.querySelectorAll('#vr .btn').forEach(b=>{const on=+b.dataset.r===n;b.textContent=(on?'✔ ':'')+b.dataset.r;b.style.outline=on?'3px solid #fff':'none'});mark();
  $('#vr').onclick=e=>{const r=e.target.dataset.r;if(r){n=+r;DB.vr=n;save();sfx('ok');mark()}};
  $('#bt').onclick=duelHub;
+ $('#drn').onclick=()=>{ac();duelRandom(getName(),n)};
  $('#dmk').onclick=async()=>{ac();const v=getName();$('#er').textContent='Eröffne Duell …';try{await duCreate(v,n)}catch(e){$('#er').textContent='❌ Duell konnte nicht erstellt werden. Sind die Raum-Tabellen in Supabase angelegt?'}};
  $('#djn').onclick=async()=>{ac();const v=getName(),c=$('#dcd').value;if(c.trim().length<4){$('#er').textContent='❌ Bitte den Duell-Code eingeben.';return}
   $('#er').textContent='Trete bei …';try{await duJoin(duCode(c),v)}catch(e){$('#er').textContent=e.auth?'❌ Anmeldung ungültig – im Hauptmenü unter 👤 neu anmelden.':e.nf?'❌ Duell nicht gefunden.':e.full?'❌ In diesem Duell sind schon zwei Spieler.':e.dup?'❌ Dieser Name ist im Duell schon vergeben.':'❌ Beitritt nicht möglich (Internet oder Server pausiert?).'}};
@@ -840,7 +859,7 @@ function duRender0(){const r=DU.room,ph=DU.phase,N=(r.stages.g||[]).length,S2=du
   $('#dskip').onclick=async()=>{try{await duPatch(R,{stages:{g:r.stages.g,r:R+1},start_at:new Date(Date.now()+7000).toISOString()});DU.adv[R]=true}catch(e){}}}
  else if(ph=='end'){
   const[x,y]=[S2.sc[S2.P[0]],S2.sc[S2.P[1]]],t0=S2.tot[S2.P[0]],t1=S2.tot[S2.P[1]],w=x>y?S2.P[0]:y>x?S2.P[1]:t0<t1?S2.P[0]:t1<t0?S2.P[1]:null;
-  if(!DU.rec){DU.rec=1;h2hAdd(me,S2.P.find(q=>q!==me)||'?',w);sbSend({n:me,t:500+(w===me?1:w?0:2),pen:0},{},DU.code+'-END').catch(()=>{})}
+  if(!DU.rec){DU.rec=1;h2hAdd(me,S2.P.find(q=>q!==me)||'?',w);const ec=DU.code;sbSend({n:me,t:500+(w===me?1:w?0:2),pen:0},{},ec+'-END').then(()=>{rpc('elo_apply',{p_code:ec}).catch(()=>{});setTimeout(()=>rpc('elo_apply',{p_code:ec}).catch(()=>{}),5000)}).catch(()=>{})}
   sfx(w===me?'rec':w?'lose':'win');confetti(w===me?220:50);
   app.innerHTML=`<div class="scr" id="du"><div class="c bounce" style="font-size:64px">${w?'👑':'🤝'}</div><div class="big pop" style="font-size:clamp(34px,11vw,52px);color:var(--yel)">${w?nmx(w):'Unentschieden'}</div>
   <div class="c mut">${w?(w===me?'Du gewinnst das Duell!':'gewinnt das Duell'):'Absolut gleichauf!'}${x==y&&w?' (schnellere Gesamtzeit)':''}</div>
