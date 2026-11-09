@@ -748,11 +748,11 @@ function duelOnline(pre=''){duStop();DU=null;if(needAcct(duelOnline,pre))return;
  $('#djn').onclick=async()=>{ac();const v=getName(),c=$('#dcd').value;if(c.trim().length<4){$('#er').textContent='❌ Bitte den Duell-Code eingeben.';return}
   $('#er').textContent='Trete bei …';try{await duJoin(duCode(c),v)}catch(e){$('#er').textContent=e.auth?'❌ Anmeldung ungültig – im Hauptmenü unter 👤 neu anmelden.':e.nf?'❌ Duell nicht gefunden.':e.full?'❌ In diesem Duell sind schon zwei Spieler.':e.dup?'❌ Dieser Name ist im Duell schon vergeben.':'❌ Beitritt nicht möglich (Internet oder Server pausiert?).'}};
 }
-async function duCreate(name,rounds,nc,base,n){
+async function duCreate(name,rounds,nc,base,n,noEnter){
  for(let i=0;i<6;i++){const code=nc||'1'+[...Array(4)].map(()=>RMCH[Math.random()*RMCH.length|0]).join('');
   const g=shuffle(POOL(),Math.random).slice(0,rounds);
   try{await roomRpc('create_room',{p_code:code,p_seed:(Math.random()*2e9)|0,p_size:2,p_stages:{g,r:0}})}catch(e){if(e.status==409){if(nc)return nc;continue}throw e}
-  await joinPick(code,name);duEnter(code,name,{base,n});return code}
+  await joinPick(code,name);if(!noEnter)duEnter(code,name,{base,n});return code}
  throw new Error('Code')}
 async function duJoin(code,name,rejoin,x){
  const rm=await api('GET',`rooms?code=eq.${encodeURIComponent(code)}&select=*`);if(!rm||!rm[0])throw Object.assign(new Error('nf'),{nf:true});
@@ -818,7 +818,7 @@ function duRender0(){const r=DU.room,ph=DU.phase,N=(r.stages.g||[]).length,S2=du
  if(ph.startsWith('lobbyr')){const meR=ph[6]=='1',all=ph[7]=='1',op=DU.rows.map(x=>x.name).find(n=>n!==me)||'?';
   app.innerHTML=`<div class="scr" id="du">${head}<div class="mid"><div class="big pop" style="font-size:clamp(28px,9vw,40px)">${nmx(me)}<br><span style="color:var(--pink)">VS</span><br>${nmx(op)}</div><div class="c mut">${N} Runde${N>1?'n':''} · beide drücken „Bereit“, dann startet der Countdown</div>
    ${all?'<div class="big" style="font-size:30px;color:var(--grn)">Gleich geht’s los …</div>':meR?`<div class="c" style="font-size:20px">✔ Du bist bereit – warte auf ${esc(op)} …</div>`:'<button class="btn pink glow" id="rdy2" style="padding:20px;font-size:24px">✅ BEREIT</button>'}</div>${tb}</div>`;
-  const rb=document.getElementById('rdy2');if(rb)rb.onclick=async()=>{ac();rb.disabled=true;try{await roomRpc('set_pick',{p_code:DU.code,p_game:'ok-'+DU.name});DU.phase='';duTick()}catch(e){rb.disabled=false}};$('#bt').onclick=()=>{leaveSig(DU&&DU.code);duStop();DU=null;DB.sess=null;save();(NBK||duelOnline)()};return}
+  const rb=document.getElementById('rdy2');if(rb)rb.onclick=async()=>{ac();rb.disabled=true;try{await roomRpc('set_pick',{p_code:DU.code,p_game:'ok-'+DU.name});DU.phase='';duTick()}catch(e){rb.disabled=false}};$('#bt').onclick=()=>{leaveSig(DU&&DU.code);duStop();DU=null;DB.sess=null;save();menu()};return}
  if(ph=='lobby'){
   app.innerHTML=`<div class="scr" id="du">${head}<div class="mid"><div class="big" style="font-size:clamp(30px,10vw,44px)">Warte auf Gegner …</div><div class="c mut">Gib deinem Gegner diesen Code:</div><div class="big" style="font-size:clamp(40px,13vw,60px);color:var(--yel);letter-spacing:4px">${esc(show)}</div><div id="plist"></div><div class="hint" id="rms"></div><button class="btn" id="inv">📤 Code teilen</button><button class="btn ghost" id="inf">👥 Freund einladen</button></div>${tb}</div>`;
   $('#inf').onclick=()=>inviteFriends('DUELL-'+show,'Duell');
@@ -851,7 +851,7 @@ function duRender0(){const r=DU.room,ph=DU.phase,N=(r.stages.g||[]).length,S2=du
    try{const nc='1'+(DU.base.slice(1)+(DU.n+1)).slice(0,7),x={base:DU.base,n:DU.n+1},nm=DU.name,N2=N;duStop();
     await duCreate(nm,N2,nc,x.base,x.n);if(DU&&DU.code!==nc||!DU)await duJoin(nc,nm,true,x)}
    catch(e){const el=document.getElementById('rer');if(el)el.textContent='⚠️ Revanche nicht möglich (Internet oder Server pausiert?).'}}}
- $('#bt').onclick=()=>{leaveSig(DU&&DU.code);duStop();DU=null;DB.sess=null;save();(NBK||duelOnline)()};
+ $('#bt').onclick=()=>{leaveSig(DU&&DU.code);duStop();DU=null;DB.sess=null;save();menu()};
  duUpdate()}
 function duUpdate(){if(!DU||!DU.room)return;const pl=document.getElementById('plist');
  if(pl)pl.innerHTML=DU.rows.map(x=>`<div class="rk"><b>${nmx(x.name)}</b><span>✔ dabei</span></div>`).join('')+`<div class="mut c" style="font-size:13px;margin-top:6px">${DU.rows.length}/2 dabei</div>`;
@@ -1012,31 +1012,50 @@ function ibBanner(){if(!document.getElementById('ib')&&!document.getElementById(
 setInterval(async()=>{if(document.getElementById('ib')||document.getElementById('fr')){const n=IB.length;await ibLoad();const f=document.getElementById('fr');if(f&&IB.length!=n&&!document.activeElement.matches('input'))frDraw()}},6000);
 const pyTxt=p=>/^DUELL-/.test(p)?'🥊 lädt dich zum 1v1-Duell ein':/^RAUM-/.test(p)?'🌍 lädt dich in einen Raum ein':'⚡ schickt dir eine Challenge';
 async function joinPayload(p){ac();NBK=menu;const nm=DB.acct.name,msg=t=>{const m=document.getElementById('fm');if(m)m.textContent=t};
- try{if(/^DUELL-[A-Z0-9]{4}$/i.test(p))await duJoin(duCode(p.slice(6)),nm,true);else if(/^RAUM-/i.test(p))await roomJoin(p,nm);else fern(p)}
+ try{if(/^DUELL-[A-Z0-9]{4}$/i.test(p)){const pk=await api('GET',`picks?code=eq.${duCode(p.slice(6))}&select=name`);if(!pk.length)throw Object.assign(new Error('nf'),{nf:true});await duJoin(duCode(p.slice(6)),nm,true)}else if(/^RAUM-/i.test(p))await roomJoin(p,nm);else fern(p)}
  catch(e){msg(e.nf?'❌ Diese Einladung ist abgelaufen oder das Spiel gibt es nicht mehr.':e.full?'❌ Dort ist schon alles voll.':'❌ Beitritt nicht möglich – versuch es nochmal.')}}
 async function friendsScreen(back=menu){if(!DB.acct){loginScreen(()=>friendsScreen(back));return}
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">👥 Freunde</h2><div id="fr" class="c mut">Lade …</div><div class="tb"><button class="btn ghost sm" id="bt">⬅ Zurück</button></div></div>`;
  $('#bt').onclick=()=>{menu()};await Promise.all([frLoad(),ibLoad()]);frDraw(back)}
+let FP=null,FPMSG='';
+function fpStop(){if(FP){clearInterval(FP.iv);FP=null}}
+async function fpCancel(msg){const x=FP;if(!x)return;fpStop();FPMSG=msg||'';
+ try{await rpc('cancel_invites',{p_name:DB.acct.name,p_pin:DB.acct.pin,p_payload:'DUELL-'+x.code.slice(1)})}catch(e){}leaveSig(x.code);
+ if(document.getElementById('fr'))frDraw();else{const b=document.getElementById('fpm');if(b)b.remove()}}
+function fpStart(code,who){fpStop();FP={code,who,t0:Date.now(),gone:0,busy:false};FP.iv=setInterval(fpTick,2000)}
+async function fpTick(){const x=FP;if(!x||x.busy)return;
+ if(!document.getElementById('ib')&&!document.getElementById('fr')){fpCancel('');return}
+ x.busy=true;
+ try{const pk=await api('GET',`picks?code=eq.${x.code}&select=name`);if(FP!==x)return;
+  if(pk.some(q=>q.name!==DB.acct.name)){fpStop();NBK=menu;duEnter(x.code,DB.acct.name);return}
+  const st=await rpc('invite_state',{p_name:DB.acct.name,p_pin:DB.acct.pin,p_payload:'DUELL-'+x.code.slice(1)});if(FP!==x)return;
+  x.gone=st==='gone'?x.gone+1:0;
+  if(x.gone>=2){fpCancel('❌ '+x.who+' hat die Herausforderung nicht angenommen.');return}
+  if(Date.now()-x.t0>60000){fpCancel('⌛ '+x.who+' hat nicht reagiert.')}}
+ catch(e){}finally{x.busy=false}}
 function frDraw(back){const el=document.getElementById('fr');if(!el)return;const me=DB.acct,av=a=>`<div style="font-size:28px;width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;flex:none">${a||'🙂'}</div>`;
  el.className='';el.style.cssText='display:flex;flex-direction:column;gap:12px';
- el.innerHTML=`<div class="card${IB.length?' glow':''}" style="padding:12px;${IB.length?'border:2px solid var(--yel)':''}"><b>${IB.length?'📬 Neu für dich ('+IB.length+')':'📭 Postfach leer'}</b>${IB.map(i=>`<div style="margin-top:10px;display:flex;gap:8px;align-items:center">${av((FR.find(f=>skey(f.n)==skey(i.f))||{}).a)}<div style="flex:1;min-width:0;text-align:left"><b>${esc(i.f)}</b><br><span class="mut">${i.k=='friend'?'🙋 möchte dein Freund sein':pyTxt(i.p||'')}</span></div><button class="btn sm" data-i="${i.id}" data-a="1" style="flex:none;width:auto;padding:10px 14px">${i.k=='friend'?'✔ Annehmen':'▶ Los!'}</button><button class="btn ghost sm" data-i="${i.id}" data-a="0" style="flex:none;width:auto;padding:10px 12px">✖</button></div>`).join('')}<div class="hint" id="fm"></div></div>
+ el.innerHTML=`${FP?`<div class="card" style="padding:12px;border:2px solid var(--cyan);position:relative;overflow:hidden"><b>⏳ Warte auf ${esc(FP.who)} …</b><div class="mut">Du springst direkt ins Duell, sobald ${esc(FP.who)} annimmt.</div><button class="btn ghost sm" id="fpx" style="margin-top:8px">✖ Herausforderung abbrechen</button><div id="fpb" style="position:absolute;left:0;bottom:0;height:5px;width:${Math.max(0,100-(Date.now()-FP.t0)/600)}%;background:var(--cyan)"></div></div>`:FPMSG?`<div class="card" style="padding:12px">${esc(FPMSG)}</div>`:''}<div class="card${IB.length?' glow':''}" style="padding:12px;${IB.length?'border:2px solid var(--yel)':''}"><b>${IB.length?'📬 Neu für dich ('+IB.length+')':'📭 Postfach leer'}</b>${IB.map(i=>`<div style="margin-top:10px;display:flex;gap:8px;align-items:center">${av((FR.find(f=>skey(f.n)==skey(i.f))||{}).a)}<div style="flex:1;min-width:0;text-align:left"><b>${esc(i.f)}</b><br><span class="mut">${i.k=='friend'?'🙋 möchte dein Freund sein':pyTxt(i.p||'')}</span></div><button class="btn sm" data-i="${i.id}" data-a="1" style="flex:none;width:auto;padding:10px 14px">${i.k=='friend'?'✔ Annehmen':'▶ Los!'}</button><button class="btn ghost sm" data-i="${i.id}" data-a="0" style="flex:none;width:auto;padding:10px 12px">✖</button></div>`).join('')}<div class="hint" id="fm"></div></div>
  <div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:4px 0 0">👥 Meine Freunde (${FR.length})</h3>${FR.length>=2?`<button class="btn ghost sm" id="fgr" style="flex:none;width:auto;padding:6px 12px">${FSEL?'✖ Abbrechen':'🏠 Gruppen-Raum'}</button>`:''}</div>
  ${(()=>{const rc=Object.values(DB.h2h||{}).filter(e=>e.t).map(e=>{const k=Object.keys(e.n),o=k.find(x=>x!==skey(me.name));return{n:e.n[o],t:e.t}}).filter(x=>x.n&&FR.some(f=>skey(f.n)==skey(x.n))).sort((a,b)=>b.t-a.t).slice(0,3);return rc.length&&!FSEL?`<div class="c mut" style="text-align:left">🕘 Zuletzt gespielt:</div><div class="row">${rc.map(x=>`<button class="btn ghost sm" data-q="${esc(FR.find(f=>skey(f.n)==skey(x.n)).n)}" style="padding:8px 4px">🥊 ${esc(x.n)}</button>`).join('')}</div>`:''})()}
 
- ${FR.length?[...FR].sort((a,b)=>isOn(b)-isOn(a)).map(f=>`<div class="card" ${FSEL?`data-s="${esc(f.n)}" `:''}style="padding:10px;margin:0${FRD==f.n&&!FSEL?';border:2px solid var(--yel)':''}${FSEL&&FSEL.has(f.n)?';border:2px solid var(--grn)':''}"><div style="display:flex;align-items:center;gap:10px">${av(f.a)}<div style="flex:1;min-width:0;text-align:left"><b style="display:block;overflow:hidden;text-overflow:ellipsis">${esc(f.n)}</b><span class="mut" style="font-size:13px">${isOn(f)?'<span style="color:var(--grn)">● online</span>':'○ offline'}${h2hMini(me.name,f.n)?' · '+h2hMini(me.name,f.n):''}</span></div>${FSEL?`<b style="font-size:26px">${FSEL.has(f.n)?'✅':'⬜'}</b>`:`<button class="btn sm${FRD==f.n?'':' pink'}" data-d="${esc(f.n)}" style="flex:none;width:auto;padding:8px 12px">${FRD==f.n?'▲':'🥊 Duell'}</button><button class="btn ghost sm" data-r="${esc(f.n)}" style="flex:none;width:auto;padding:8px 10px" aria-label="entfernen">✖</button>`}</div>${FRD==f.n?`<div class="c mut" style="margin:10px 0 6px">Runden pro Duell:</div><div class="row" id="frr">${[1,3,5,7,10].map(r=>`<button class="btn ghost sm" data-n="${r}" style="padding:8px 0">${(DB.vr||5)==r?'✔ ':''}${r}</button>`).join('')}</div><button class="btn pink" id="frgo" style="margin-top:10px">⚔️ ${esc(f.n)} herausfordern</button>`:''}</div>`).join('')+(FSEL?`<button class="btn pink" id="fgo" ${FSEL.size?'':'disabled'}>🏠 Raum eröffnen${FSEL.size?' & '+FSEL.size+' einladen':' – erst Freunde antippen'}</button>`:''):'<div class="card mut" style="padding:14px">Noch keine Freunde. Schick unten eine Anfrage – danach lädst du sie mit einem Tipp zum Duell ein.</div>'}
+ ${FR.length?[...FR].sort((a,b)=>isOn(b)-isOn(a)).map(f=>`<div class="card" ${FSEL?`data-s="${esc(f.n)}" `:''}style="padding:10px;margin:0${FRD==f.n&&!FSEL?';border:2px solid var(--yel)':''}${FSEL&&FSEL.has(f.n)?';border:2px solid var(--grn)':''}"><div style="display:flex;align-items:center;gap:10px">${av(f.a)}<div style="flex:1;min-width:0;text-align:left"><b style="display:block;overflow:hidden;text-overflow:ellipsis">${esc(f.n)}</b><span class="mut" style="font-size:13px">${isOn(f)?'<span style="color:var(--grn)">● online</span>':'○ offline'}${h2hMini(me.name,f.n)?' · '+h2hMini(me.name,f.n):''}</span></div>${FSEL?`<b style="font-size:26px">${FSEL.has(f.n)?'✅':'⬜'}</b>`:`${FP?'':`<button class="btn sm${FRD==f.n?'':' pink'}" data-d="${esc(f.n)}" style="flex:none;width:auto;padding:8px 12px">${FRD==f.n?'▲':'🥊 Duell'}</button>`}<button class="btn ghost sm" data-r="${esc(f.n)}" style="flex:none;width:auto;padding:8px 10px" aria-label="entfernen">✖</button>`}</div>${FRD==f.n?`<div class="c mut" style="margin:10px 0 6px">Runden pro Duell:</div><div class="row" id="frr">${[1,3,5,7,10].map(r=>`<button class="btn ghost sm" data-n="${r}" style="padding:8px 0">${(DB.vr||5)==r?'✔ ':''}${r}</button>`).join('')}</div><button class="btn pink" id="frgo" style="margin-top:10px">⚔️ ${esc(f.n)} herausfordern</button>`:''}</div>`).join('')+(FSEL?`<button class="btn pink" id="fgo" ${FSEL.size?'':'disabled'}>🏠 Raum eröffnen${FSEL.size?' & '+FSEL.size+' einladen':' – erst Freunde antippen'}</button>`:''):'<div class="card mut" style="padding:14px">Noch keine Freunde. Schick unten eine Anfrage – danach lädst du sie mit einem Tipp zum Duell ein.</div>'}
  <div class="card" style="padding:12px"><b>➕ Freund hinzufügen</b><div style="display:flex;gap:8px;margin-top:8px"><div class="pl" style="flex:1;margin:0"><input id="fn" maxlength="14" placeholder="Name des Freundes" autocomplete="off" autocapitalize="off"></div><button class="btn sm" id="fa" style="flex:none;width:auto;padding:0 16px">📨</button></div><div class="hint" id="fh"></div></div><div style="height:14px;flex:none"></div>`;
  el.querySelectorAll('[data-i]').forEach(b=>b.onclick=async()=>{const i=IB.find(x=>String(x.id)==b.dataset.i);if(!i)return;const acc=b.dataset.a=='1';el.querySelectorAll('button').forEach(x=>x.disabled=true);
   try{await rpc('inbox_answer',{p_name:me.name,p_pin:me.pin,p_id:i.id,p_accept:acc})}catch(e){}
-  IB=IB.filter(x=>x.id!=i.id);ibBadge();if(i.k=='friend'&&acc)await frLoad();frDraw(back);if(i.k=='invite'&&acc)joinPayload(i.p)});
+  IB=IB.filter(x=>x.id!=i.id&&!(acc&&i.k=='invite'&&x.k=='invite'));ibBadge();if(i.k=='friend'&&acc)await frLoad();frDraw(back);if(i.k=='invite'&&acc)joinPayload(i.p)});
  el.querySelectorAll('#frr [data-n]').forEach(b=>b.onclick=()=>{DB.vr=+b.dataset.n;save();sfx('ok');frDraw(back)});
+ {const bx=document.getElementById('fpb');if(bx&&FP){const rem=Math.max(.1,60-(Date.now()-FP.t0)/1000);bx.style.transition='width '+rem+'s linear';setTimeout(()=>{bx.style.width='0'},60)}}
+ const fpx=document.getElementById('fpx');if(fpx)fpx.onclick=()=>{ac();fpCancel('Herausforderung abgebrochen.')};
  const fg=document.getElementById('fgr');if(fg)fg.onclick=()=>{ac();FSEL=FSEL?null:new Set();FRD='';frDraw(back)};
  el.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{ac();FRD=b.dataset.q;frDraw(back)});
  el.querySelectorAll('[data-s]').forEach(c=>c.onclick=()=>{const n=c.dataset.s;if(FSEL.has(n))FSEL.delete(n);else if(FSEL.size<4)FSEL.add(n);frDraw(back)});
  const fo=document.getElementById('fgo');if(fo)fo.onclick=async()=>{ac();const L=[...FSEL];fo.disabled=true;fo.textContent='Eröffne Raum …';NBK=menu;
   try{const c=await roomCreate(me.name,Math.max(2,Math.min(5,L.length+1)));await Promise.all(L.map(n=>rpc('send_invite',{p_name:me.name,p_pin:me.pin,p_to:n,p_payload:'RAUM-'+c})));FSEL=null}catch(e){fo.disabled=false;fo.textContent='⚠️ Raum konnte nicht eröffnet werden'}};
  el.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{ac();FRD=FRD==b.dataset.d?'':b.dataset.d;frDraw(back)});
- const go=document.getElementById('frgo');if(go)go.onclick=async()=>{ac();const who=FRD;el.querySelectorAll('button').forEach(x=>x.disabled=true);NBK=menu;const m=document.getElementById('fh');if(m)m.textContent='Eröffne Duell …';
-  try{const c=await duCreate(me.name,DB.vr||5);await rpc('send_invite',{p_name:me.name,p_pin:me.pin,p_to:who,p_payload:'DUELL-'+c.slice(1)})}catch(e){frDraw(back);const h=document.getElementById('fh');if(h)h.textContent='⚠️ Duell konnte nicht eröffnet werden.'}};
+ const go=document.getElementById('frgo');if(go)go.onclick=async()=>{ac();const who=FRD;el.querySelectorAll('button').forEach(x=>x.disabled=true);NBK=menu;const m=document.getElementById('fh');if(m)m.textContent='Sende Herausforderung …';
+  try{const c=await duCreate(me.name,DB.vr||5,undefined,undefined,undefined,true);const r=await rpc('send_invite',{p_name:me.name,p_pin:me.pin,p_to:who,p_payload:'DUELL-'+c.slice(1)});if(r!=='ok'){leaveSig(c);throw new Error(r)}FPMSG='';FRD='';fpStart(c,who);frDraw(back)}
+  catch(e){frDraw(back);const h=document.getElementById('fh');if(h)h.textContent='⚠️ Herausforderung konnte nicht gesendet werden.'}};
  el.querySelectorAll('[data-r]').forEach(b=>b.onclick=async()=>{if(b.dataset.s!='1'){b.dataset.s='1';b.textContent='sicher?';return}
   try{await rpc('friend_remove',{p_name:me.name,p_pin:me.pin,p_who:b.dataset.r})}catch(e){}await frLoad();frDraw(back)});
  $('#fa').onclick=async()=>{const v=$('#fn').value.trim(),h=$('#fh');if(!v)return;h.textContent='Sende …';
@@ -1068,6 +1087,7 @@ function menu(){NBK=null;applyTheme();avLoad();ibLoad();S.code=null;S.room=null;
  const sv=DB.acct&&DB.sess&&Date.now()-DB.sess.ts<90*60*1000?DB.sess:null;
  if(sv){const mid=app.querySelector('.mid');if(mid){const b=document.createElement('button');b.className='btn ghost';b.id='rs';b.textContent='↩️ Zurück ins '+(sv.t=='du'?'Duell':'Raum')+' ('+sv.code.replace(/^1/,'')+')';mid.append(b);
   b.onclick=async()=>{ac();NBK=menu;b.textContent='Verbinde …';try{if(sv.t=='du')await duJoin(sv.code,sv.name,true);else await roomJoin(sv.code,sv.name)}catch(e){DB.sess=null;save();b.textContent='❌ Nicht mehr verfügbar'}}}}
+ if(FP){const mid=app.querySelector('.mid');if(mid){const b=document.createElement('button');b.className='btn ghost';b.id='fpm';b.textContent='⏳ Warte auf '+FP.who+' … (tippen = abbrechen)';mid.prepend(b);b.onclick=()=>{ac();fpCancel('')}}}
  {const mid=app.querySelector('.mid');if(mid){const b=document.createElement('button'),sk=DB.acct?streakNow(DB.acct.name):null;b.className='btn'+(sk&&!sk.today?' glow':'');b.id='dly';
   b.style.cssText='padding:12px;background:linear-gradient(180deg,var(--c1),var(--c2));border:2px solid var(--yel);box-shadow:0 5px 0 var(--g2);color:#fff';
   b.innerHTML='📅 HEUTE · TAGESAUFGABE<br><small style="font-weight:700;opacity:.9">'+(sk?(sk.today?'✔ heute gespielt · ':'')+streakTxt(sk):'3 neue Spiele jeden Tag · jetzt anmelden')+'</small>';mid.prepend(b);b.onclick=()=>{ac();daily()}}}
@@ -1326,7 +1346,7 @@ function rmRender(){const r=RM.room,host=r.host===RM.name,ph=RM.phase;
    const at=new Date(Date.now()+6000).toISOString();try{await roomRpc('set_room',{p_code:RM.code,p_stages:null,p_start:at,p_expect:null});RM.room.start_at=at;RM.phase='count';rmRender()}catch(e){const st=document.getElementById('rms');if(st)st.textContent='⚠️ Start konnte nicht gesendet werden.'}}}
  if($('#inf'))$('#inf').onclick=()=>inviteFriends('RAUM-'+RM.code,'Raum');
  if($('#inv'))$('#inv').onclick=()=>shareTxt(`⚡ BLITZBRAIN-Raum! Code: ${RM.code}${lnk('RAUM-'+RM.code)}\nUnter „Online-Arena“ → „Raum beitreten“ eingeben.`,$('#inv'));
- $('#bt').onclick=()=>{leaveSig(RM&&RM.code);rmStop();RM=null;DB.sess=null;save();(NBK||fernRoom)()};
+ $('#bt').onclick=()=>{leaveSig(RM&&RM.code);rmStop();RM=null;DB.sess=null;save();menu()};
  rmUpdate()}
 function remoteEnd(){
  const r=S.res[0],g=(DB.runs[DB.runs.length-1]||{}).g||{},code=S.code,on=sbOk(),dly=!!S.daily&&!S.room,sk=dly?streakTouch(S.res[0].n):null;
