@@ -540,13 +540,13 @@ function home(){S.code=null;S.room=null;
  <div class="c mut">Wer spielt mit?</div>
  <div id="pl" style="display:flex;flex-direction:column;gap:8px"></div>
  <button class="btn ghost sm" id="add">＋ Spieler hinzufügen</button>
- <button class="btn pink" id="go">LOS GEHT'S ⚡</button>${bar('⬅ Hauptmenü')}</div>`;
+ <button class="btn pink" id="go">LOS GEHT'S ⚡</button>${bar('⬅ Zurück')}</div>`;
  const pl=()=>{$('#pl').innerHTML=DB.names.map((n,i)=>`<div class="pl"><input data-i="${i}" maxlength="14" placeholder="Spieler ${i+1}" value="${esc(n)}" autocomplete="off">${DB.names.length>1?`<button data-x="${i}">✕</button>`:''}</div>`).join('')};
  pl();
  $('#pl').oninput=e=>{if(e.target.dataset.i!=null){DB.names[+e.target.dataset.i]=e.target.value;save()}};
  $('#pl').onclick=e=>{const x=e.target.dataset.x;if(x!=null){DB.names.splice(+x,1);save();pl()}};
  $('#add').onclick=()=>{ac();DB.names.push('');save();pl();$('#pl').lastChild.querySelector('input').focus()};
- $('#bt').onclick=menu;
+ $('#bt').onclick=partyHub;
  $('#go').onclick=()=>{ac();S.names=DB.names.map((n,i)=>(n.trim()||'Spieler '+(i+1)));newRound(true)};
 }
 function newRound(fresh){
@@ -682,11 +682,10 @@ function duForfeitWin(){const D=DU;duStop();const me=D.name,code=D.code;sfx('rec
 function randGo(back){back=typeof back=='function'?back:menu;ac();if(needAcct(()=>randGo(back)))return;duelRandom(DB.acct.name,3,back)}
 function duelHub(){
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🥊 1v1-Duell</h2><div class="mut">Zwei Spieler, jede Runde ein anderes Spiel – wer schneller ist, holt den Punkt.</div>
- <div class="mid"><button class="btn pink glow" id="h0" style="padding:26px">🏆 RANKED<br><small style="font-weight:700;opacity:.9">Zufälliger Gegner · 3 Spiele · Elo</small></button>
- <div class="card c" id="eld" style="padding:8px"><span class="mut">🏅 Dein Elo …</span></div>
+ <div class="mid"><div class="card c" id="eld" style="padding:8px;cursor:pointer"><span class="mut">🏅 Dein Elo …</span></div>
  <button class="btn" id="h2" style="padding:18px">🌍 MIT FREUND / CODE<br><small style="font-weight:700;opacity:.8">Duell eröffnen oder per Code beitreten</small></button>
  <button class="btn" id="h1" style="padding:18px;background:linear-gradient(180deg,#b9ff6b,#8be02e);box-shadow:0 6px 0 #4c8a0e">📱 EIN HANDY<br><small style="font-weight:700;opacity:.8">Reihum am selben Gerät</small></button><button class="btn ghost sm" id="h3">📊 Bilanz &amp; Ranked-Rangliste</button></div>${bar('⬅ Hauptmenü')}</div>`;
- $('#h0').onclick=()=>randGo(duelHub);$('#h1').onclick=duelSetup;$('#h2').onclick=()=>duelOnline();$('#h3').onclick=()=>duelStats();$('#bt').onclick=menu;
+ $('#h1').onclick=duelSetup;$('#h2').onclick=()=>duelOnline();$('#h3').onclick=()=>duelStats();$('#eld').onclick=()=>duelStats();$('#bt').onclick=menu;
  (async()=>{const e=()=>document.getElementById('eld');if(!DB.acct){if(e())e().innerHTML='<span class="mut">🏅 Melde dich an, um in der Duell-Rangliste zu starten.</span>';return}
   try{const L=await rpc('elo_rank',{p_name:DB.acct.name});if(!e())return;e().innerHTML=Array.isArray(L)&&L[0]?`${league(L[0].r).e} <b>${league(L[0].r).n}</b> · <b>${L[0].r}</b> Elo · Platz <b>${L[0].pos}</b> · ${L[0].w}/${L[0].g} Siege`:'<span class="mut">🏅 Noch kein gewertetes Online-Duell – Start bei 1000 Elo.</span>'}catch(x){if(e())e().innerHTML=''}})();
 }
@@ -1180,9 +1179,8 @@ function onboard(i=0){const P=[['⚡','Schnell sein!','Mini-Spiele, die du so sc
  const end=()=>{DB.seen=1;save();menu()};$('#on').onclick=()=>{ac();i<2?onboard(i+1):end()};$('#os').onclick=end}
 function menu(){NBK=null;setTimeout(installNudge,1200);applyTheme();avLoad();ibLoad();S.code=null;S.room=null;S.daily=false;
  app.innerHTML=`<div class="scr"><h1 class="logo sm">BLITZ<span>BRAIN</span></h1><div class="sub" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="white-space:nowrap">${POOL().length} Mini-Games</span><button class="btn ghost sm" id="ac" style="flex:none;width:auto;padding:6px 12px;font-size:13px"></button></div>
- <div class="mid" style="gap:10px"><button class="btn glow" id="mr" style="padding:13px;background:linear-gradient(180deg,#ffb347,#ff7a18);box-shadow:0 6px 0 #a24a00;color:#fff">🏆 RANKED<br><small style="font-weight:700;opacity:.9">Zufälliger Gegner · 3 Spiele · Elo</small></button><button class="btn pink" id="m1" style="padding:13px">⚔️ PARTY-RUNDE<br><small style="font-weight:700;opacity:.9">Ein Handy für alle – auch offline</small></button>
- <button class="btn" id="m4" style="padding:13px;background:linear-gradient(180deg,#b9ff6b,#8be02e);box-shadow:0 6px 0 #4c8a0e">🥊 1v1-DUELL<br><small style="font-weight:700;opacity:.8">Zu zweit · lokal oder online</small></button>
- <button class="btn" id="m3" style="padding:13px;background:linear-gradient(180deg,#6ff0ff,#27e1ff);box-shadow:0 6px 0 #0a7f94">🌍 ONLINE-ARENA<br><small style="font-weight:700;opacity:.8">Raum oder Challenge · online</small></button>
+ <div class="mid" style="gap:10px"><button class="btn glow" id="mr" style="padding:13px;background:linear-gradient(180deg,#ffb347,#ff7a18);box-shadow:0 6px 0 #a24a00;color:#fff">🏆 RANKED<br><small style="font-weight:700;opacity:.9">Zufälliger Gegner · 3 Spiele · Elo</small></button><button class="btn" id="m4" style="padding:13px;background:linear-gradient(180deg,#b9ff6b,#8be02e);box-shadow:0 6px 0 #4c8a0e">🥊 1v1-DUELL<br><small style="font-weight:700;opacity:.8">Mit Freund (online) oder an einem Handy</small></button>
+ <button class="btn pink" id="m1" style="padding:13px">👥 PARTY<br><small style="font-weight:700;opacity:.9">Gruppe: ein Handy, Online-Raum oder Challenge</small></button>
  <button class="btn" id="m2" style="padding:13px">🕹️ ARCADE<br><small style="font-weight:700;opacity:.8">Solo – jedes Spiel einzeln üben</small></button></div>
  <div class="tb"><button class="btn ghost sm" id="rec">🏆 Bestenlisten</button><button class="btn ghost sm" id="mus" style="flex:0 0 64px" aria-label="Musik"></button><button class="btn ghost sm" id="snd" style="flex:0 0 64px" aria-label="Sound"></button><button class="btn ghost sm" id="hp" style="flex:0 0 64px" aria-label="So geht's">❔</button></div></div>`;
  const lab=()=>{$('#mus').textContent=DB.mus?'🎵':'🔕';$('#snd').textContent=DB.snd?'🔊':DB.vib===false?'🔇':'📳'};lab();
@@ -1197,7 +1195,7 @@ function menu(){NBK=null;setTimeout(installNudge,1200);applyTheme();avLoad();ibL
   b.onclick=()=>{ac();if(DB.acct)profile();else loginScreen(menu)};
   if(DB.acct){const w=document.createElement('div'),ib=document.createElement('button');w.style.cssText='display:flex;gap:6px;flex:none';ib.className='btn ghost sm';ib.id='ib';ib.style.cssText='flex:none;width:auto;padding:6px 12px;font-size:14px';ib.textContent=IB.length?'📬 '+IB.length:'👥';ib.setAttribute('aria-label','Freunde und Postfach');ib.onclick=()=>{ac();friendsScreen()};b.replaceWith(w);w.append(ib,b)}}}
  $('#hp').onclick=help;
- $('#m1').onclick=()=>{ac();home()};$('#m3').onclick=()=>{ac();fern()};$('#m2').onclick=()=>{ac();arcade()};$('#m4').onclick=()=>{ac();duelHub()};$('#mr').onclick=()=>randGo(menu);
+ $('#m1').onclick=()=>{ac();partyHub()};$('#m2').onclick=()=>{ac();arcade()};$('#m4').onclick=()=>{ac();duelHub()};$('#mr').onclick=()=>randGo(menu);
  $('#rec').onclick=()=>{ac();bestenlisten(menu)};
  $('#mus').onclick=()=>{ac();DB.mus=!DB.mus;save();lab()};
  $('#snd').onclick=()=>{ac();if(DB.snd){DB.snd=false;DB.vib=true}else if(DB.vib!==false){DB.vib=false}else{DB.snd=true;DB.vib=true}save();lab();sfx('ok')};
@@ -1270,7 +1268,13 @@ const shareTxt=(text,b)=>{const ok=()=>{if(b){const o=b.textContent;b.textConten
  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(ok,()=>prompt('Text kopieren:',text));else prompt('Text kopieren:',text)};
 const nameField=()=>`<div class="card c" style="padding:10px">👤 Angemeldet als <b>${esc(DB.acct?DB.acct.name:'–')}</b></div>`;
 const getName=()=>DB.acct.name;
-function fern(pre=''){S.code=null;S.room=null;if(needAcct(fern,pre))return;
+function partyHub(){S.code=null;S.room=null;
+ app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">👥 Party</h2><div class="mut">Für Gruppen – jede Runde wird anders.</div>
+ <div class="mid"><button class="btn pink" id="p1" style="padding:22px">⚔️ EIN HANDY<br><small style="font-weight:700;opacity:.9">Party-Runde, Handy wandert reihum – auch offline</small></button>
+ <button class="btn" id="p2" style="padding:22px;background:linear-gradient(180deg,#6ff0ff,#27e1ff);box-shadow:0 6px 0 #0a7f94">🏠 ONLINE-RAUM<br><small style="font-weight:700;opacity:.8">Jeder am eigenen Handy, gemeinsamer Countdown</small></button>
+ <button class="btn" id="p3" style="padding:22px">⚡ SCHNELL-CHALLENGE<br><small style="font-weight:700;opacity:.8">Gleicher Code, jeder spielt, wann er will</small></button></div>${bar('⬅ Hauptmenü')}</div>`;
+ $('#p1').onclick=()=>{ac();home()};$('#p2').onclick=()=>{ac();fernRoom()};$('#p3').onclick=()=>{ac();fernChallenge()};$('#bt').onclick=menu}
+function fern(pre=''){S.code=null;S.room=null;if(!pre)return partyHub();if(needAcct(fern,pre))return;
  if(/^RAUM-/i.test(pre))return fernRoom(pre.slice(5));if(pre)return fernChallenge(pre);
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🌍 Online-Arena</h2><div class="mut">Jeder spielt am eigenen Handy – mit denselben Aufgaben.</div>
  <div class="mid"><button class="btn pink" id="a1" style="padding:24px">🏠 RAUM<br><small style="font-weight:700;opacity:.9">Geheime Spiele-Wahl, gemeinsamer Countdown</small></button>
@@ -1472,7 +1476,7 @@ setTimeout(()=>{if(DB.notif&&DB.acct)pushOn()},5000);
 try{const h=decodeURIComponent((location.hash||'').slice(1));if(h&&/^DUELL-[A-Z0-9]{4}$/i.test(h))duelOnline(h.slice(6).toUpperCase());else if(h&&(dec(h)||/^RAUM-[A-Z0-9]{4,8}$/i.test(h)))fern(h)}catch(e){}
 try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&location.hostname.endsWith('github.io'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-09-6';let updPend=null,updT=0;
+const BBV='2026-11-09-7';let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;font-weight:800;text-align:center';
