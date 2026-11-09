@@ -926,7 +926,7 @@ function daily(){S.code=null;S.room=null;if(needAcct(daily,''))return;const D=da
  <div class="c" style="font-weight:800">${streakTxt(streakNow(DB.acct.name))}${streakNow(DB.acct.name).today?' ✔ heute gespielt':''}</div>
  <div class="card">${D.idx.map(i=>`<div style="padding:4px 0">${STG[K[i]].emoji} <b>${STG[K[i]].name}</b></div>`).join('')}</div>
  <button class="btn pink" id="dg">▶ Jetzt spielen</button><button class="btn ghost" id="dv">📊 Heutiges Scoreboard</button><h3 style="margin:4px 0 0">🏅 Top 3 heute</h3><div id="dtop" class="mut">Lade …</div><div class="hint">Du kannst mehrmals spielen – jedes Mal gibt es neue Aufgaben, es zählt deine beste Zeit.</div>${bar()}</div>`;
- $('#dg').onclick=()=>{ac();fernIntro(DB.acct.name,D.code,false,(Math.random()*1e9)|0)};$('#dv').onclick=()=>sbView(D.code,daily);$('#bt').onclick=menu;
+ $('#dg').onclick=()=>{ac();fernIntro(DB.acct.name,D.code,false,(Math.random()*1e9)|0)};$('#dv').onclick=()=>sbView(D.code,daily,1);$('#bt').onclick=menu;
  (async()=>{let h;try{const rows=await sbGet(D.code),b={};rows.forEach(x=>{if(!b[x.name]||x.total_ms<b[x.name].total_ms)b[x.name]=x});const L=Object.values(b).sort((x,y)=>x.total_ms-y.total_ms).slice(0,3),med=['🥇','🥈','🥉'];
   h=L.length?L.map((x,i)=>`<div class="rk${i==0?' w':''}"><span>${med[i]}</span><b>${esc(x.name)}</b><span>${f3(x.total_ms)}</span></div>`).join(''):'Noch niemand – sei der Erste!'}catch(e){h='⚠️ Nicht erreichbar.'}
   const el=document.getElementById('dtop');if(el)el.innerHTML=h})()}
@@ -1119,8 +1119,8 @@ function sbRender(code,ks0){clearInterval(sbT);
     +`<div class="mut c" style="margin-top:8px;font-size:13px">${L.length} Spieler · aktualisiert sich automatisch</div>`;
   }catch(e){const el=document.getElementById('sbv');if(el)el.textContent='⚠️ Scoreboard nicht erreichbar.'}};
  draw();sbT=setInterval(draw,5000)}
-function sbView(code,back){
- app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">📊 Scoreboard</h2><div class="mut">Code ${code}</div><div id="sbv" class="c mut">Lade …</div>${bar()}</div>`;
+function sbView(code,back,dl){
+ app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">📊 ${dl?'Heutiges Scoreboard':'Scoreboard'}</h2>${dl?'':`<div class="mut">Code ${code}</div>`}<div id="sbv" class="c mut">Lade …</div>${bar()}</div>`;
  $('#bt').onclick=back||(()=>fernChallenge());sbRender(code);
 }
 /* ===== Raum-Modus: geheime Spiele-Wahl auf dem eigenen Handy + gemeinsamer Countdown (Supabase-Tabellen rooms & picks) ===== */
@@ -1213,7 +1213,7 @@ function remoteEnd(){
  <button class="btn pink" id="sh">📤 Ergebnis teilen</button><button class="btn" id="again">${S.room?'🔁 Revanche (alle müssen zustimmen)':'🔁 Nochmal versuchen'}</button><div class="hint" id="rer"></div>
  <div class="row"><button class="btn ghost sm" id="cp">${dly?'🏅 Tages-Scoreboard':'📋 Code teilen'}</button><button class="btn ghost sm" id="mn">🏠 Menü</button></div></div>`;
  countUp();bindRate();$('#sh').onclick=()=>shareTxt(txt,$('#sh'));
- $('#cp').onclick=dly?()=>sbView(code,daily):()=>shareTxt(`⚡ BLITZBRAIN-Challenge! Code: ${code}${lnk(code)}\nUnter „Online-Arena“ eingeben und meine Zeit schlagen.`,$('#cp'));
+ $('#cp').onclick=dly?()=>sbView(code,daily,1):()=>shareTxt(`⚡ BLITZBRAIN-Challenge! Code: ${code}${lnk(code)}\nUnter „Online-Arena“ eingeben und meine Zeit schlagen.`,$('#cp'));
  $('#again').onclick=()=>{if(S.room)return roomRematch();if(dly)S.seed=(Math.random()*1e9)|0;S.cur=0;S.res=[];pass()};$('#mn').onclick=menu;
  if(on){const up=()=>sbSend(r,g,code).then(()=>sbRender(code,S.room?S.stages:null),()=>{const el=document.getElementById('sbv');if(el){el.innerHTML='⚠️ Zeit konnte nicht gesendet werden. <button class="btn ghost sm" id="rt">Nochmal senden</button>';$('#rt').onclick=()=>{el.textContent='Sende Zeit …';up()}}});up()}
 }
