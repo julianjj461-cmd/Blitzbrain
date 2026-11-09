@@ -1439,4 +1439,16 @@ applyTheme();if(DB.acct||DB.runs.length)DB.seen=1;
 DB.seen?menu():onboard();
 try{const h=decodeURIComponent((location.hash||'').slice(1));if(h&&/^DUELL-[A-Z0-9]{4}$/i.test(h))duelOnline(h.slice(6).toUpperCase());else if(h&&(dec(h)||/^RAUM-[A-Z0-9]{4,8}$/i.test(h)))fern(h)}catch(e){}
 try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&location.hostname.endsWith('github.io'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
+/* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
+const BBV='2026-11-09-3';let updPend=null,updT=0;
+function updTry(){if(!updPend)return;
+ if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
+  const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;font-weight:800;text-align:center';
+  o.innerHTML='<div class="bounce" style="font-size:64px">🔄</div><div style="font-size:26px">Neue Version!</div><div style="opacity:.8;font-weight:600">Lade neu …</div>';document.body.append(o);setTimeout(()=>location.reload(),1300)}
+ else if(!updT)updT=setInterval(updTry,4000)}
+async function updCheck(){try{if(!/^https?:$/.test(location.protocol)||document.hidden)return;
+ const r=await fetch(location.pathname+'?v='+Date.now(),{cache:'no-store'});if(!r.ok)return;const m=/BBV='([0-9a-z.-]+)'/.exec(await r.text());
+ let seen='';try{seen=sessionStorage.getItem('bbu')||''}catch(e){}
+ if(m&&m[1]!==BBV&&m[1]!==seen){updPend=m[1];updTry()}}catch(e){}}
+setTimeout(updCheck,3000);setInterval(updCheck,10*60*1000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)updCheck()});
 </script></body></html>
