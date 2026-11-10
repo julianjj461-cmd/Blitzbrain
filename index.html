@@ -73,6 +73,9 @@ body{background:radial-gradient(120% 80% at 50% 0,var(--g1),var(--g2) 70%) fixed
 .ftap{width:min(64vw,280px);aspect-ratio:1;border-radius:50%;border:0;margin:4px auto;background:radial-gradient(circle at 35% 30%,#9bff7a,#2fbf4a);box-shadow:0 8px 0 #1f7a12;color:#08330f;font:900 20px system-ui;display:flex;flex-direction:column;align-items:center;justify-content:center;touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}.ftap span{font-size:clamp(60px,22vw,100px);line-height:1}.ftap:active:not(:disabled){transform:translateY(5px);box-shadow:0 3px 0 #1f7a12}.ftap:disabled{opacity:.45;filter:grayscale(.4)}
 .fbars{width:100%;display:flex;flex-direction:column;gap:4px}.fbr{display:flex;align-items:center;gap:6px;font-size:13px}.fbr .fbn{width:84px;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fbr.me .fbn{font-weight:900}.fbr .fbv{flex:1;height:10px;border-radius:5px;background:#ffffff22;overflow:hidden}.fbr .fbv i{display:block;height:100%;background:var(--yel);transition:width .3s}.fbr.me .fbv i{background:#3dffa0}.fbr b{width:30px;text-align:right}
 .fz{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;width:100%;font-size:clamp(26px,9vw,38px);text-align:center;line-height:1.15}
+.frx{display:flex;gap:6px;justify-content:center}.frx button{border:0;background:rgba(255,255,255,.12);border-radius:12px;padding:4px 10px;font-size:20px;touch-action:manipulation}.frx button:active{background:rgba(255,255,255,.3)}.rxb{margin-left:4px;font-size:16px}
+.fmk{font-size:clamp(70px,24vw,110px);text-align:center;min-height:1.3em;line-height:1.2}
+.frk{width:100%;flex:1;min-height:38vh;border:0;border-radius:28px;font:900 clamp(24px,8vw,38px) system-ui;color:#fff;background:linear-gradient(180deg,#5b6fd8,#3a45a8);box-shadow:0 8px 0 #222a70;touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;padding:16px}.frk.go{background:linear-gradient(180deg,#9bff7a,#2fbf4a);color:#08330f;box-shadow:0 8px 0 #1f7a12}.frk.lock{background:linear-gradient(180deg,#666,#444);box-shadow:0 8px 0 #222}.frk.end{background:linear-gradient(180deg,#ffe27a,#ffd23f);color:#3a2600;box-shadow:0 8px 0 #b66a00}
 .fpb{font-size:17px;padding:16px 8px}.fpb.hot{outline:3px solid var(--yel)}
 .ar{padding-left:12px;border-left:6px solid var(--ac,#fff);border-radius:3px}
 .mt{display:flex;flex-direction:column;align-items:center;gap:3px;padding:20px 4px;font-size:15px}.mt span{font-size:30px;line-height:1.1}.mt b{font-size:17px}.mt small{font-weight:700;opacity:.8;font-size:12px}
@@ -1351,6 +1354,9 @@ const FFG={flask:{e:'🍾',n:'Flaschen-Grab',h:'Eine Flasche weniger als Spieler
  sprint:{e:'👆',n:'Tipp-Sprint',h:'Nach dem Countdown 6 Sekunden lang so schnell wie möglich tippen – die meisten Taps gewinnen.'},
  einzig:{e:'🔢',n:'Einzigartige Zahl',h:'Wähle eine Zahl. Gewonnen hat die kleinste Zahl, die kein anderer gewählt hat.'},
  zaehl:{e:'🧮',n:'Zähl-Duell',h:'Zähle ein Symbol im Gewimmel – wer am nächsten an der richtigen Zahl liegt, punktet.'}};
+FFG.zwei3={e:'⅔',n:'Zwei-Drittel',h:'Wähle 0 bis 100. Gewonnen hat, wer am nächsten an zwei Dritteln des Durchschnitts aller Zahlen liegt.'};
+FFG.merk={e:'🧠',n:'Merk-Reihe',h:'Merk dir die Symbolfolge und tippe sie nach. Jede Runde wird sie länger – der Schnellste bekommt einen Bonuspunkt.'};
+FFG.reaktion={e:'⚡',n:'Reaktions-Ampel',h:'Warte aufs Signal und tippe als Erster. Wer zu früh tippt, ist kurz gesperrt.'};
 const ffaOpts=v=>v.g==='minor'?FFO.map((e,o)=>[o,e]):v.g==='einzig'?Array.from({length:(v.st&&v.st.k)||6},(_,i)=>[i+1,String(i+1)]):[];
 const FFO=['⭐','🌙','🔥','🍀'];
 let FFX=null;
@@ -1379,7 +1385,7 @@ function ffaEnter(code,tk,me){ffaStop();FFX={code,tk,me,v:null,key:'',err:0,busy
  app.innerHTML=`<div class="scr"><div class="mid"><div class="c mut">Verbinde …</div></div></div>`;
  FFX.iv=setInterval(ffaTick,300);ffaCall('get')}
 function ffaTick(){const f=FFX;if(!f||f.busy)return;const ph=f.v?f.v.ph:'lobby',g=f.v?f.v.g:'';
- const need=ph==='done'?1500:ph==='lobby'?1000:ph==='intro'?700:g==='sprint'?350:(g==='minor'||g==='einzig'||g==='zaehl')?800:450;if(Date.now()-f.last<need)return;
+ const need=ph==='done'?1500:ph==='lobby'?1000:ph==='intro'?700:g==='sprint'?350:g==='reaktion'?300:(g==='minor'||g==='einzig'||g==='zaehl'||g==='zwei3')?800:450;if(Date.now()-f.last<need)return;
  if(ph==='play'&&g==='sprint'&&f.tc>0)ffaCall('cnt',null,f.tc);else ffaCall('get')}
 async function ffaCall(op,arg,n){const f=FFX;if(!f)return;f.busy=true;f.last=Date.now();
  try{const v=await rpc('ffa_do',{p_code:f.code,p_name:f.me,p_tk:f.tk,p_op:op,p_arg:arg==null?null:arg,p_n:n==null?null:n});if(FFX!==f)return;f.err=0;
@@ -1390,9 +1396,9 @@ async function ffaCall(op,arg,n){const f=FFX;if(!f)return;f.busy=true;f.last=Dat
  finally{if(FFX===f)f.busy=false}}
 function ffaGone(){app.innerHTML=`<div class="scr"><div class="mid"><div class="big" style="font-size:34px">Raum beendet</div><div class="c mut">Der Raum existiert nicht mehr oder du wurdest entfernt.</div><button class="btn pink" id="g1">🎪 Zu Free-for-All</button></div></div>`;$('#g1').onclick=()=>ffaHub()}
 function ffaLeave(){const f=FFX;if(f)rpc('ffa_do',{p_code:f.code,p_name:f.me,p_tk:f.tk,p_op:'leave',p_arg:null,p_n:null}).catch(()=>{});ffaStop();partyHub()}
-const ffaStrip=v=>`<div class="fstrip">${v.pl.map(p=>`<span class="fchip${p.n===FFX.me?' me':''}${!p.on?' off':''}${p.out?' out':''}">${nmx(p.n)} <b>${p.s}</b></span>`).join('')}</div>`;
-const ffaBar=()=>`<div class="tb"><button class="btn ghost sm" id="bt">⬅ Raum verlassen</button></div>`;
-function ffaBindLeave(){const b=$('#bt');if(!b)return;b.onclick=()=>{const ph=FFX&&FFX.v?FFX.v.ph:'lobby';if(ph==='lobby'||ph==='done'){ffaLeave();return}
+const ffaStrip=v=>`<div class="fstrip">${v.pl.map(p=>`<span class="fchip${p.n===FFX.me?' me':''}${!p.on?' off':''}${p.out?' out':''}">${nmx(p.n)} <b>${p.s}</b>${p.rx?`<span class="rxb">${p.rx}</span>`:''}</span>`).join('')}</div>`;
+const ffaBar=()=>`<div class="tb" style="flex-direction:column;gap:6px"><div class="frx">${['😂','😡','👏','😱','🔥','🤔'].map(e=>`<button data-rx="${e}" aria-label="Reaktion ${e}">${e}</button>`).join('')}</div><button class="btn ghost sm" id="bt">⬅ Raum verlassen</button></div>`;
+function ffaBindLeave(){document.querySelectorAll('.frx button').forEach(x=>x.onclick=()=>{sfx('tap',3);ffaCall('react',x.dataset.rx,null)});const b=$('#bt');if(!b)return;b.onclick=()=>{const ph=FFX&&FFX.v?FFX.v.ph:'lobby';if(ph==='lobby'||ph==='done'){ffaLeave();return}
  if(FFX.arm>Date.now()){ffaLeave();return}FFX.arm=Date.now()+3000;b.textContent='Wirklich verlassen? Nochmal tippen';setTimeout(()=>{if(b.isConnected)b.textContent='⬅ Raum verlassen'},3000)}}
 function ffaRender(){const f=FFX,v=f.v;if(!v)return;
  if(f.key&&!document.getElementById('ffa')){ffaStop();return}
@@ -1407,19 +1413,26 @@ function ffaScr(){const f=FFX,v=f.v,g=FFG[v.g],me=v.host===f.me;
   $('#inf').onclick=()=>inviteFriends('FFA-'+f.code,'Free-for-All-Raum');
   $('#fdyn').onclick=e=>{const b=e.target.closest('button');if(!b)return;
    if(b.id==='fgo'){ac();b.disabled=true;ffaCall('start')}
+   else if(b.id==='ftmb')ffaCall('tmode')
+   else if(b.dataset.x)ffaCall('ex',b.dataset.x)
    else if(b.dataset.g){const x=FFX.v,g=b.dataset.g;if(x&&x.st){const vt=x.st.vt=x.st.vt||{};if(x.st.mv&&vt[x.st.mv])vt[x.st.mv]--;vt[g]=(vt[g]||0)+1;x.st.mv=g;sfx('tap',2);ffaUpd()}ffaCall('vote',g,null)}
    else if(b.dataset.r)ffaCall('cfg',null,FFX.v.rounds+(+b.dataset.r))};
   ffaBindLeave();sfx('ok');ffaUpd();return}
+ if(v.ph==='inter'){const st=v.st,gp=st.gp||{},tot=st.tot||{},ks=Object.keys(tot).sort((a,b)=>tot[b]-tot[a]),ng=FFG[st.g]||g,nx=FFG[st.next];
+  app.innerHTML=`<div class="scr" id="ffa"><div class="mid" style="justify-content:center"><div class="c mut">🏆 Mini-Turnier · Spiel ${v.tm?v.tm.i+1:''} von ${v.tm?v.tm.n:''} beendet</div><div class="big pop" style="font-size:28px">${ng.e} ${ng.n}</div>
+  <div class="card" style="width:100%">${ks.map((n,i)=>`<div class="rk" style="margin:4px 0${n===f.me?';outline:2px solid var(--yel)':''}"><span style="width:26px">${i+1}.</span><b style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">${nmx(n)}</b><span class="mut">+${gp[n]||0}</span><b style="width:36px;text-align:right">${tot[n]}</b></div>`).join('')}</div>
+  <div class="c mut" style="font-size:13px">Platz 1 bekommt 3, Platz 2 bekommt 2, Platz 3 bekommt 1 Punkt.</div><div class="c">Als Nächstes: ${nx?nx.e+' <b>'+nx.n+'</b>':''}</div><div class="fbar"><i id="ftm"></i></div></div>${ffaBar()}</div>`;
+  ffaBindLeave();sfx('ok');ffaUpd();return}
  if(v.ph==='intro'){const vt=v.st.vote||{},ks=Object.keys(vt).filter(k=>FFG[k]).sort((a,b)=>vt[b]-vt[a]);
-  app.innerHTML=`<div class="scr" id="ffa"><div id="fsr"></div><div class="mid" style="justify-content:center"><div class="c mut">🗳️ Die Abstimmung hat entschieden</div><div class="pop" style="font-size:84px;text-align:center">${g.e}</div><div class="big pop" style="font-size:clamp(30px,10vw,46px)">${g.n}</div>
-  <div class="card c" style="padding:12px;width:100%">${g.h}</div><div class="c mut" style="font-size:13px">${ks.length?'Stimmen: '+ks.map(k=>FFG[k].e+' '+vt[k]).join(' · '):'Niemand hat abgestimmt – das Los hat entschieden.'}</div><div class="fbar"><i id="ftm"></i></div><div class="c mut" style="font-size:13px">Gleich geht’s los …</div></div>${ffaBar()}</div>`;
+  app.innerHTML=`<div class="scr" id="ffa"><div id="fsr"></div><div class="mid" style="justify-content:center"><div class="c mut">${v.tm?`🏆 Mini-Turnier · Spiel ${v.tm.i+1} von ${v.tm.n}`:'🗳️ Die Abstimmung hat entschieden'}</div><div class="pop" style="font-size:84px;text-align:center">${g.e}</div><div class="big pop" style="font-size:clamp(30px,10vw,46px)">${g.n}</div>
+  <div class="card c" style="padding:12px;width:100%">${g.h}</div><div class="c mut" style="font-size:13px">${v.tm?'':ks.length?'Stimmen: '+ks.map(k=>FFG[k].e+' '+vt[k]).join(' · '):'Niemand hat abgestimmt – das Los hat entschieden.'}</div><div class="fbar"><i id="ftm"></i></div><div class="c mut" style="font-size:13px">Gleich geht’s los …</div></div>${ffaBar()}</div>`;
   ffaBindLeave();sfx('go');ffaUpd();return}
  if(v.ph==='done'){
   const L=v.pl,top=L[0]?L[0].s:0,win=L.filter(p=>p.s===top).map(p=>p.n),iw=win.includes(f.me),med=['🥇','🥈','🥉'];
   const ord=v.g==='flask'?[...L].sort((a,b)=>b.s-a.s||a.n.localeCompare(b.n)):L;
-  app.innerHTML=`<div class="scr" id="ffa"><div class="mid" style="justify-content:flex-start;padding-top:10px"><div class="c mut">${g.e} ${g.n}</div><div class="big pop" style="font-size:clamp(34px,11vw,52px)">${iw?'🏆 Du hast gewonnen!':'🏁 Geschafft!'}</div>
+  app.innerHTML=`<div class="scr" id="ffa"><div class="mid" style="justify-content:flex-start;padding-top:10px"><div class="c mut">${v.tm?'🏆 Mini-Turnier – Gesamtwertung':g.e+' '+g.n}</div><div class="big pop" style="font-size:clamp(34px,11vw,52px)">${iw?'🏆 Du hast gewonnen!':'🏁 Geschafft!'}</div>
   <div class="banner" style="font-size:22px">${win.length>1?'Unentschieden: ':'Sieger: '}${win.map(nmx).join(', ')}</div>
-  <div class="card" style="width:100%">${ord.map((p,i)=>`<div class="rk" style="margin:4px 0${p.n===f.me?';outline:2px solid var(--yel)':''}"><span style="width:30px;text-align:center">${med[i]||(i+1)+'.'}</span><b style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">${nmx(p.n)}</b><span>${p.s} ${v.g==='flask'?'Pkt':g.e}</span></div>`).join('')}</div>
+  <div class="card" style="width:100%">${ord.map((p,i)=>`<div class="rk" style="margin:4px 0${p.n===f.me?';outline:2px solid var(--yel)':''}"><span style="width:30px;text-align:center">${med[i]||(i+1)+'.'}</span><b style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">${nmx(p.n)}</b><span>${p.s} ${v.tm||v.g==='flask'?'Pkt':g.e}</span></div>`).join('')}</div>
   ${me?'<button class="btn pink" id="fag">🔁 Nochmal (Lobby)</button>':'<div class="hint">Der Host kann direkt eine neue Runde starten.</div>'}<div class="hint" id="fst"></div></div>${ffaBar()}</div>`;
   if(me)$('#fag').onclick=()=>{$('#fag').disabled=true;ffaCall('again')};ffaBindLeave();sfx(iw?'win':'ok');if(iw)confetti(160);return}
  if(v.ph==='between'){ffaBetween();return}
@@ -1436,6 +1449,24 @@ function ffaScr(){const f=FFX,v=f.v,g=FFG[v.g],me=v.host===f.me;
   <div class="fbar"><i id="ftm"></i></div><div class="hint" id="fst"></div>${ffaBar()}</div>`;
   $('#fmy').onclick=e=>{const b=e.target.closest('button[data-s]');if(!b)return;const x=FFX.v;if(!x||x.ph!=='play'||Date.now()<FFX.lkUntil){sfx('bad');return}
    const s=b.dataset.s;if(!x.st.c.includes(s)){FFX.lkUntil=Date.now()+1500;sfx('bad');ffaUpd()}else sfx('ok');ffaCall('tap',s,null)};
+  ffaBindLeave();sfx('go')}
+ else if(v.g==='zwei3'){
+  f.gs=50;
+  app.innerHTML=`<div class="scr" id="ffa"><div id="fsr"></div><div class="c" style="font-weight:900;font-size:16px">Runde ${v.rnd} von ${v.rounds}</div><div class="c" style="font-weight:900;font-size:20px" id="fhd"></div>
+  <div class="card c" style="padding:10px;font-size:14px">Wähle eine Zahl von 0 bis 100.<br><b>Gewonnen hat, wer am nächsten an ⅔ des Durchschnitts aller Zahlen liegt.</b></div><div class="c" style="font-size:64px;font-weight:900" id="fzn">50</div><input type="range" min="0" max="100" value="50" id="fzr" style="width:100%"><button class="btn pink" id="fzok">✔ Fertig</button><div class="fbar"><i id="ftm"></i></div><div class="hint" id="fst"></div>${ffaBar()}</div>`;
+  $('#fzr').oninput=e=>{FFX.gs=+e.target.value;$('#fzn').textContent=FFX.gs};
+  $('#fzok').onclick=()=>{const x=FFX.v;if(!x||x.ph!=='play'||x.st.my!=null)return;x.st.my=FFX.gs;sfx('ok');ffaUpd();ffaCall('pick',null,FFX.gs)};
+  ffaBindLeave();sfx('go')}
+ else if(v.g==='merk'){
+  f.inp=false;f.rs=f.t0-((v.tot||0)-(v.left||0));
+  app.innerHTML=`<div class="scr" id="ffa"><div id="fsr"></div><div class="c" style="font-weight:900;font-size:16px">Runde ${v.rnd} von ${v.rounds} · ${v.st.sq.length} Symbole</div><div class="c" style="font-weight:900;font-size:20px" id="fhd">👀 Merk dir die Reihenfolge …</div><div class="fmk" id="fshow">·</div>
+  <div class="grid g2" id="fmb" style="gap:10px">${FFO.map((e,o)=>`<button class="fo" data-o="${o}" disabled>${e}</button>`).join('')}</div><div class="fbar"><i id="ftm"></i></div><div class="hint" id="fst"></div>${ffaBar()}</div>`;
+  $('#fmb').onclick=e=>{const b=e.target.closest('button[data-o]');if(!b||b.disabled)return;const x=FFX.v,o=+b.dataset.o;if(!x||x.ph!=='play'||!FFX.inp)return;const st=x.st;
+   if(st.sq[st.my]===o){st.my++;sfx('ok');if(st.my>=st.sq.length)(st.dn=st.dn||[]).push(FFX.me)}else{(st.fl=st.fl||[]).push(FFX.me);st.my=-1;sfx('bad')}ffaUpd();ffaCall('seq',null,o)};
+  ffaBindLeave();sfx('go');ffaMerkTick()}
+ else if(v.g==='reaktion'){
+  app.innerHTML=`<div class="scr" id="ffa"><div id="fsr"></div><div class="c" style="font-weight:900;font-size:16px">Runde ${v.rnd} von ${v.rounds}</div><button class="frk" id="frk"><span id="frt">Warte …</span></button><div class="hint" id="fst"></div>${ffaBar()}</div>`;
+  $('#frk').onpointerdown=e=>{e.preventDefault();const x=FFX.v;if(!x||x.ph!=='play'||x.st.w||Date.now()<FFX.lkUntil)return;if(!x.st.g)sfx('bad');else sfx('ok');ffaCall('hit',null,null)};
   ffaBindLeave();sfx('go')}
  else if(v.g==='kartoffel'){
   app.innerHTML=`<div class="scr" id="ffa"><div id="fsr"></div><div class="c" style="font-weight:900;font-size:20px" id="fhd"></div><div class="pop" style="font-size:72px;text-align:center" id="fpot">🥔</div><div class="grid g2" id="fpl" style="gap:10px"></div><div class="hint" id="fst"></div>${ffaBar()}</div>`;
@@ -1463,6 +1494,11 @@ function ffaScr(){const f=FFX,v=f.v,g=FFG[v.g],me=v.host===f.me;
 function ffaBetween(){const f=FFX,v=f.v,me=v.host===f.me,st=v.st;let head='',body='';
  if(v.g==='flask'){const last=st.last||[];head=last.length?`💥 ${last.map(nmx).join(', ')} ${last.length>1?'sind':'ist'} raus!`:'Keiner raus';body=`<div class="c mut">Noch ${(st.al||[]).length} im Spiel</div>${last.includes(f.me)?'<div class="c">Du bleibst als Zuschauer dabei 👀</div>':'<div class="c">Gleich geht’s weiter – mach dich bereit!</div>'}`;if(last.includes(f.me))sfx('lose');else sfx('ok')}
  else if(v.g==='dobble'){const w=st.w,com=(st.my||[]).find(s=>(st.c||[]).includes(s));head=w?(w===f.me?'🏆 Du warst am schnellsten!':`🏁 ${nmx(w)} war am schnellsten!`):'⏱ Keiner hat es gefunden';body=`<div class="c mut">Das gesuchte Symbol:</div><div style="font-size:64px;text-align:center">${com||'❓'}</div>`;sfx(w===f.me?'win':w?'ok':'bad')}
+ else if(v.g==='zwei3'){const res=st.res||{win:[],avg:0,tg:0},picks=st.picks||{},rows=Object.keys(picks).sort((a,b)=>Math.abs(picks[a]-res.tg)-Math.abs(picks[b]-res.tg));
+  head=`⅔ des Durchschnitts: ${res.tg}`;body=`<div class="c mut">Durchschnitt ${res.avg} → Ziel ${res.tg}</div><div class="c">${res.win.length?'Am nächsten dran: '+res.win.map(nmx).join(', '):''}</div><div class="card" style="width:100%">${rows.map(n=>`<div class="rk" style="margin:4px 0${res.win.includes(n)?';outline:3px solid var(--yel)':''}"><b style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">${nmx(n)}</b><span>${picks[n]}</span></div>`).join('')}</div>`;sfx(res.win.includes(f.me)?'win':'ok')}
+ else if(v.g==='merk'){const res=st.res||{ord:[]},ord=res.ord||[];head=ord.length?(ord[0]===f.me?'🧠 Du warst am schnellsten! (+2)':`🧠 ${nmx(ord[0])} war am schnellsten (+2)`):'Niemand hat die Reihe geschafft';
+  body=`<div style="font-size:34px;text-align:center">${(st.sq||[]).map(i=>FFO[i]).join(' ')}</div>${ord.length>1?`<div class="c">Auch geschafft (+1): ${ord.slice(1).map(nmx).join(', ')}</div>`:''}`;sfx(ord.includes(f.me)?'win':'lose')}
+ else if(v.g==='reaktion'){const w=st.w;head=w?(w===f.me?'⚡ Du warst am schnellsten!':`⚡ ${nmx(w)} war am schnellsten`):'⏱ Keiner hat getippt';body='';sfx(w===f.me?'win':w?'ok':'bad')}
  else if(v.g==='kartoffel'){const b=st.boom;head=b?(b===f.me?'💥 Bumm! Bei dir ist sie explodiert!':`💥 Bei ${nmx(b)} ist sie explodiert!`):'💥 Bumm!';body='<div style="font-size:72px;text-align:center">💥</div><div class="c mut">Alle anderen bekommen einen Punkt.</div>';sfx(b===f.me?'lose':'win')}
  else if(v.g==='sprint'){const res=st.res||{win:[],max:0},c=st.c||{},rows=Object.keys(c).sort((a,b)=>c[b]-c[a]);head=res.win.length?`👆 Die meisten Taps: ${res.win.map(nmx).join(', ')} (${res.max})`:'Niemand hat getippt';
   body=`<div class="card" style="width:100%">${rows.map((n,i)=>`<div class="rk" style="margin:4px 0${res.win.includes(n)?';outline:3px solid var(--yel)':''}"><span style="width:26px">${i+1}.</span><b style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">${nmx(n)}</b><span>${c[n]} 👆</span></div>`).join('')}</div>`;sfx(res.win.includes(f.me)?'win':'ok')}
@@ -1476,18 +1512,24 @@ function ffaBetween(){const f=FFX,v=f.v,me=v.host===f.me,st=v.st;let head='',bod
   body=`<div class="grid g2" style="gap:10px">${FFO.map((e,o)=>`<div class="card c" style="padding:10px${(res.win||[]).some(w=>picks[w]===o)?';outline:3px solid var(--yel)':''}"><div style="font-size:38px">${e}</div><b>${by(o).length}×</b><div class="mut" style="font-size:12px">${by(o).map(nmx).join(', ')||'–'}</div></div>`).join('')}</div>`;
   sfx(res.win.includes(f.me)?'win':'ok')}
  app.innerHTML=`<div class="scr" id="ffa"><div id="fsr"></div><div class="mid" style="justify-content:center"><div class="banner pop" style="font-size:24px">${head}</div>${body}</div><div class="hint" id="fst"></div>${ffaBar()}</div>`;ffaBindLeave();ffaUpd()}
+function ffaMerkTick(){const f=FFX;if(!f||!document.getElementById('fshow'))return;const v=f.v,n=Date.now()-f.rs,sh=v.st.sh,sq=v.st.sq,el=$('#fshow'),hd=$('#fhd');
+ if(n<sh){const i=Math.floor((n-400)/700),ph=(n-400)%700;el.textContent=(n>=400&&i>=0&&i<sq.length&&ph<560)?FFO[sq[i]]:'·'}
+ else if(!f.inp){f.inp=true;if(hd)hd.textContent='Jetzt du! Tippe die Reihenfolge …';el.textContent='❔'}
+ const bs=document.querySelectorAll('#fmb button'),st=v.st,me=f.me,off=!f.inp||(st.fl||[]).includes(me)||(st.dn||[]).includes(me);bs.forEach(b=>{if(b.disabled!==off)b.disabled=off});
+ setTimeout(()=>{if(FFX===f)ffaMerkTick()},60)}
 function ffaSprTick(){const f=FFX;if(!f||!document.getElementById('ftap'))return;const hd=$('#fhd'),n=Date.now(),on=!!f.goAt&&n>=f.goAt&&n<f.goAt+6000;
  if(hd){if(!f.goAt)hd.textContent='Gleich geht’s los …';else if(n<f.goAt)hd.innerHTML='Mach dich bereit … <b>'+Math.ceil((f.goAt-n)/1000)+'</b>';else if(on)hd.textContent='👆 TIPPEN! TIPPEN! TIPPEN!';else hd.textContent='⏱ Zeit!'}
  const t=$('#ftap');if(t&&t.disabled===on)t.disabled=!on;
  setTimeout(()=>{if(FFX===f)ffaSprTick()},80)}
 function ffaUpd(){const f=FFX,v=f.v;if(!v||!document.getElementById('ffa'))return;
  const sr=$('#fsr');if(sr)sr.innerHTML=ffaStrip(v);
- if(v.ph==='lobby'){const d=$('#fdyn');if(!d)return;const me=v.host===f.me,vt=v.st.vt||{},mv=v.st.mv;
+ if(v.ph==='lobby'){const d=$('#fdyn');if(!d)return;const me=v.host===f.me,vt=v.st.vt||{},mv=v.st.mv,ex=v.st.ex||[],tm=!!v.st.tm,en=Object.keys(FFG).filter(k=>!ex.includes(k));
   const h=`<div class="card" style="padding:10px"><div class="fstrip">${v.pl.map(p=>`<span class="fchip${p.n===f.me?' me':''}${!p.on?' off':''}">${p.n===v.host?'👑 ':''}${nmx(p.n)}${!p.on?' 📴':''}</span>`).join('')}</div><div class="mut c" style="font-size:12px;margin-top:6px">${v.pl.length} von max. 10 Spielern</div></div>
-  <div class="card" style="padding:12px"><div class="c" style="font-weight:900">🗳️ Welches Spiel soll es sein?</div><div class="c mut" style="font-size:13px;margin:2px 0 8px">Das Spiel mit den meisten Stimmen wird gespielt (bei Gleichstand entscheidet das Los).</div>
-  <div class="grid g3" style="gap:6px">${Object.keys(FFG).map(k=>{const n=vt[k]||0;return`<button class="btn ghost sm fvb${k===mv?' sel':''}" data-g="${k}"><span style="font-size:28px">${FFG[k].e}</span><span>${FFG[k].n}</span><b>${n} ${n===1?'Stimme':'Stimmen'}</b></button>`}).join('')}</div>
-  ${mv?`<div class="c mut" style="font-size:13px;margin-top:8px">${FFG[mv].e} ${FFG[mv].h}</div>`:''}
+  <div class="card" style="padding:12px">${tm?'<div class="c" style="font-weight:900">🏆 Mini-Turnier</div><div class="c mut" style="font-size:13px;margin-top:4px">Es werden bis zu 4 zufällige Spiele nacheinander gespielt (je 3 Runden). Pro Spiel gibt es Punkte nach Platz, am Ende gewinnt die Gesamtwertung.</div>':`<div class="c" style="font-weight:900">🗳️ Welches Spiel soll es sein?</div><div class="c mut" style="font-size:13px;margin:2px 0 8px">Das Spiel mit den meisten Stimmen wird gespielt (bei Gleichstand entscheidet das Los).</div>
+  <div class="grid g3" style="gap:6px">${en.map(k=>{const n=vt[k]||0;return`<button class="btn ghost sm fvb${k===mv?' sel':''}" data-g="${k}"><span style="font-size:28px">${FFG[k].e}</span><span>${FFG[k].n}</span><b>${n} ${n===1?'Stimme':'Stimmen'}</b></button>`}).join('')}</div>`}
+  ${mv&&!tm&&FFG[mv]?`<div class="c mut" style="font-size:13px;margin-top:8px">${FFG[mv].e} ${FFG[mv].h}</div>`:''}
   <div class="row" style="align-items:center;justify-content:center;margin-top:10px"><span class="mut" style="font-size:13px">Runden:</span>${me?'<button class="btn ghost sm" data-r="-1" style="width:44px;padding:8px">−</button>':''}<b>${v.rounds}</b>${me?'<button class="btn ghost sm" data-r="1" style="width:44px;padding:8px">＋</button>':''}</div><div class="c mut" style="font-size:12px">(Flaschen-Grab läuft, bis nur noch einer übrig ist)</div></div>
+  ${me?`<div class="card" style="padding:10px"><button class="btn ghost sm" id="ftmb">🏆 Mini-Turnier: ${tm?'AN':'AUS'}</button><details ${f.xo?'open':''} ontoggle="FFX&&(FFX.xo=this.open)" style="margin-top:8px"><summary style="cursor:pointer;font-weight:800">⚙️ Spiele ein-/ausschalten</summary><div class="fstrip" style="margin-top:8px">${Object.keys(FFG).map(k=>`<button class="fchip" data-x="${k}" style="border:0;color:#fff;${ex.includes(k)?'opacity:.4;text-decoration:line-through':''}">${FFG[k].e} ${FFG[k].n}</button>`).join('')}</div></details></div>`:(tm?'<div class="hint">🏆 Der Host hat das Mini-Turnier aktiviert.</div>':'')}
   ${me?`<button class="btn pink" id="fgo" ${v.pl.filter(p=>p.on).length<2?'disabled':''}>${v.pl.filter(p=>p.on).length<2?'⏳ Warte auf Mitspieler …':'🚀 Los geht’s!'}</button>`:'<div class="hint">Der Host startet, sobald alle da sind.</div>'}`;
   if(h!==f.dyn){f.dyn=h;d.innerHTML=h}return}
  const lt=$('#ftm');if(lt&&v.left!=null){const left=Math.max(0,v.left-(Date.now()-f.t0)),tot=v.tot||10000;lt.style.transition='none';lt.style.width=(left/tot*100)+'%';requestAnimationFrame(()=>{lt.style.transition='width '+(left/1000)+'s linear';lt.style.width='0%'})}
@@ -1500,6 +1542,16 @@ function ffaUpd(){const f=FFX,v=f.v;if(!v||!document.getElementById('ffa'))retur
   if(my){const k=String(st.my)+lk;if(my.dataset.k!==k){my.dataset.k=k;my.innerHTML=(st.my||[]).map(s=>`<button data-s="${s}" ${lk?'disabled':''}>${s}</button>`).join('')}}
   const lb=$('#flab');if(lb)lb.textContent=lk?'❌ Falsch – kurz gesperrt …':'Deine Karte – tippe das gleiche Symbol!';
   if(lk){setTimeout(()=>{if(FFX===f)ffaUpd()},Math.max(50,f.lkUntil-Date.now()+30))}}
+ else if(v.g==='zwei3'){const st=v.st,my=st.my,hd=$('#fhd');
+  if(hd)hd.innerHTML=my==null?'Welche Zahl wählst du?':`✔ Gewählt: ${my} – ${st.picked.length} von ${v.pl.filter(p=>p.on).length} fertig`;
+  const ok=$('#fzok'),r=$('#fzr');if(ok){ok.disabled=my!=null;r.disabled=my!=null;if(my!=null)$('#fzn').textContent=my}}
+ else if(v.g==='merk'){const st=v.st,me=f.me,n=st.sq.length,fail=(st.fl||[]).includes(me),done=(st.dn||[]).includes(me),hd=$('#fhd'),el=$('#fshow');
+  if(f.inp&&hd)hd.innerHTML=fail?'❌ Falsch! Warte auf die anderen …':done?'✅ Geschafft! Warte auf die anderen …':`Tippe die Reihenfolge: ${Math.max(0,st.my)} von ${n}`;
+  if(f.inp&&el)el.textContent=fail?'❌':done?'✅':'❔'}
+ else if(v.g==='reaktion'){const st=v.st,k=$('#frk'),t=$('#frt'),lk=Date.now()<f.lkUntil;if(!k)return;
+  const mode=st.w?'end':lk?'lock':st.g?'go':'wait';k.className='frk '+mode;
+  t.textContent=mode==='end'?(st.w===f.me?'⚡ Du!':'⚡ '+st.w):mode==='lock'?'❌ Zu früh! Kurz gesperrt …':mode==='go'?'JETZT TIPPEN!':'Warte … nicht zu früh tippen!';
+  if(lk)setTimeout(()=>{if(FFX===f)ffaUpd()},Math.max(50,f.lkUntil-Date.now()+30))}
  else if(v.g==='kartoffel'){const st=v.st,h=st.h,mine=h===f.me,hd=$('#fhd'),pot=$('#fpot'),pl=$('#fpl');
   if(hd)hd.innerHTML=mine?'🔥 Du hast die Kartoffel! Gib sie weiter!':h?`🥔 ${nmx(h)} hat die Kartoffel`:'🥔 …';
   if(pot)pot.textContent=mine?'🥔🔥':'🥔';
@@ -1767,7 +1819,7 @@ setTimeout(()=>{if(DB.notif&&DB.acct)pushOn()},5000);
 try{const h=decodeURIComponent((location.hash||'').slice(1));if(h&&/^DUELL-[A-Z0-9]{4}$/i.test(h))duelOnline(h.slice(6).toUpperCase());else if(h&&(dec(h)||/^RAUM-[A-Z0-9]{4,8}$/i.test(h)))fern(h);else if(h&&/^FFA-[A-Z0-9]{4,8}$/i.test(h))ffaHub(h)}catch(e){}
 try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&location.hostname.endsWith('github.io'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-10-13';const BVN='2.5.0';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-10-14';const BVN='2.6.0';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;font-weight:800;text-align:center';
