@@ -1415,6 +1415,7 @@ function ffaRender(){const f=FFX,v=f.v;if(!v)return;
  if(f.key&&!document.getElementById('ffa')){ffaStop();return}
  const key=v.ph+'|'+v.rnd+'|'+v.g;
  if(key!==f.key){f.key=key;f.dyn='';ffaScr()}else ffaUpd()}
+const BLV=['','Leicht','Mittel','Schwer','Profi'];
 function ffaScr(){const f=FFX,v=f.v,g=FFG[v.g],me=v.host===f.me;
  if(v.ph==='lobby'){
   app.innerHTML=`<div class="scr" id="ffa"><div class="c mut">Free-for-All · Raum-Code</div><div class="big" style="font-size:clamp(40px,14vw,64px);letter-spacing:8px;color:var(--yel)">${f.code}</div>
@@ -1425,6 +1426,8 @@ function ffaScr(){const f=FFX,v=f.v,g=FFG[v.g],me=v.host===f.me;
   $('#fdyn').onclick=e=>{const b=e.target.closest('button');if(!b)return;
    if(b.id==='fgo'){ac();b.disabled=true;ffaCall('start')}
    else if(b.id==='ftmb')ffaCall('tmode')
+   else if(b.dataset.ab){sfx('tap',2);ffaCall('addbot',null,+b.dataset.ab)}
+   else if(b.dataset.rb){sfx('tap',1);ffaCall('rmbot',b.dataset.rb)}
    else if(b.dataset.x)ffaCall('ex',b.dataset.x)
    else if(b.dataset.g){const x=FFX.v,g=b.dataset.g;if(x&&x.st){const vt=x.st.vt=x.st.vt||{};if(x.st.mv&&vt[x.st.mv])vt[x.st.mv]--;vt[g]=(vt[g]||0)+1;x.st.mv=g;sfx('tap',2);ffaUpd()}ffaCall('vote',g,null)}
    else if(b.dataset.r)ffaCall('cfg',null,FFX.v.rounds+(+b.dataset.r))};
@@ -1535,12 +1538,13 @@ function ffaSprTick(){const f=FFX;if(!f||!document.getElementById('ftap'))return
 function ffaUpd(){const f=FFX,v=f.v;if(!v||!document.getElementById('ffa'))return;
  const sr=$('#fsr');if(sr)sr.innerHTML=ffaStrip(v);
  if(v.ph==='lobby'){const d=$('#fdyn');if(!d)return;const me=v.host===f.me,vt=v.st.vt||{},mv=v.st.mv,ex=v.st.ex||[],tm=!!v.st.tm,en=Object.keys(FFG).filter(k=>!ex.includes(k));
-  const h=`<div class="card" style="padding:10px"><div class="fstrip">${v.pl.map(p=>`<span class="fchip${p.n===f.me?' me':''}${!p.on?' off':''}">${p.n===v.host?'👑 ':''}${nmx(p.n)}${!p.on?' 📴':''}</span>`).join('')}</div><div class="mut c" style="font-size:12px;margin-top:6px">${v.pl.length} von max. 10 Spielern</div></div>
+  const h=`<div class="card" style="padding:10px"><div class="fstrip">${v.pl.map(p=>p.bot?(me?`<button class="fchip" data-rb="${esc(p.n)}" style="border:0;color:#fff">${esc(p.n)} <small>${BLV[p.bot]}</small> ✕</button>`:`<span class="fchip">${esc(p.n)} <small>${BLV[p.bot]}</small></span>`):`<span class="fchip${p.n===f.me?' me':''}${!p.on?' off':''}">${p.n===v.host?'👑 ':''}${nmx(p.n)}${!p.on?' 📴':''}</span>`).join('')}</div><div class="mut c" style="font-size:12px;margin-top:6px">${v.pl.length} von max. 10 Spielern</div></div>
   <div class="card" style="padding:12px">${tm?'<div class="c" style="font-weight:900">🏆 Mini-Turnier</div><div class="c mut" style="font-size:13px;margin-top:4px">Es werden bis zu 4 zufällige Spiele nacheinander gespielt (je 3 Runden). Pro Spiel gibt es Punkte nach Platz, am Ende gewinnt die Gesamtwertung.</div>':`<div class="c" style="font-weight:900">🗳️ Welches Spiel soll es sein?</div><div class="c mut" style="font-size:13px;margin:2px 0 8px">Das Spiel mit den meisten Stimmen wird gespielt (bei Gleichstand entscheidet das Los).</div>
   <div class="grid g3" style="gap:6px">${en.map(k=>{const n=vt[k]||0;return`<button class="btn ghost sm fvb${k===mv?' sel':''}" data-g="${k}"><span style="font-size:28px">${FFG[k].e}</span><span>${FFG[k].n}</span><b>${n} ${n===1?'Stimme':'Stimmen'}</b></button>`}).join('')}</div>`}
   ${mv&&!tm&&FFG[mv]?`<div class="c mut" style="font-size:13px;margin-top:8px">${FFG[mv].e} ${FFG[mv].h}</div>`:''}
   <div class="row" style="align-items:center;justify-content:center;margin-top:10px"><span class="mut" style="font-size:13px">Runden:</span>${me?'<button class="btn ghost sm" data-r="-1" style="width:44px;padding:8px">−</button>':''}<b>${v.rounds}</b>${me?'<button class="btn ghost sm" data-r="1" style="width:44px;padding:8px">＋</button>':''}</div><div class="c mut" style="font-size:12px">(Flaschen-Grab läuft, bis nur noch einer übrig ist)</div></div>
   ${me?`<div class="card" style="padding:10px"><button class="btn ghost sm" id="ftmb">🏆 Mini-Turnier: ${tm?'AN':'AUS'}</button><details ${f.xo?'open':''} ontoggle="FFX&&(FFX.xo=this.open)" style="margin-top:8px"><summary style="cursor:pointer;font-weight:800">⚙️ Spiele ein-/ausschalten</summary><div class="fstrip" style="margin-top:8px">${Object.keys(FFG).map(k=>`<button class="fchip" data-x="${k}" style="border:0;color:#fff;${ex.includes(k)?'opacity:.4;text-decoration:line-through':''}">${FFG[k].e} ${FFG[k].n}</button>`).join('')}</div></details></div>`:(tm?'<div class="hint">🏆 Der Host hat das Mini-Turnier aktiviert.</div>':'')}
+  ${me?`<div class="card" style="padding:10px"><b>🤖 Bots hinzufügen</b><div class="row" style="margin-top:8px;gap:6px">${[1,2,3,4].map(l=>`<button class="btn ghost sm" data-ab="${l}" style="padding:8px 4px;flex:1;width:auto">${BLV[l]}</button>`).join('')}</div><div class="hint">Bots füllen den Raum auf. Sie zählen nicht für Statistik, Wochenaufgabe und Elo; Statistik gibt es erst ab 2 echten Spielern. Antworten und Zeiten sind Schätzwerte.</div></div>`:''}
   ${me?`<button class="btn pink" id="fgo" ${v.pl.filter(p=>p.on).length<2?'disabled':''}>${v.pl.filter(p=>p.on).length<2?'⏳ Warte auf Mitspieler …':'🚀 Los geht’s!'}</button>`:'<div class="hint">Der Host startet, sobald alle da sind.</div>'}`;
   if(h!==f.dyn){f.dyn=h;d.innerHTML=h}return}
  const lt=$('#ftm');if(lt&&v.left!=null){const left=Math.max(0,v.left-(Date.now()-f.t0)),tot=v.tot||10000;lt.style.transition='none';lt.style.width=(left/tot*100)+'%';requestAnimationFrame(()=>{lt.style.transition='width '+(left/1000)+'s linear';lt.style.width='0%'})}
@@ -1842,7 +1846,7 @@ setTimeout(()=>{if(DB.notif&&DB.acct)pushOn()},5000);
 try{const h=decodeURIComponent((location.hash||'').slice(1));if(h&&/^DUELL-[A-Z0-9]{4}$/i.test(h))duelOnline(h.slice(6).toUpperCase());else if(h&&(dec(h)||/^RAUM-[A-Z0-9]{4,8}$/i.test(h)))fern(h);else if(h&&/^FFA-[A-Z0-9]{4,8}$/i.test(h))ffaHub(h)}catch(e){}
 try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&location.hostname.endsWith('github.io'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-10-16';const BVN='2.8.0';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-10-17';const BVN='2.9.0';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;font-weight:800;text-align:center';
