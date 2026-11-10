@@ -662,3 +662,13 @@ create or replace function public.elo_medals() returns table(n text, p integer) 
  select e.name, min(e.pos)::integer from public.elo_season e where e.pos <= 3 and e.name_key not in (select name_key from public.bans) group by e.name $$;
 revoke all on function public._ffa_stat(public.ffa), public._ffa_fin(public.ffa) from public, anon, authenticated;
 grant execute on function public.ffa_stats(text), public.elo_medals() to anon, authenticated;
+
+-- ============================================================
+-- 19) v2.8.0: Melden, Konto loeschen, Sicherung (reports, delete_account, bk_snap/bk_run, admin_export)
+--     (Vollstaendiger Code: Migration "melden_kontoloeschung_sicherung")
+-- ============================================================
+create table if not exists public.reports (id bigint generated always as identity primary key, from_key text not null, target_key text not null, target text not null, reason text not null, ctx text, created_at timestamptz not null default now(), done boolean not null default false);
+alter table public.reports enable row level security;
+create table if not exists public.bk_snap (day date not null, tbl text not null, data jsonb not null, primary key (day, tbl));
+alter table public.bk_snap enable row level security;
+-- Funktionen: report_player, admin_reports, admin_report_done, delete_account (nicht fuer Admin), bk_run (taeglich 02:40 via pg_cron 'bb-backup', 7 Tage), admin_export

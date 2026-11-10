@@ -1065,13 +1065,14 @@ function settings(){
  <div class="card" style="padding:12px"><b>🔊 Ton & Musik</b><div class="row" style="margin-top:8px"><button class="btn ghost sm" id="smu"></button><button class="btn ghost sm" id="ssd"></button></div></div>
  <div class="card" style="padding:12px"><b>🎨 Farbthema</b><div id="thg" style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">${Object.entries(THM).map(([k,t])=>`<button class="btn ghost sm vb${(THM[DB.thm]&&thmOk(DB.thm)?DB.thm:'std')==k?' sel':''}" data-t="${k}" style="flex:1;width:auto;padding:8px 6px;min-width:70px">${thmOk(k)?t.e+' '+t.n:'🔒 '+t.u+' Tage'}</button>`).join('')}</div><div class="hint" id="thh" style="margin-top:8px">Themen schaltest du mit deiner Tagesserie frei (Rekord: ${best} Tage).</div></div>
  <div class="card" style="padding:12px"><b>📲 App & Mitteilungen</b><button class="btn ghost sm" id="pin" style="margin-top:8px">📲 Als App installieren</button><button class="btn ghost sm" id="dnd" style="margin-top:8px">${DB.dnd?'🌙 Ruhe-Modus an – tippen zum Ausschalten':'🌙 Ruhe-Modus (keine Einladungs-Banner)'}</button><button class="btn ghost sm" id="pnf" style="margin-top:8px">${DB.notif?'🔔 Mitteilungen an – tippen zum Ausschalten':'🔕 Mitteilungen bei Einladungen einschalten'}</button><div class="hint">Mitteilungen kommen nur an, solange die App im Hintergrund noch läuft – echte Push-Nachrichten bei geschlossener App gibt es (noch) nicht.</div></div>
- <button class="btn ghost" id="shp">❔ So geht's</button>${adm?'<button class="btn ghost" id="sad">🛠️ Admin-Bereich</button>':''}${DB.acct?'<button class="btn ghost" id="po">🚪 Abmelden</button>':'<button class="btn" id="sln">👤 Anmelden</button>'}
- <div class="c mut" style="font-size:12px">BLITZBRAIN v${BVN}</div>${tabBar('st')}</div>`;
+ <button class="btn ghost" id="shp">❔ So geht's</button>${adm?'<button class="btn ghost" id="sad">🛠️ Admin-Bereich</button>':''}${DB.acct?'<button class="btn ghost" id="rpb">🚩 Spieler melden</button><button class="btn ghost" id="po">🚪 Abmelden</button>':'<button class="btn" id="sln">👤 Anmelden</button>'}
+ ${DB.acct&&skey(DB.acct.name)!=='admin'?'<button class="btn ghost sm" id="dla" style="opacity:.8">🗑️ Konto löschen</button>':''}<div class="c mut" style="font-size:12px">BLITZBRAIN v${BVN}</div>${tabBar('st')}</div>`;
  const lab=()=>{$('#smu').textContent=DB.mus?'🎵 Musik an':'🔕 Musik aus';$('#ssd').textContent=DB.snd?'🔊 Ton an':DB.vib===false?'🔇 Stumm':'📳 Nur Vibration'};lab();
  $('#smu').onclick=()=>{ac();DB.mus=!DB.mus;save();lab()};
  $('#ssd').onclick=()=>{ac();if(DB.snd){DB.snd=false;DB.vib=true}else if(DB.vib!==false){DB.vib=false}else{DB.snd=true;DB.vib=true}save();lab();sfx('ok')};
  $('#shp').onclick=()=>help(settings);if($('#sad'))$('#sad').onclick=adminScreen;if($('#sln'))$('#sln').onclick=()=>loginScreen(settings);
  if($('#po'))$('#po').onclick=()=>{DB.acct=null;DB.sess=null;save();menu()};
+ if($('#rpb'))$('#rpb').onclick=()=>reportDlg('');if($('#dla'))$('#dla').onclick=delAcct;
   document.querySelectorAll('#thg button').forEach(b=>b.onclick=()=>{const k=b.dataset.t;if(!thmOk(k)){$('#thh').textContent='🔒 Noch gesperrt – spiel die Tagesaufgabe '+THM[k].u+' Tage in Folge.';return}
   DB.thm=k;save();applyTheme();document.querySelectorAll('#thg button').forEach(x=>x.classList.toggle('sel',x.dataset.t==k))});
 $('#pin').onclick=installHelp;$('#pnf').onclick=()=>notifToggle($('#pnf'));$('#dnd').onclick=()=>{DB.dnd=!DB.dnd;save();$('#dnd').textContent=DB.dnd?'🌙 Ruhe-Modus an – tippen zum Ausschalten':'🌙 Ruhe-Modus (keine Einladungs-Banner)'};
@@ -1327,7 +1328,7 @@ async function shareImg(o){try{const W=1080,H=1350,cv=document.createElement('ca
  x.fillStyle='#b9a9f5';x.font='700 44px '+F;x.fillText(o.name||'',W/2,430);x.fillStyle='#fff';x.font='800 52px '+F;x.fillText(o.sub||'',W/2,510);
  x.font='900 190px '+F;x.fillStyle='#ff3d8b';x.fillText(o.big,W/2+8,740+8);x.fillStyle='#ffd23f';x.fillText(o.big,W/2,740);
  x.font='700 46px '+F;x.fillStyle='#fff';let y=840;(o.lines||[]).slice(0,7).forEach(l=>{x.fillText(String(l).slice(0,40),W/2,y);y+=70});
- x.fillStyle='#27e1ff';x.font='800 54px '+F;x.fillText('Schlag meine Zeit! 😏',W/2,H-110);
+ x.fillStyle='#27e1ff';x.font='800 54px '+F;x.fillText('Schlag meine Zeit! 😏',W/2,H-130);x.font='600 34px '+F;x.fillStyle='#b9a9f5';x.fillText('julianjj461-cmd.github.io/Blitzbrain',W/2,H-70);
  const blob=await new Promise(r=>cv.toBlob(r,'image/png')),f=new File([blob],'blitzbrain.png',{type:'image/png'});
  if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],text:'⚡ BLITZBRAIN – schlag meine Zeit!'});return}
  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='blitzbrain.png';document.body.append(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(a.href)},2000)}catch(e){}}
@@ -1582,10 +1583,22 @@ function ffaUpd(){const f=FFX,v=f.v;if(!v||!document.getElementById('ffa'))retur
 /* ===== Admin (nur Konto "Admin"; der Server prüft die Berechtigung bei jedem Aufruf) ===== */
 let ADQ='';
 function admArm(b,label,fn){let t=0;const o=b.textContent;b.onclick=async()=>{if(t>Date.now()){t=0;b.textContent=o;b.disabled=true;await fn();b.disabled=false;return}t=Date.now()+3000;b.textContent='Sicher? Nochmal tippen';setTimeout(()=>{if(b.isConnected&&t){t=0;b.textContent=o}},3000)}}
+function reportDlg(t){const o=sheet(`<b>🚩 Spieler melden</b><div class="hint" style="margin:6px 0">Melde Spieler mit unpassendem Namen, Schummeln oder Mobbing. Der Admin sieht die Meldung. Max. 5 pro Tag.</div><input id="rpn" placeholder="Name des Spielers" value="${esc(t)}" autocomplete="off" style="width:100%;box-sizing:border-box"><select id="rpr" style="width:100%;padding:10px;margin-top:8px"><option value="name">Unpassender Name</option><option value="cheat">Schummeln</option><option value="mobbing">Mobbing / Beleidigung</option><option value="other">Sonstiges</option></select><button class="btn" id="rps" style="margin-top:10px">Melden</button><div class="hint" id="rpm"></div>`);
+ $('#rps').onclick=async()=>{const n=$('#rpn').value.trim();if(!n)return;$('#rpm').textContent='…';try{const r=await rpc('report_player',{p_name:DB.acct.name,p_pin:DB.acct.pin,p_target:n,p_reason:$('#rpr').value,p_ctx:null});
+  $('#rpm').textContent=({ok:'✅ Danke, die Meldung ist beim Admin.',self:'Dich selbst kannst du nicht melden.',none:'Diesen Spieler gibt es nicht.',limit:'Heute schon 5 Meldungen – morgen wieder.',auth:'Bitte melde dich neu an.',invalid:'Ungültiger Grund.'})[r]||'⚠️ Fehler'}catch(e){$('#rpm').textContent='⚠️ Server nicht erreichbar.'}}}
+function delAcct(){const nm=DB.acct.name;const o=sheet(`<b>🗑️ Konto löschen</b><div style="margin:8px 0">Alle deine Ergebnisse, Elo, Freunde und Statistiken werden <b>endgültig</b> gelöscht. Das geht nicht rückgängig.</div><div class="hint">Zur Bestätigung tippe deinen Namen: <b>${esc(nm)}</b></div><input id="dln" autocomplete="off" style="width:100%;box-sizing:border-box;margin-top:6px"><button class="btn pink" id="dls" style="margin-top:10px">Endgültig löschen</button><div class="hint" id="dlm"></div>`);
+ $('#dls').onclick=async()=>{if(skey($('#dln').value)!==skey(nm)){$('#dlm').textContent='Name stimmt nicht.';return}try{const r=await rpc('delete_account',{p_name:DB.acct.name,p_pin:DB.acct.pin});
+  if(r==='ok'){DB.acct=null;DB.sess=null;save();o.remove();menu()}else $('#dlm').textContent=r==='no'?'Dieses Konto kann nicht gelöscht werden.':'⚠️ Anmeldung abgelaufen – bitte neu anmelden.'}catch(e){$('#dlm').textContent='⚠️ Server nicht erreichbar.'}}}
+async function adReports(){const o=sheet('<b>🚩 Meldungen</b><div id="arl" class="hint">Lade …</div>');try{const r=await rpc('admin_reports',{p_name:DB.acct.name,p_pin:DB.acct.pin});const L=$('#arl');if(!r||r.r!=='ok'){L.textContent='Kein Zugriff.';return}
+ const RN={name:'Name',cheat:'Schummeln',mobbing:'Mobbing',other:'Sonstiges'};
+ L.outerHTML='<div id="arl">'+(r.list.map(x=>`<div class="rk" style="margin-top:6px;${x.done?'opacity:.55':''}"><span style="flex:1;min-width:0"><b>${esc(x.target)}</b> · ${RN[x.reason]||x.reason}<br><small>von ${esc(x.from||'?')} · ${new Date(x.at).toLocaleDateString('de-DE')}</small></span>${x.done?'✔':`<button class="btn ghost sm" data-d="${x.id}" style="width:auto">Erledigt</button>`}</div>`).join('')||'<div class="mut c">Keine Meldungen.</div>')+'</div>';
+ $('#arl').onclick=async e=>{const b=e.target.closest('[data-d]');if(!b)return;await rpc('admin_report_done',{p_name:DB.acct.name,p_pin:DB.acct.pin,p_id:+b.dataset.d});o.remove();adReports()}}catch(e){const L=$('#arl');if(L)L.textContent='⚠️ Fehler.'}}
+async function adExport(){try{const r=await rpc('admin_export',{p_name:DB.acct.name,p_pin:DB.acct.pin});if(!r||r.r!=='ok'){alert('Kein Zugriff');return}
+ const b=new Blob([JSON.stringify(r)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='blitzbrain-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.append(a);a.click();a.remove()}catch(e){alert('Export fehlgeschlagen')}}
 async function adminScreen(){if(!DB.acct||skey(DB.acct.name)!=='admin'){menu();return}
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🛠️ Admin</h2><div id="ads" class="c mut" style="font-size:14px">Lade …</div>
- <div class="pl"><input id="adq" placeholder="Spieler suchen …" value="${esc(ADQ)}" autocomplete="off"></div><div id="adl"></div>${bar('⬅ Hauptmenü')}</div>`;
- $('#bt').onclick=menu;let tm=0;$('#adq').oninput=e=>{ADQ=e.target.value;clearTimeout(tm);tm=setTimeout(adLoad,300)};adLoad()}
+ <div class="row"><button class="btn ghost sm" id="arp">🚩 Meldungen</button><button class="btn ghost sm" id="aex">💾 Backup (JSON)</button></div><div class="pl"><input id="adq" placeholder="Spieler suchen …" value="${esc(ADQ)}" autocomplete="off"></div><div id="adl"></div>${bar('⬅ Hauptmenü')}</div>`;
+ $('#bt').onclick=menu;$('#arp').onclick=adReports;$('#aex').onclick=adExport;let tm=0;$('#adq').oninput=e=>{ADQ=e.target.value;clearTimeout(tm);tm=setTimeout(adLoad,300)};adLoad()}
 async function adLoad(){const l=$('#adl');if(!l)return;
  try{const r=await rpc('admin_list',{p_name:DB.acct.name,p_pin:DB.acct.pin,p_q:ADQ});if(!$('#adl'))return;
   if(!r||r.r!=='ok'){$('#ads').textContent='❌ Kein Admin-Zugriff – melde dich mit dem Konto „Admin“ und der richtigen PIN an.';l.innerHTML='';return}
@@ -1829,7 +1842,7 @@ setTimeout(()=>{if(DB.notif&&DB.acct)pushOn()},5000);
 try{const h=decodeURIComponent((location.hash||'').slice(1));if(h&&/^DUELL-[A-Z0-9]{4}$/i.test(h))duelOnline(h.slice(6).toUpperCase());else if(h&&(dec(h)||/^RAUM-[A-Z0-9]{4,8}$/i.test(h)))fern(h);else if(h&&/^FFA-[A-Z0-9]{4,8}$/i.test(h))ffaHub(h)}catch(e){}
 try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&location.hostname.endsWith('github.io'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-10-15';const BVN='2.7.0';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-10-16';const BVN='2.8.0';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;font-weight:800;text-align:center';
