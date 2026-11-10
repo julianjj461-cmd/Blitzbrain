@@ -1227,7 +1227,7 @@ function menu(){NBK=null;S.fi=false;setTimeout(installNudge,1200);applyTheme();a
  const sv=DB.acct&&DB.sess&&Date.now()-DB.sess.ts<90*60*1000?DB.sess:null;
  if(sv){const mid=app.querySelector('.mid');if(mid){const b=document.createElement('button');b.className='btn ghost';b.id='rs';b.textContent='↩️ Zurück ins '+(sv.t=='du'?'Duell':'Raum')+' ('+sv.code.replace(/^1/,'')+')';mid.append(b);
   b.onclick=async()=>{ac();NBK=menu;b.textContent='Verbinde …';try{if(sv.t=='du')await duJoin(sv.code,sv.name,true);else await roomJoin(sv.code,sv.name)}catch(e){DB.sess=null;save();b.textContent='❌ Nicht mehr verfügbar'}}}}
- {const v=document.getElementById('ver');if(v)v.textContent='v'+(()=>{try{return BBV}catch(e){return''}})()}
+ {const v=document.getElementById('ver');if(v)v.textContent='v'+(()=>{try{return BVN}catch(e){return''}})()}
  {const sb=app.querySelector('.sub');if(sb&&DB.acct){const sk=streakNow(DB.acct.name),n=(DB.runs||[]).length,d=document.createElement('div');d.className='chips';d.id='mch';d.innerHTML=`<span class="chip">🔥 ${sk.n?sk.n+(sk.n==1?' Tag':' Tage')+' Serie':'Serie starten'}</span><span class="chip">🎮 ${n} Runden</span><span class="chip" id="mlg" style="display:none"></span>`;sb.after(d);const lc=()=>{const r=ELM[skey(DB.acct.name)],e=document.getElementById('mlg');if(r!=null&&e){const lg=league(r);e.textContent=lg.e+' '+lg.n;e.style.display=''}};eloLoad().then(lc);setTimeout(lc,1200)}}
  fpFloat();
  {const mid=app.querySelector('.mid');if(mid){const b=document.createElement('button'),sk=DB.acct?streakNow(DB.acct.name):null;b.className='btn'+(sk&&!sk.today?' glow':'');b.id='dly';
@@ -1683,7 +1683,7 @@ setTimeout(()=>{if(DB.notif&&DB.acct)pushOn()},5000);
 try{const h=decodeURIComponent((location.hash||'').slice(1));if(h&&/^DUELL-[A-Z0-9]{4}$/i.test(h))duelOnline(h.slice(6).toUpperCase());else if(h&&(dec(h)||/^RAUM-[A-Z0-9]{4,8}$/i.test(h)))fern(h);else if(h&&/^FFA-[A-Z0-9]{4,8}$/i.test(h))ffaHub(h)}catch(e){}
 try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&location.hostname.endsWith('github.io'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-10-9';{const e=document.getElementById('ver');if(e)e.textContent='v'+BBV}let updPend=null,updT=0;
+const BBV='2026-11-10-10';const BVN='2.3.1';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;font-weight:800;text-align:center';
