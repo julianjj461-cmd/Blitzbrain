@@ -1088,7 +1088,6 @@ function daily(){S.code=null;S.room=null;if(needAcct(daily,''))return;const D=da
 /* ===== Untere Leiste (Reiter): Spielen · Rekorde · Freunde · Profil · Einstellungen ===== */
 const TABS=[['play','🎮','Spielen',()=>menu()],['rec','🏆','Rekorde',()=>bestenlisten(menu)],['fr','👥','Freunde',()=>friendsScreen()],['pr','👤','Profil',()=>profile()],['st','⚙️','Einstellungen',()=>settings()]];
 const tabBar=a=>`<div class="tb tabs">${TABS.map(([k,e,n])=>`<button data-tab="${k}" class="${k===a?'on':''}" aria-label="${n}"><span>${e}</span>${n}${k==='fr'&&IB.length?`<i class="dot">${IB.length}</i>`:''}</button>`).join('')}</div>`;
-const hdBack=(h2,extra='')=>`<div class="hd"><button class="bk" id="bt" aria-label="Zurück">‹</button>${h2}${extra}</div>`;
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-tab]');if(!b)return;const t=TABS.find(x=>x[0]===b.dataset.tab);if(t){ac();t[3]()}});
 function settings(){
  const adm=DB.acct&&skey(DB.acct.name)==='admin',nm0=DB.acct?DB.acct.name:'',sk=nm0?streakNow(nm0):{n:0},best=nm0?((DB.streak&&DB.streak[skey(nm0)]||{}).best||sk.n):0;
@@ -1319,7 +1318,7 @@ function arcade(){
  $('#bt').onclick=menu;
 }
 const LVS=[{n:'😌 Leicht',pen:750,runs:1,d:'Fehler +0,75 s'},{n:'😐 Normal',pen:1500,runs:1,d:'Fehler +1,5 s'},{n:'🔥 Hart',pen:2500,runs:3,d:'Fehler +2,5 s · 3 Durchgänge'}];
-const lvOf=()=>LVS[DB.lv==null?1:DB.lv],arcKey=(k,lv)=>k+(lv==null||lv==1?'':'#'+lv),fmtPen=ms=>'+'+String(+(ms/1000).toFixed(2)).replace('.',',')+' s';
+const arcKey=(k,lv)=>k+(lv==null||lv==1?'':'#'+lv),fmtPen=ms=>'+'+String(+(ms/1000).toFixed(2)).replace('.',',')+' s';
 function arcIntro(k){const lv=DB.lv==null?1:DB.lv,L=LVS[lv],bk=DB.arc&&DB.arc[arcKey(k,lv)];
  app.innerHTML=`<div class="scr"><div class="mid"><div class="big" style="font-size:90px">${STG[k].emoji}</div><div class="big" style="font-size:clamp(34px,11vw,50px);color:var(--cyan)">${STG[k].name}</div>
  <div class="card c">${STG[k].hint}<div class="mut" style="margin-top:6px">${L.d}${bk?' · Bestzeit: '+f3(bk):''}</div></div>
@@ -1433,12 +1432,13 @@ async function ffaCall(op,arg,n){const f=FFX;if(!f)return;f.busy=true;f.last=Dat
  try{const v=await rpc('ffa_do',{p_code:f.code,p_name:f.me,p_tk:f.tk,p_op:op,p_arg:arg==null?null:arg,p_n:n==null?null:n});if(FFX!==f)return;f.err=0;
   if(v&&v.r==='ok'){f.v=v;f.t0=Date.now();if(v.st&&v.st.lk>0)f.lkUntil=Date.now()+v.st.lk;ffaRender()}
   else if(v&&(v.r==='kicked'||v.r==='none')){ffaStop();ffaGone()}
-  else if(v&&v.r==='few'){const m=$('#fst');if(m)m.textContent='Es müssen mindestens 2 Spieler da sein.'}}
+  else if(v&&v.r==='few'){const m=$('#fst');if(m)m.textContent='Es müssen mindestens 2 Spieler da sein.'}
+  else if(v&&v.r==='teams'){const m=$('#fst');if(m)m.textContent='Beide Teams brauchen mindestens 1 Spieler.'}}
  catch(e){if(FFX===f){f.err++;const m=$('#fst');if(m&&f.err>=3)connMsg(m,f.err,()=>ffaCall('get'))}}
  finally{if(FFX===f)f.busy=false}}
 function ffaGone(){app.innerHTML=`<div class="scr"><div class="mid"><div class="big" style="font-size:34px">Raum beendet</div><div class="c mut">Der Raum existiert nicht mehr oder du wurdest entfernt.</div><button class="btn pink" id="g1">🎪 Zu Free-for-All</button></div></div>`;$('#g1').onclick=()=>ffaHub()}
 function ffaLeave(){const f=FFX;if(f)rpc('ffa_do',{p_code:f.code,p_name:f.me,p_tk:f.tk,p_op:'leave',p_arg:null,p_n:null}).catch(()=>{});ffaStop();partyHub()}
-const ffaStrip=v=>`<div class="fstrip">${v.pl.map(p=>`<span class="fchip${p.n===FFX.me?' me':''}${!p.on?' off':''}${p.out?' out':''}">${nmx(p.n)} <b>${p.s}</b>${p.rx?`<span class="rxb">${p.rx}</span>`:''}</span>`).join('')}</div>`;
+const ffaStrip=v=>`<div class="fstrip">${v.pl.map(p=>`<span class="fchip${p.n===FFX.me?' me':''}${!p.on?' off':''}${p.out?' out':''}">${v.team&&p.tt?TMS[p.tt].e+' ':''}${nmx(p.n)} <b>${p.s}</b>${p.rx?`<span class="rxb">${p.rx}</span>`:''}</span>`).join('')}</div>`;
 const ffaBar=()=>`<div class="tb" style="flex-direction:column;gap:6px"><div class="frx">${['😂','😡','👏','😱','🔥','🤔'].map(e=>`<button data-rx="${e}" aria-label="Reaktion ${e}">${e}</button>`).join('')}</div><button class="btn ghost sm" id="bt">⬅ Raum verlassen</button></div>`;
 function ffaBindLeave(){document.querySelectorAll('.frx button').forEach(x=>x.onclick=()=>{sfx('tap',3);ffaCall('react',x.dataset.rx,null)});const b=$('#bt');if(!b)return;b.onclick=()=>{const ph=FFX&&FFX.v?FFX.v.ph:'lobby';if(ph==='lobby'||ph==='done'){ffaLeave();return}
  if(FFX.arm>Date.now()){ffaLeave();return}FFX.arm=Date.now()+3000;b.textContent='Wirklich verlassen? Nochmal tippen';setTimeout(()=>{if(b.isConnected)b.textContent='⬅ Raum verlassen'},3000)}}
@@ -1446,7 +1446,7 @@ function ffaRender(){const f=FFX,v=f.v;if(!v)return;
  if(f.key&&!document.getElementById('ffa')){ffaStop();return}
  const key=v.ph+'|'+v.rnd+'|'+v.g;
  if(key!==f.key){f.key=key;f.dyn='';ffaScr()}else ffaUpd()}
-const BLV=['','Leicht','Mittel','Schwer','Profi'];
+const BLV=['','Leicht','Mittel','Schwer','Profi'],TMS={A:{e:'⚡',n:'Blitz'},B:{e:'🧠',n:'Hirn'}};
 function ffaScr(){const f=FFX,v=f.v,g=FFG[v.g],me=v.host===f.me;
  if(v.ph==='lobby'){
   app.innerHTML=`<div class="scr" id="ffa"><div class="c mut">Free-for-All · Raum-Code</div><div class="big" style="font-size:clamp(40px,14vw,64px);letter-spacing:8px;color:var(--yel)">${f.code}</div>
@@ -1457,6 +1457,9 @@ function ffaScr(){const f=FFX,v=f.v,g=FFG[v.g],me=v.host===f.me;
   $('#fdyn').onclick=e=>{const b=e.target.closest('button');if(!b)return;
    if(b.id==='fgo'){ac();b.disabled=true;ffaCall('start')}
    else if(b.id==='ftmb')ffaCall('tmode')
+   else if(b.id==='ftem'){sfx('tap',2);ffaCall('tmteam')}
+   else if(b.dataset.tm){sfx('tap',2);ffaCall('team',b.dataset.tm)}
+   else if(b.dataset.bt){sfx('tap',2);const[n,t]=b.dataset.bt.split('|');ffaCall('botteam',n,+t)}
    else if(b.dataset.bm){sfx('tap',2);const bl=FFX.v.pl.filter(p=>p.bot);if(b.dataset.bm==='1')ffaCall('addbot',null,bl.length?bl[bl.length-1].bot:2);else if(bl.length)ffaCall('rmbot',bl[bl.length-1].n)}
    else if(b.dataset.bl){sfx('tap',2);const[n,l]=b.dataset.bl.split('|');ffaCall('botlv',n,+l)}
    else if(b.dataset.rb){sfx('tap',1);ffaCall('rmbot',b.dataset.rb)}
@@ -1474,11 +1477,12 @@ function ffaScr(){const f=FFX,v=f.v,g=FFG[v.g],me=v.host===f.me;
   <div class="card c" style="padding:12px;width:100%">${g.h}</div><div class="c mut" style="font-size:13px">${v.tm?'':ks.length?'Stimmen: '+ks.map(k=>FFG[k].e+' '+vt[k]).join(' · '):'Niemand hat abgestimmt – das Los hat entschieden.'}</div><div class="fbar"><i id="ftm"></i></div><div class="c mut" style="font-size:13px">Gleich geht’s los …</div></div>${ffaBar()}</div>`;
   ffaBindLeave();sfx('go');ffaUpd();return}
  if(v.ph==='done'){
-  const L=v.pl,top=L[0]?L[0].s:0,win=L.filter(p=>p.s===top).map(p=>p.n),iw=win.includes(f.me),med=['🥇','🥈','🥉'];
+  const L=v.pl,top=L[0]?L[0].s:0,med=['🥇','🥈','🥉'],ts={A:0,B:0};if(v.team)L.forEach(p=>{if(p.tt)ts[p.tt]+=p.s});
+  const tw=v.team?(ts.A>ts.B?['A']:ts.B>ts.A?['B']:['A','B']):null,win=v.team?L.filter(p=>tw.includes(p.tt)).map(p=>p.n):L.filter(p=>p.s===top).map(p=>p.n),iw=win.includes(f.me);
   const ord=v.g==='flask'?[...L].sort((a,b)=>b.s-a.s||a.n.localeCompare(b.n)):L;
   app.innerHTML=`<div class="scr" id="ffa"><div class="mid" style="justify-content:flex-start;padding-top:10px"><div class="c mut">${v.tm?'🏆 Mini-Turnier – Gesamtwertung':g.e+' '+g.n}</div><div class="big pop" style="font-size:clamp(34px,11vw,52px)">${iw?'🏆 Du hast gewonnen!':'🏁 Geschafft!'}</div>
-  <div class="banner" style="font-size:22px">${win.length>1?'Unentschieden: ':'Sieger: '}${win.map(nmx).join(', ')}</div>
-  <div class="card" style="width:100%">${ord.map((p,i)=>`<div class="rk" style="margin:4px 0${p.n===f.me?';outline:2px solid var(--yel)':''}"><span style="width:30px;text-align:center">${med[i]||(i+1)+'.'}</span><b style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">${nmx(p.n)}</b><span>${p.s} ${v.tm||v.g==='flask'?'Pkt':g.e}</span></div>`).join('')}</div>
+  <div class="banner" style="font-size:22px">${v.team?(tw.length>1?'Unentschieden: ':'Siegerteam: ')+tw.map(t=>TMS[t].e+' '+TMS[t].n).join(' & ')+` (${ts.A} : ${ts.B})`:(win.length>1?'Unentschieden: ':'Sieger: ')+win.map(nmx).join(', ')}</div>
+  <div class="card" style="width:100%">${ord.map((p,i)=>`<div class="rk" style="margin:4px 0${p.n===f.me?';outline:2px solid var(--yel)':''}"><span style="width:30px;text-align:center">${med[i]||(i+1)+'.'}</span><b style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">${v.team&&p.tt?TMS[p.tt].e+' ':''}${nmx(p.n)}</b><span>${p.s} ${v.tm||v.g==='flask'?'Pkt':g.e}</span></div>`).join('')}</div>
   ${me?'<button class="btn pink" id="fag">🔁 Nochmal (Lobby)</button>':'<div class="hint">Der Host kann direkt eine neue Runde starten.</div>'}<div class="hint" id="fst"></div></div>${ffaBar()}</div>`;
   if(me)$('#fag').onclick=()=>{$('#fag').disabled=true;ffaCall('again')};ffaBindLeave();sfx(iw?'win':'ok');if(iw)confetti(160);return}
  if(v.ph==='between'){ffaBetween();return}
@@ -1570,14 +1574,17 @@ function ffaSprTick(){const f=FFX;if(!f||!document.getElementById('ftap'))return
 function ffaUpd(){const f=FFX,v=f.v;if(!v||!document.getElementById('ffa'))return;
  const sr=$('#fsr');if(sr)sr.innerHTML=ffaStrip(v);
  if(v.ph==='lobby'){const d=$('#fdyn');if(!d)return;const me=v.host===f.me,vt=v.st.vt||{},mv=v.st.mv,ex=v.st.ex||[],tm=!!v.st.tm,en=Object.keys(FFG).filter(k=>!ex.includes(k));
-  const h=`<div class="card" style="padding:10px"><div class="fstrip">${v.pl.map(p=>p.bot?`<span class="fchip">${esc(p.n)} <small>${BLV[p.bot]}</small></span>`:`<span class="fchip${p.n===f.me?' me':''}${!p.on?' off':''}">${p.n===v.host?'👑 ':''}${nmx(p.n)}${!p.on?' 📴':''}</span>`).join('')}</div><div class="mut c" style="font-size:12px;margin-top:6px">${v.pl.length} von max. 10 Spielern</div></div>
+  const h=`<div class="card" style="padding:10px"><div class="fstrip">${(()=>{const chip=p=>p.bot?`<span class="fchip">${esc(p.n)} <small>${BLV[p.bot]}</small></span>`:`<span class="fchip${p.n===f.me?' me':''}${!p.on?' off':''}">${p.n===v.host?'👑 ':''}${nmx(p.n)}${!p.on?' 📴':''}</span>`;
+   if(!v.st.team)return v.pl.map(chip).join('');
+   return'</div>'+['A','B'].map(t=>`<div class="c" style="font-weight:900;margin-top:8px">${TMS[t].e} Team ${TMS[t].n}</div><div class="fstrip">${v.pl.filter(p=>p.tt===t).map(chip).join('')||'<span class="mut">–</span>'}</div>`).join('')+'<div>'})()}</div><div class="mut c" style="font-size:12px;margin-top:6px">${v.pl.length} von max. 10 Spielern</div></div>
   <div class="card" style="padding:12px">${tm?'<div class="c" style="font-weight:900">🏆 Mini-Turnier</div><div class="c mut" style="font-size:13px;margin-top:4px">Es werden bis zu 4 zufällige Spiele nacheinander gespielt (je 3 Runden). Pro Spiel gibt es Punkte nach Platz, am Ende gewinnt die Gesamtwertung.</div>':`<div class="c" style="font-weight:900">🗳️ Welches Spiel soll es sein?</div><div class="c mut" style="font-size:13px;margin:2px 0 8px">Das Spiel mit den meisten Stimmen wird gespielt (bei Gleichstand entscheidet das Los).</div>
   <div class="grid g3" style="gap:6px">${en.map(k=>{const n=vt[k]||0;return`<button class="btn ghost sm fvb${k===mv?' sel':''}" data-g="${k}"><span style="font-size:28px">${FFG[k].e}</span><span>${FFG[k].n}</span><b>${n} ${n===1?'Stimme':'Stimmen'}</b></button>`}).join('')}</div>`}
   ${mv&&!tm&&FFG[mv]?`<div class="c mut" style="font-size:13px;margin-top:8px">${FFG[mv].e} ${FFG[mv].h}</div>`:''}
   <div class="row" style="align-items:center;justify-content:center;margin-top:10px"><span class="mut" style="font-size:13px">Runden:</span>${me?'<button class="btn ghost sm" data-r="-1" style="width:44px;padding:8px">−</button>':''}<b>${v.rounds}</b>${me?'<button class="btn ghost sm" data-r="1" style="width:44px;padding:8px">＋</button>':''}</div><div class="c mut" style="font-size:12px">(Flaschen-Grab läuft, bis nur noch einer übrig ist)</div></div>
-  ${me?`<div class="card" style="padding:10px"><button class="btn ghost sm" id="ftmb">🏆 Mini-Turnier: ${tm?'AN':'AUS'}</button><details ${f.xo?'open':''} ontoggle="FFX&&(FFX.xo=this.open)" style="margin-top:8px"><summary style="cursor:pointer;font-weight:800">⚙️ Spiele ein-/ausschalten</summary><div class="fstrip" style="margin-top:8px">${Object.keys(FFG).map(k=>`<button class="fchip" data-x="${k}" style="border:0;color:#fff;${ex.includes(k)?'opacity:.4;text-decoration:line-through':''}">${FFG[k].e} ${FFG[k].n}</button>`).join('')}</div></details></div>`:(tm?'<div class="hint">🏆 Der Host hat das Mini-Turnier aktiviert.</div>':'')}
+  ${me?`<div class="card" style="padding:10px"><div class="row"><button class="btn ghost sm" id="ftmb">🏆 Mini-Turnier: ${tm?'AN':'AUS'}</button><button class="btn ghost sm" id="ftem">👥 Teams: ${v.st.team?'AN':'AUS'}</button></div><details ${f.xo?'open':''} ontoggle="FFX&&(FFX.xo=this.open)" style="margin-top:8px"><summary style="cursor:pointer;font-weight:800">⚙️ Spiele ein-/ausschalten</summary><div class="fstrip" style="margin-top:8px">${Object.keys(FFG).map(k=>`<button class="fchip" data-x="${k}" style="border:0;color:#fff;${ex.includes(k)?'opacity:.4;text-decoration:line-through':''}">${FFG[k].e} ${FFG[k].n}</button>`).join('')}</div></details></div>`:(tm?'<div class="hint">🏆 Der Host hat das Mini-Turnier aktiviert.</div>':'')}
+  ${v.st.team?`<div class="card" style="padding:10px"><div class="c" style="font-weight:900">👥 Teams – wähle dein Team</div><div class="row" style="margin-top:8px">${['A','B'].map(t=>{const mine=(v.pl.find(p=>p.n===f.me)||{}).tt===t;return`<button class="btn ghost sm" data-tm="${t}" style="${mine?'outline:3px solid var(--yel)':''}">${mine?'✔ ':''}${TMS[t].e} ${TMS[t].n}</button>`}).join('')}</div><div class="hint">Die Punkte beider Teams werden addiert. Das Team mit der höheren Summe gewinnt.</div></div>`:''}
   ${me?(()=>{const bl=v.pl.filter(p=>p.bot);return`<div class="card" style="padding:10px"><div class="row" style="align-items:center;justify-content:space-between"><b>🤖 Bots</b><span class="row" style="align-items:center;gap:8px;flex:none;width:auto"><button class="btn ghost sm" data-bm="-1" style="width:44px;padding:8px" ${bl.length?'':'disabled'}>−</button><b style="min-width:20px;text-align:center">${bl.length}</b><button class="btn ghost sm" data-bm="1" style="width:44px;padding:8px" ${bl.length>=5||v.pl.length>=10?'disabled':''}>＋</button></span></div>
-  ${bl.map(p=>`<div style="display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap"><span style="flex:1;min-width:90px;font-weight:800">${esc(p.n)}</span><span style="display:flex;gap:4px">${[1,2,3,4].map(l=>`<button class="btn ghost sm${p.bot===l?' sel':''}" data-bl="${esc(p.n)}|${l}" style="width:auto;padding:6px 8px;font-size:12px;${p.bot===l?'outline:2px solid var(--yel)':''}">${BLV[l]}</button>`).join('')}</span><button class="btn ghost sm" data-rb="${esc(p.n)}" style="width:auto;padding:6px 10px">✕</button></div>`).join('')}
+  ${bl.map(p=>`<div style="display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap"><span style="flex:1;min-width:90px;font-weight:800">${esc(p.n)}</span>${v.st.team?`<button class="btn ghost sm" data-bt="${esc(p.n)}|${p.tt==='A'?1:0}" style="width:auto;padding:6px 8px" title="Team wechseln">${TMS[p.tt||'A'].e} ${TMS[p.tt||'A'].n}</button>`:''}<span style="display:flex;gap:4px">${[1,2,3,4].map(l=>`<button class="btn ghost sm${p.bot===l?' sel':''}" data-bl="${esc(p.n)}|${l}" style="width:auto;padding:6px 8px;font-size:12px;${p.bot===l?'outline:2px solid var(--yel)':''}">${BLV[l]}</button>`).join('')}</span><button class="btn ghost sm" data-rb="${esc(p.n)}" style="width:auto;padding:6px 10px">✕</button></div>`).join('')}
   <div class="hint">Bots füllen den Raum auf (Zahl und Stufe je Bot einstellbar). Sie zählen nicht für Statistik, Wochenaufgabe und Elo; Statistik gibt es erst ab 2 echten Spielern. Antworten und Zeiten sind Schätzwerte.</div></div>`})():''}
   ${me?`<button class="btn pink" id="fgo" ${v.pl.filter(p=>p.on).length<2?'disabled':''}>${v.pl.filter(p=>p.on).length<2?'⏳ Warte auf Mitspieler …':'🚀 Los geht’s!'}</button>`:'<div class="hint">Der Host startet, sobald alle da sind.</div>'}`;
   if(h!==f.dyn){f.dyn=h;d.innerHTML=h}return}
@@ -1891,7 +1898,7 @@ setTimeout(()=>{if(DB.notif&&DB.acct)pushOn()},5000);
 try{const h=decodeURIComponent((location.hash||'').slice(1));if(h&&/^DUELL-[A-Z0-9]{4}$/i.test(h))duelOnline(h.slice(6).toUpperCase());else if(h&&(dec(h)||/^RAUM-[A-Z0-9]{4,8}$/i.test(h)))fern(h);else if(h&&/^FFA-[A-Z0-9]{4,8}$/i.test(h))ffaHub(h)}catch(e){}
 try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&location.hostname.endsWith('github.io'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-10-18';const BVN='2.10.0';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-10-20';const BVN='2.11.0';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;font-weight:800;text-align:center';

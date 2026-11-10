@@ -664,17 +664,93 @@ revoke all on function public._ffa_stat(public.ffa), public._ffa_fin(public.ffa)
 grant execute on function public.ffa_stats(text), public.elo_medals() to anon, authenticated;
 
 -- ============================================================
--- 19) v2.8.0: Melden, Konto loeschen, Sicherung (reports, delete_account, bk_snap/bk_run, admin_export)
---     (Vollstaendiger Code: Migration "melden_kontoloeschung_sicherung")
+-- 19) v2.8.0: Melden, Konto loeschen, Sicherung
 -- ============================================================
 create table if not exists public.reports (id bigint generated always as identity primary key, from_key text not null, target_key text not null, target text not null, reason text not null, ctx text, created_at timestamptz not null default now(), done boolean not null default false);
 alter table public.reports enable row level security;
+
+create or replace function public.report_player(p_name text, p_pin text, p_target text, p_reason text, p_ctx text default null) returns text language plpgsql security definer set search_path = public, extensions as $$
+declare s text; me text; k text := lower(btrim(coalesce(p_target, ''))); tn text;
+begin
+ s := public._auth(p_name, p_pin, false); if s not like 'ok:%' then return 'auth'; end if; me := substr(s, 4);
+ if k = lower(me) then return 'self'; end if;
+ select name into tn from public.players where name_key = k; if tn is null then return 'none'; end if;
+ if p_reason not in ('name', 'cheat', 'mobbing', 'other') then return 'invalid'; end if;
+ if (select count(*) from public.reports where from_key = lower(me) and created_at > now() - interval '1 day') >= 5 then return 'limit'; end if;
+ insert into public.reports(from_key, target_key, target, reason, ctx) values (lower(me), k, tn, p_reason, left(p_ctx, 60));
+ return 'ok';
+end $$;
+
+create or replace function public.admin_reports(p_name text, p_pin text) returns jsonb language plpgsql security definer set search_path = public, extensions as $$
+begin
+ if not public._adm(p_name, p_pin) then return jsonb_build_object('r', 'no'); end if;
+ return jsonb_build_object('r', 'ok', 'list', coalesce((select jsonb_agg(jsonb_build_object('id', id, 'target', target, 'reason', reason, 'ctx', ctx, 'from', (select name from public.players where name_key = x.from_key), 'at', created_at, 'done', done) order by done, created_at desc) from (select * from public.reports order by done, created_at desc limit 60) x), '[]'::jsonb));
+end $$;
+
+create or replace function public.admin_report_done(p_name text, p_pin text, p_id bigint) returns text language plpgsql security definer set search_path = public, extensions as $$
+begin
+ if not public._adm(p_name, p_pin) then return 'no'; end if;
+ update public.reports set done = true where id = p_id; return 'ok';
+end $$;
+
+-- Konto loeschen (nicht fuer "Admin")
+create or replace function public.delete_account(p_name text, p_pin text) returns text language plpgsql security definer set search_path = public, extensions as $$
+declare s text; nm text; k text;
+begin
+ s := public._auth(p_name, p_pin, false); if s not like 'ok:%' then return 'auth'; end if; nm := substr(s, 4); k := lower(nm);
+ if k = 'admin' then return 'no'; end if;
+ delete from public.results where lower(name) = k;
+ delete from public.picks where lower(name) = k;
+ delete from public.reacts where lower(name) = k;
+ delete from public.friends where a = k or b = k;
+ delete from public.inbox where to_key = k or lower(from_name) = k;
+ delete from public.mutes where a = k or b = k;
+ delete from public.elo where name_key = k;
+ delete from public.elo_season where name_key = k;
+ delete from public.ratings where name_key = k;
+ delete from public.push_subs where name_key = k;
+ delete from public.queue where name_key = k;
+ delete from public.ffa_stats where name_key = k;
+ delete from public.reports where from_key = k;
+ delete from public.players where name_key = k;
+ return 'ok';
+end $$;
+
+-- Taegliche Sicherung (7 Tage) + Export fuer den Admin
 create table if not exists public.bk_snap (day date not null, tbl text not null, data jsonb not null, primary key (day, tbl));
 alter table public.bk_snap enable row level security;
--- Funktionen: report_player, admin_reports, admin_report_done, delete_account (nicht fuer Admin), bk_run (taeglich 02:40 via pg_cron 'bb-backup', 7 Tage), admin_export
+create or replace function public.bk_run() returns text language plpgsql security definer set search_path = public as $$
+declare d date := (now() at time zone 'Europe/Berlin')::date;
+begin
+ insert into public.bk_snap(day, tbl, data) values
+  (d, 'players', coalesce((select jsonb_agg(to_jsonb(p)) from public.players p), '[]'::jsonb)),
+  (d, 'results', coalesce((select jsonb_agg(to_jsonb(r)) from public.results r), '[]'::jsonb)),
+  (d, 'elo', coalesce((select jsonb_agg(to_jsonb(e)) from public.elo e), '[]'::jsonb)),
+  (d, 'elo_season', coalesce((select jsonb_agg(to_jsonb(e)) from public.elo_season e), '[]'::jsonb)),
+  (d, 'friends', coalesce((select jsonb_agg(to_jsonb(f)) from public.friends f), '[]'::jsonb)),
+  (d, 'ffa_stats', coalesce((select jsonb_agg(to_jsonb(f)) from public.ffa_stats f), '[]'::jsonb))
+ on conflict (day, tbl) do update set data = excluded.data;
+ delete from public.bk_snap where day < d - 7;
+ return 'ok';
+end $$;
+do $$ begin perform cron.schedule('bb-backup', '40 2 * * *', 'select public.bk_run()'); exception when others then raise notice 'pg_cron nicht verfuegbar: %', sqlerrm; end $$;
+
+create or replace function public.admin_export(p_name text, p_pin text) returns jsonb language plpgsql security definer set search_path = public, extensions as $$
+begin
+ if not public._adm(p_name, p_pin) then return jsonb_build_object('r', 'no'); end if;
+ return jsonb_build_object('r', 'ok', 'at', now(),
+  'players', coalesce((select jsonb_agg(jsonb_build_object('name', name, 'created', created_at, 'avatar', avatar, 'team', team)) from public.players), '[]'::jsonb),
+  'results', coalesce((select jsonb_agg(to_jsonb(x)) from (select * from public.results order by id desc limit 5000) x), '[]'::jsonb),
+  'elo', coalesce((select jsonb_agg(to_jsonb(e)) from public.elo e), '[]'::jsonb),
+  'elo_season', coalesce((select jsonb_agg(to_jsonb(e)) from public.elo_season e), '[]'::jsonb),
+  'ffa_stats', coalesce((select jsonb_agg(to_jsonb(f)) from public.ffa_stats f), '[]'::jsonb));
+end $$;
+
+revoke all on function public.bk_run() from public, anon, authenticated;
+grant execute on function public.report_player(text, text, text, text, text), public.admin_reports(text, text), public.admin_report_done(text, text, bigint), public.delete_account(text, text), public.admin_export(text, text) to anon, authenticated;
 
 -- ============================================================
--- 20) v2.9.0: Free-for-All-Bots (Stufen 1-4): _bu, _ffa_bots, ffa_do (addbot/rmbot), _ffa_next/_ffa_view/_ffa_stat angepasst
+-- 20) v2.9.0-2.11.0: Free-for-All-Bots (Stufen 1-4, op addbot/rmbot/botlv) und Team-Modus (op tmteam/team/botteam) - aktueller Stand
 -- ============================================================
 create or replace function public._bu(seed text) returns numeric language sql immutable as $$ select ((hashtext(seed)::bigint + 2147483648) % 10000) / 10000.0 $$;
 create or replace function public._ffa_bots(r public.ffa) returns public.ffa language plpgsql set search_path = public as $$
@@ -795,23 +871,31 @@ begin
  return r;
 end $$;
 revoke all on function public._bu(text), public._ffa_bots(public.ffa) from public, anon, authenticated;
-
+create or replace function public._ffa_teams(r public.ffa) returns public.ffa language plpgsql set search_path = public as $$
+declare x text; ca integer; cb integer;
+begin
+ for x in select key from jsonb_each(r.pl) where not (value ? 'tt') order by (value ? 'bot'), key loop
+  select count(*) filter (where value->>'tt' = 'A'), count(*) filter (where value->>'tt' = 'B') into ca, cb from jsonb_each(r.pl);
+  r.pl := jsonb_set(r.pl, array[x, 'tt'], to_jsonb(case when ca <= cb then 'A' else 'B' end));
+ end loop;
+ return r;
+end $$;
 create or replace function public._ffa_next(r public.ffa) returns public.ffa language plpgsql set search_path = public as $$
 declare t bigint := public._fnow(); q text[]; i integer;
 begin
  q := array(select jsonb_array_elements_text(r.tm->'q')); i := (r.tm->>'i')::integer + 1;
  r.tm := r.tm || jsonb_build_object('i', i);
  r.game := q[i + 1]; r.rounds := (r.tm->>'rn')::integer;
- select jsonb_object_agg(key, jsonb_build_object('s', 0, 'seen', (value->>'seen')::bigint, 'tk', value->>'tk') || case when value ? 'bot' then jsonb_build_object('bot', value->'bot') else '{}'::jsonb end) into r.pl from jsonb_each(r.pl);
+ select jsonb_object_agg(key, jsonb_build_object('s', 0, 'seen', (value->>'seen')::bigint, 'tk', value->>'tk') || (case when value ? 'bot' then jsonb_build_object('bot', value->'bot') else '{}'::jsonb end) || (case when value ? 'tt' then jsonb_build_object('tt', value->'tt') else '{}'::jsonb end)) into r.pl from jsonb_each(r.pl);
  r.rnd := 0; r.phase := 'intro'; r.tp := t; r.st := jsonb_build_object('vote', '{}'::jsonb);
  return r;
 end $$;
 create or replace function public._ffa_view(r public.ffa, me text) returns jsonb language plpgsql set search_path = public as $$
 declare t bigint := public._fnow(); pl jsonb; st jsonb := '{}'; lft bigint; tot bigint; live boolean := r.phase in ('play', 'between', 'done');
 begin
- select coalesce(jsonb_agg(jsonb_build_object('n', key, 's', coalesce((value->>'s')::integer, 0), 'on', (value->>'seen')::bigint > t - 15000, 'out', value->'out', 'w', coalesce((value->>'w')::boolean, false), 'rx', case when t - coalesce((value->>'rt')::bigint, 0) < 3000 then value->>'rx' end, 'bot', value->'bot') order by coalesce((value->>'s')::integer, 0) desc, key), '[]') into pl from jsonb_each(r.pl);
+ select coalesce(jsonb_agg(jsonb_build_object('n', key, 's', coalesce((value->>'s')::integer, 0), 'on', (value->>'seen')::bigint > t - 15000, 'out', value->'out', 'w', coalesce((value->>'w')::boolean, false), 'rx', case when t - coalesce((value->>'rt')::bigint, 0) < 3000 then value->>'rx' end, 'bot', value->'bot', 'tt', value->'tt') order by coalesce((value->>'s')::integer, 0) desc, key), '[]') into pl from jsonb_each(r.pl);
  if r.phase = 'lobby' then
-  st := jsonb_build_object('vt', (select coalesce(jsonb_object_agg(g, c), '{}'::jsonb) from (select value->>'v' g, count(*) c from jsonb_each(r.pl) where value->>'v' is not null group by 1) q), 'mv', r.pl->me->'v', 'ex', coalesce(r.cf->'ex', '[]'::jsonb), 'tm', coalesce((r.cf->>'tm')::boolean, false));
+  st := jsonb_build_object('vt', (select coalesce(jsonb_object_agg(g, c), '{}'::jsonb) from (select value->>'v' g, count(*) c from jsonb_each(r.pl) where value->>'v' is not null group by 1) q), 'mv', r.pl->me->'v', 'ex', coalesce(r.cf->'ex', '[]'::jsonb), 'tm', coalesce((r.cf->>'tm')::boolean, false), 'team', coalesce((r.cf->>'team')::boolean, false));
  elsif r.phase = 'intro' then
   st := jsonb_build_object('vote', r.st->'vote');
  elsif r.phase = 'inter' then
@@ -839,15 +923,21 @@ begin
  tot := case r.phase when 'intro' then 5000 when 'inter' then 6000 when 'play' then (case when r.game = 'merk' then (r.st->>'end')::bigint - r.tp else public._ffa_pt(r.game) end) when 'between' then public._ffa_bd(r.game) else null end;
  lft := case when tot is null then null else tot - (t - r.tp) end;
  return jsonb_build_object('r', 'ok', 'ph', r.phase, 'g', r.game, 'rnd', r.rnd, 'rounds', r.rounds, 'host', r.host, 'left', lft, 'tot', tot, 'pl', pl, 'st', st,
-  'tm', case when r.tm is null then null else jsonb_build_object('i', (r.tm->>'i')::integer, 'n', jsonb_array_length(r.tm->'q'), 'tot', r.tm->'tot') end);
+  'team', coalesce((r.cf->>'team')::boolean, false), 'tm', case when r.tm is null then null else jsonb_build_object('i', (r.tm->>'i')::integer, 'n', jsonb_array_length(r.tm->'q'), 'tot', r.tm->'tot') end);
 end $$;
 create or replace function public._ffa_stat(r public.ffa) returns void language plpgsql set search_path = public as $$
-declare x text; mx integer; cw text := to_char(now() at time zone 'Europe/Berlin', 'IYYY-IW'); gk text := case when r.tm is not null then 'tm' else r.game end; win boolean; nk text;
+declare x text; mx integer; cw text := to_char(now() at time zone 'Europe/Berlin', 'IYYY-IW'); gk text := case when r.tm is not null then 'tm' else r.game end; win boolean; nk text; tsum numeric; tmax numeric;
 begin
  if (select count(*) from jsonb_each(r.pl) where not (value ? 'bot')) < 2 then return; end if;
  select max((value->>'s')::integer) into mx from jsonb_each(r.pl);
  for x in select key from jsonb_each(r.pl) where not (value ? 'bot') loop
-  win := coalesce(mx, 0) > 0 and (r.pl->x->>'s')::integer = mx;
+  if coalesce((r.cf->>'team')::boolean, false) and (r.pl->x) ? 'tt' then
+   select coalesce(sum((value->>'s')::integer), 0) into tsum from jsonb_each(r.pl) where value->>'tt' = r.pl->x->>'tt';
+   select coalesce(max(z), 0) into tmax from (select sum((value->>'s')::integer) z from jsonb_each(r.pl) group by value->>'tt') q;
+   win := tsum > 0 and tsum = tmax;
+  else
+   win := coalesce(mx, 0) > 0 and (r.pl->x->>'s')::integer = mx;
+  end if;
   nk := lower(btrim(x));
   insert into public.ffa_stats(name_key, name) values (nk, x) on conflict (name_key) do nothing;
   update public.ffa_stats s set name = x, g = s.g + 1, w = s.w + (case when win then 1 else 0 end),
@@ -875,8 +965,10 @@ begin
   if cardinality(stale) > 0 then r.pl := r.pl - stale; end if;
   if not (r.pl ? r.host) then r.host := p_name; end if;
  end if;
+ if r.phase = 'lobby' and coalesce((r.cf->>'team')::boolean, false) then r := public._ffa_teams(r); end if;
  if p_op = 'start' and r.host = p_name and r.phase = 'lobby' then
   if (select count(*) from jsonb_each(r.pl) where (value->>'seen')::bigint > t - 15000) < 2 then return jsonb_build_object('r', 'few'); end if;
+  if coalesce((r.cf->>'team')::boolean, false) and (select count(distinct value->>'tt') from jsonb_each(r.pl) where (value->>'seen')::bigint > t - 15000) < 2 then return jsonb_build_object('r', 'teams'); end if;
   enabled := array(select g from unnest(public._ffa_games()) g where not (coalesce(r.cf->'ex', '[]'::jsonb) ? g));
   if coalesce((r.cf->>'tm')::boolean, false) then
    q := array(select g from unnest(enabled) g order by random() limit 4);
@@ -888,7 +980,7 @@ begin
    else tied := array(select key from jsonb_each_text(cnts) where value::integer = mx); end if;
    r.game := tied[1 + floor(random() * cardinality(tied))::integer];
   end if;
-  select jsonb_object_agg(key, jsonb_build_object('s', 0, 'seen', (value->>'seen')::bigint, 'tk', value->>'tk') || case when value ? 'bot' then jsonb_build_object('bot', value->'bot') else '{}'::jsonb end) into r.pl from jsonb_each(r.pl) where (value->>'seen')::bigint > t - 15000;
+  select jsonb_object_agg(key, jsonb_build_object('s', 0, 'seen', (value->>'seen')::bigint, 'tk', value->>'tk') || (case when value ? 'bot' then jsonb_build_object('bot', value->'bot') else '{}'::jsonb end) || (case when value ? 'tt' then jsonb_build_object('tt', value->'tt') else '{}'::jsonb end)) into r.pl from jsonb_each(r.pl) where (value->>'seen')::bigint > t - 15000;
   r.rnd := 0; r.phase := 'intro'; r.tp := t; r.st := jsonb_build_object('vote', cnts);
  elsif p_op = 'vote' and r.phase = 'lobby' and p_arg = any(public._ffa_games()) and not (coalesce(r.cf->'ex', '[]'::jsonb) ? p_arg) then
   r.pl := jsonb_set(r.pl, array[p_name, 'v'], to_jsonb(p_arg));
@@ -904,7 +996,7 @@ begin
  elsif p_op = 'cfg' and r.host = p_name and r.phase = 'lobby' then
   if p_n is not null then r.rounds := least(15, greatest(3, p_n)); end if;
  elsif p_op = 'again' and r.host = p_name and r.phase = 'done' then
-  select jsonb_object_agg(key, jsonb_build_object('s', 0, 'seen', (value->>'seen')::bigint, 'tk', value->>'tk') || case when value ? 'bot' then jsonb_build_object('bot', value->'bot') else '{}'::jsonb end) into r.pl from jsonb_each(r.pl) where (value->>'seen')::bigint > t - 30000;
+  select jsonb_object_agg(key, jsonb_build_object('s', 0, 'seen', (value->>'seen')::bigint, 'tk', value->>'tk') || (case when value ? 'bot' then jsonb_build_object('bot', value->'bot') else '{}'::jsonb end) || (case when value ? 'tt' then jsonb_build_object('tt', value->'tt') else '{}'::jsonb end)) into r.pl from jsonb_each(r.pl) where (value->>'seen')::bigint > t - 30000;
   if r.tm is not null then r.rounds := coalesce((r.tm->>'orig')::integer, 8); end if;
   r.tm := null; r.phase := 'lobby'; r.rnd := 0; r.st := '{}'; r.tp := t;
  elsif p_op = 'grab' and r.phase = 'play' and r.game = 'flask' and r.st->'al' ? p_name then
@@ -959,6 +1051,14 @@ begin
   nbn := '🤖' || (array['Robo','Pixel','Blitz','Turbo','Nova','Bolt','Zap','Echo','Luna','Max'])[1 + floor(random() * 10)::integer];
   if r.pl ? nbn then nbn := nbn || (1 + floor(random() * 9))::integer::text; end if;
   if not (r.pl ? nbn) then r.pl := r.pl || jsonb_build_object(nbn, jsonb_build_object('s', 0, 'seen', t, 'tk', md5(random()::text), 'bot', p_n)); end if;
+ elsif p_op = 'botlv' and r.host = p_name and r.phase = 'lobby' and p_n between 1 and 4 and r.pl ? p_arg and (r.pl->p_arg) ? 'bot' then
+  r.pl := jsonb_set(r.pl, array[p_arg, 'bot'], to_jsonb(p_n));
+ elsif p_op = 'tmteam' and r.host = p_name and r.phase = 'lobby' then
+  r.cf := r.cf || jsonb_build_object('team', not coalesce((r.cf->>'team')::boolean, false));
+ elsif p_op = 'team' and r.phase = 'lobby' and p_arg in ('A', 'B') then
+  r.pl := jsonb_set(r.pl, array[p_name, 'tt'], to_jsonb(p_arg));
+ elsif p_op = 'botteam' and r.host = p_name and r.phase = 'lobby' and p_n in (0, 1) and r.pl ? p_arg and (r.pl->p_arg) ? 'bot' then
+  r.pl := jsonb_set(r.pl, array[p_arg, 'tt'], to_jsonb(case when p_n = 0 then 'A' else 'B' end));
  elsif p_op = 'rmbot' and r.host = p_name and r.phase = 'lobby' and r.pl ? p_arg and (r.pl->p_arg) ? 'bot' then
   r.pl := r.pl - p_arg;
  elsif p_op = 'leave' then
@@ -980,13 +1080,11 @@ begin
  return public._ffa_view(r, p_name);
 end $$;
 grant execute on function public.ffa_do(text, text, text, text, text, integer) to anon, authenticated;
-revoke all on function public._ffa_next(public.ffa), public._ffa_view(public.ffa, text), public._ffa_stat(public.ffa) from public, anon, authenticated;
+revoke all on function public._bu(text), public._ffa_bots(public.ffa), public._ffa_teams(public.ffa), public._ffa_next(public.ffa), public._ffa_view(public.ffa, text), public._ffa_stat(public.ffa) from public, anon, authenticated;
 
 -- ============================================================
--- 21) v2.10.0: Bots einstellbar (botlv) + Bots im Online-Raum (room_bot, room_bot_result)
+-- 21) v2.10.0: Bots im Online-Raum (room_bot, room_bot_result)
 -- ============================================================
--- ffa_do: zusaetzlicher Zweig  elsif p_op = 'botlv' and r.host = p_name and r.phase = 'lobby' and p_n between 1 and 4 and r.pl ? p_arg and (r.pl->p_arg) ? 'bot' then r.pl := jsonb_set(r.pl, array[p_arg, 'bot'], to_jsonb(p_n));
--- (vor dem Zweig 'rmbot' in ffa_do aus Abschnitt 20 einfuegen)
 create or replace function public.room_bot(p_name text, p_pin text, p_code text, p_bot text, p_game text) returns text language plpgsql security definer set search_path = public, extensions as $$
 declare s text; me text; r public.rooms;
 begin
@@ -1013,3 +1111,4 @@ begin
  return 'ok';
 end $$;
 grant execute on function public.room_bot(text, text, text, text, text), public.room_bot_result(text, text, text, text, integer, integer, jsonb) to anon, authenticated;
+
