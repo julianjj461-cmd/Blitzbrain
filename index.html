@@ -1210,6 +1210,7 @@ function menu(){NBK=null;S.fi=false;setTimeout(installNudge,1200);applyTheme();a
  <button class="btn pink" id="m1" style="padding:13px">👥 PARTY<br><small style="font-weight:700;opacity:.9">Ein Handy, Online-Raum oder Challenge</small></button>
  <button class="btn" id="m2" style="padding:13px">🕹️ ARCADE<br><small style="font-weight:700;opacity:.8">Solo – jedes Spiel einzeln üben</small></button></div>
  <div class="tb"><button class="btn ghost sm" id="rec">🏆 Bestenlisten</button><button class="btn ghost sm" id="mus" style="flex:0 0 64px" aria-label="Musik"></button><button class="btn ghost sm" id="snd" style="flex:0 0 64px" aria-label="Sound"></button><button class="btn ghost sm" id="hp" style="flex:0 0 64px" aria-label="So geht's">❔</button></div></div>`;
+ if(DB.acct&&skey(DB.acct.name)==='admin'){const sb=app.querySelector('.sub'),ac=$('#ac');if(sb&&ac){const b=document.createElement('button');b.className='btn ghost sm';b.id='adm';b.style.cssText='flex:none;width:auto;padding:6px 12px;font-size:13px';b.textContent='🛠️ Admin';sb.insertBefore(b,ac);b.onclick=adminScreen}}
  const lab=()=>{$('#mus').textContent=DB.mus?'🎵':'🔕';$('#snd').textContent=DB.snd?'🔊':DB.vib===false?'🔇':'📳'};lab();
  const sv=DB.acct&&DB.sess&&Date.now()-DB.sess.ts<90*60*1000?DB.sess:null;
  if(sv){const mid=app.querySelector('.mid');if(mid){const b=document.createElement('button');b.className='btn ghost';b.id='rs';b.textContent='↩️ Zurück ins '+(sv.t=='du'?'Duell':'Raum')+' ('+sv.code.replace(/^1/,'')+')';mid.append(b);
@@ -1418,6 +1419,34 @@ function ffaUpd(){const f=FFX,v=f.v;if(!v||!document.getElementById('ffa'))retur
   if(hd)hd.textContent=my==null?'Wähle – die seltenste Wahl punktet!':`✔ Gewählt – ${st.picked.length} von ${v.pl.filter(p=>p.on).length} haben gewählt`;
   const k=String(my);if(op&&op.dataset.k!==k){op.dataset.k=k;op.innerHTML=FFO.map((e,o)=>`<button class="fo${my===o?' mine':''}" data-o="${o}" ${my!=null?'disabled':''}>${e}${my===o?'<small>Deine Wahl</small>':''}</button>`).join('')}}}
 
+/* ===== Admin (nur Konto "Admin"; der Server prüft die Berechtigung bei jedem Aufruf) ===== */
+let ADQ='';
+function admArm(b,label,fn){let t=0;const o=b.textContent;b.onclick=async()=>{if(t>Date.now()){t=0;b.textContent=o;b.disabled=true;await fn();b.disabled=false;return}t=Date.now()+3000;b.textContent='Sicher? Nochmal tippen';setTimeout(()=>{if(b.isConnected&&t){t=0;b.textContent=o}},3000)}}
+async function adminScreen(){if(!DB.acct||skey(DB.acct.name)!=='admin'){menu();return}
+ app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🛠️ Admin</h2><div id="ads" class="c mut" style="font-size:14px">Lade …</div>
+ <div class="pl"><input id="adq" placeholder="Spieler suchen …" value="${esc(ADQ)}" autocomplete="off"></div><div id="adl"></div>${bar('⬅ Hauptmenü')}</div>`;
+ $('#bt').onclick=menu;let tm=0;$('#adq').oninput=e=>{ADQ=e.target.value;clearTimeout(tm);tm=setTimeout(adLoad,300)};adLoad()}
+async function adLoad(){const l=$('#adl');if(!l)return;
+ try{const r=await rpc('admin_list',{p_name:DB.acct.name,p_pin:DB.acct.pin,p_q:ADQ});if(!$('#adl'))return;
+  if(!r||r.r!=='ok'){$('#ads').textContent='❌ Kein Admin-Zugriff – melde dich mit dem Konto „Admin“ und der richtigen PIN an.';l.innerHTML='';return}
+  $('#ads').innerHTML=`👥 ${r.total} Spieler · 🟢 ${r.active7} aktiv (7 Tage) · 🚫 ${r.banned} gesperrt · 📊 ${r.results} Ergebnisse`;
+  l.innerHTML=r.list.map(p=>`<div class="rk" data-n="${esc(p.n)}" style="margin-top:6px;${p.banned?'opacity:.75':''}"><b style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">${p.av?p.av+' ':''}${esc(p.n)}${p.team?' · '+esc(p.team):''}</b><span style="font-size:13px">${p.banned?'🚫 gesperrt':p.elo?p.elo+' Elo':''} ›</span></div>`).join('')||'<div class="mut c">Keine Treffer.</div>';
+  l.onclick=e=>{const d=e.target.closest('[data-n]');if(d)adminPlayer(r.list.find(p=>p.n===d.dataset.n))}}
+ catch(e){const s=$('#ads');if(s)s.textContent='⚠️ Server nicht erreichbar (Internet oder Server pausiert?).'}}
+function adminPlayer(p){if(!p)return adminScreen();
+ const seen=p.seen?new Date(p.seen).toLocaleString('de-DE',{dateStyle:'short',timeStyle:'short'}):'–';
+ app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">${nmx(p.n)}</h2>${p.banned?'<div class="banner" style="font-size:20px;color:var(--red)">🚫 Konto gesperrt</div>':''}
+ <div class="card" style="padding:12px"><div>📅 Angelegt: ${esc(p.created)}</div><div>🕒 Zuletzt online: ${esc(seen)}</div><div>📊 Ergebnisse: ${p.res}</div><div>🏆 Elo: ${p.elo||'–'}</div><div>🏢 Team: ${esc(p.team||'–')}</div></div>
+ <button class="btn ${p.banned?'':'pink'}" id="ab">${p.banned?'✅ Entsperren':'🚫 Konto sperren'}</button>
+ <button class="btn ghost" id="ar">🔑 PIN zurücksetzen</button>
+ <button class="btn ghost" id="aw">🧹 Rekorde &amp; Elo löschen</button>
+ <div class="card c" id="am" style="display:none;padding:12px"></div>${bar('⬅ Zur Liste')}</div>`;
+ $('#bt').onclick=adminScreen;
+ const say=h=>{const m=$('#am');m.style.display='';m.innerHTML=h},call=async(fn,extra)=>rpc(fn,{p_name:DB.acct.name,p_pin:DB.acct.pin,p_target:p.n,...extra});
+ admArm($('#ab'),'',async()=>{try{const r=await call('admin_ban',{p_ban:!p.banned});if(r==='ok'){p.banned=!p.banned;sfx('ok');adminPlayer(p)}else say('❌ Das hat nicht geklappt ('+esc(String(r))+').')}catch(e){say('⚠️ Server nicht erreichbar.')}});
+ admArm($('#ar'),'',async()=>{try{const r=String(await call('admin_reset_pin'));if(r.startsWith('ok:')){sfx('win');say(`Neue PIN für <b>${esc(p.n)}</b>:<div class="big" style="font-size:44px;letter-spacing:6px;color:var(--yel)">${esc(r.slice(3))}</div><div class="mut" style="font-size:13px">Wird nur jetzt angezeigt. Gib sie dem Spieler weiter – die alte PIN gilt nicht mehr.</div>`)}else say('❌ Das hat nicht geklappt ('+esc(r)+').')}catch(e){say('⚠️ Server nicht erreichbar.')}});
+ admArm($('#aw'),'',async()=>{try{const r=String(await call('admin_wipe'));if(r.startsWith('ok:')){sfx('ok');say('🧹 '+esc(r.slice(3))+' Ergebnisse und die Elo-Wertung von '+esc(p.n)+' gelöscht.');p.res=0;p.elo=null}else say('❌ Das hat nicht geklappt ('+esc(r)+').')}catch(e){say('⚠️ Server nicht erreichbar.')}})}
+
 function partyHub(){S.code=null;S.room=null;S.fi=false;
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">👥 Party</h2><div class="mut">Für Gruppen – jede Runde wird anders.</div>
  <div class="mid" style="justify-content:flex-start;padding-top:6px">${hubBtn('p1','⚔️','Ein Handy','Party-Runde, Handy wandert reihum – auch offline','background:linear-gradient(180deg,#ff7ab8,#ff3d96);box-shadow:0 6px 0 #a1155c;color:#fff')}${hubBtn('p2','🏠','Online-Raum','Jeder am eigenen Handy, gemeinsamer Countdown','background:linear-gradient(180deg,#6ff0ff,#27e1ff);box-shadow:0 6px 0 #0a7f94')}${hubBtn('p4','🎪','Free-for-All','Alle gegen alle, live: Flaschen-Grab, Symbol-Jagd …','background:linear-gradient(180deg,#8dffc4,#3dffa0);box-shadow:0 6px 0 #0f8a55')}${hubBtn('p3','⚡','Schnell-Challenge','Gleicher Code, jeder spielt, wann er will','')}</div>${bar('⬅ Hauptmenü')}</div>`;
@@ -1509,7 +1538,7 @@ function loginScreen(next,msg=''){
   er.textContent='Prüfe …';
   try{const r=String(await rpc('claim_name',{p_name:nm,p_pin:pn})),m=/^(new|ok):(.+)$/.exec(r);
    if(m){DB.acct={name:m[2],pin:pn};DB.fname=m[2];save();sfx('win');(next||menu)();return}
-   er.textContent=r==='blocked'?'🚫 Dieser Name ist nicht erlaubt – bitte einen netten Namen wählen.':r==='wrong'?'❌ PIN falsch – oder der Name gehört schon jemand anderem.':r==='locked'?'⏳ Zu viele Fehlversuche. Bitte 5 Minuten warten.':'❌ Name: 1–14 Zeichen, PIN: 4–12 Zeichen.'}
+   er.textContent=r==='blocked'?'🚫 Dieser Name ist nicht erlaubt – bitte einen netten Namen wählen.':r==='wrong'?'❌ PIN falsch – oder der Name gehört schon jemand anderem.':r==='banned'?'🚫 Dieses Konto wurde gesperrt.':r==='locked'?'⏳ Zu viele Fehlversuche. Bitte 5 Minuten warten.':'❌ Name: 1–14 Zeichen, PIN: 4–12 Zeichen.'}
   catch(e){er.textContent=e.status==404?'⚠️ Die Konto-Funktion fehlt noch in Supabase (SQL einrichten).':'⚠️ Server nicht erreichbar (Internet oder Server pausiert?).'}};
 }
 const needAcct=(f,pre)=>{if(DB.acct)return false;loginScreen(()=>f(pre));return true};
@@ -1640,7 +1669,7 @@ setTimeout(()=>{if(DB.notif&&DB.acct)pushOn()},5000);
 try{const h=decodeURIComponent((location.hash||'').slice(1));if(h&&/^DUELL-[A-Z0-9]{4}$/i.test(h))duelOnline(h.slice(6).toUpperCase());else if(h&&(dec(h)||/^RAUM-[A-Z0-9]{4,8}$/i.test(h)))fern(h);else if(h&&/^FFA-[A-Z0-9]{4,8}$/i.test(h))ffaHub(h)}catch(e){}
 try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&location.hostname.endsWith('github.io'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-10-5';let updPend=null,updT=0;
+const BBV='2026-11-10-6';let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;font-weight:800;text-align:center';
