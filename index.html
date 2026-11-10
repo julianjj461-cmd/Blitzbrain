@@ -942,22 +942,35 @@ async function sbBest(days){const r=await rpc('best_times',{p_days:days});if(!Ar
 const teamChamp=R=>{const m={};R.forEach(x=>{Object.entries(x.g||{}).forEach(([k,t])=>{const o=m[k];if(!o||t<o.t)m[k]={team:x.team,t}})});const c={};Object.values(m).forEach(o=>{if(o.team)c[o.team]=(c[o.team]||0)+1});return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,5)};
 const champOf=R=>{const m={};R.forEach(x=>{Object.entries(x.g||{}).forEach(([k,t])=>{const o=m[k];if(!o||t<o.t)m[k]={n:x.n,t}})});const c={};Object.values(m).forEach(o=>c[o.n]=(c[o.n]||0)+1);return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,5)};
 const srcBar=()=>ONLERR?'<div class="mut">'+ONLERR+'</div>':'';
+let BLC=null,BLT=0;try{BLC=JSON.parse(localStorage.getItem('bb_lb')||'null');if(BLC)BLT=BLC.t||0}catch(e){}
+async function blFetch(){let a,w;try{[a,w]=await Promise.all([sbBest(null),sbBest(7)])}catch(e){a=await sbAll();const cut=new Date(Date.now()-7*864e5).toISOString().slice(0,10);w=a.filter(x=>x.d>=cut)}
+ BLC={a,w,t:Date.now()};BLT=BLC.t;try{localStorage.setItem('bb_lb',JSON.stringify(BLC))}catch(e){}return BLC}
 async function bestenlisten(back=menu){
- app.innerHTML='<div class="scr"><div id="rl" class="mid"><div class="c mut">Lade Bestenlisten …</div></div><button class="btn ghost sm" id="bk">⬅ Zurück</button></div>';
- $('#bk').onclick=back;
- avLoad(true);await frLoad();
- try{try{[ONL,WK]=await Promise.all([sbBest(null),sbBest(7)])}catch(e){ONL=await sbAll();const cut=new Date(Date.now()-7*864e5).toISOString().slice(0,10);WK=ONL.filter(x=>x.d>=cut)}ONLERR=''}catch(e){ONL=[];WK=[];ONLERR='⚠️ Bestenlisten nicht erreichbar (Internet oder Server pausiert?).'}
- if(document.getElementById('rl'))gboard(back);
+ const hit=!!(BLC&&Array.isArray(BLC.a)&&Array.isArray(BLC.w));
+ if(hit){ONL=BLC.a;WK=BLC.w;ONLERR='';gboard(back)}
+ else{app.innerHTML='<div class="scr"><div id="rl" class="mid"><div class="c mut">Lade Bestenlisten …</div></div><button class="btn ghost sm" id="bk">⬅ Zurück</button></div>';$('#bk').onclick=back}
+ avLoad();const fr=frLoad().catch(()=>{});fr.then(()=>{if(FF&&document.getElementById('g0'))gboard(back)});
+ if(hit&&Date.now()-BLT<15000)return;
+ try{const c=await blFetch(),same=JSON.stringify([c.a,c.w])===JSON.stringify([ONL,WK]);ONL=c.a;WK=c.w;ONLERR='';
+  if(!hit){if(document.getElementById('rl'))gboard(back)}
+  else if(!same&&document.getElementById('g0')&&document.activeElement!==document.getElementById('nf'))gboard(back)}
+ catch(e){if(!hit){ONL=[];WK=[];ONLERR='⚠️ Bestenlisten nicht erreichbar (Internet oder Server pausiert?).';if(document.getElementById('rl'))gboard(back)}}
 }
 let GTAB=0;
 const SEA0=Date.parse('2026-11-08T23:00:00Z'),SEAL=28*864e5;
 function seasonInfo(){const n=Math.max(0,Math.floor((Date.now()-SEA0)/SEAL)),a=SEA0+n*SEAL,b=a+SEAL;return{n:n+1,a,b,left:Math.max(1,Math.ceil((b-Date.now())/864e5)),pa:a-SEAL,has:n>=1,fd:new Date(b).toLocaleDateString('de-DE')}}
+const SEAC={};
 async function seasonDraw(){const el=document.getElementById('ssn');if(!el)return;const S0=seasonInfo(),med=['🥇','🥈','🥉'];
  const line=L=>L.slice(0,3).map((x,i)=>`${med[i]} ${esc(x.n)} (${x.c})`).join(' · ');
+ const paint=(cur,pv)=>{let h=Array.isArray(cur)&&cur.length?'Aktuell vorn: '+line(cur):'Noch keine Zeiten in dieser Saison.';
+  if(Array.isArray(pv)&&pv.length)h+=`<br><b style="color:var(--yel)">Letzte Saison:</b> `+line(pv);const e=document.getElementById('ssc');if(e)e.innerHTML=h};
+ const c=SEAC[S0.n];
  el.innerHTML=`<b>🗓️ Saison ${S0.n}</b> <span class="mut">· noch ${S0.left} Tag${S0.left>1?'e':''} (bis ${S0.fd})</span><div class="mut" id="ssc" style="margin-top:4px">Lade …</div>`;
- try{const cur=await rpc('season_top',{p_from:new Date(S0.a).toISOString(),p_to:new Date(S0.b).toISOString()});let h=Array.isArray(cur)&&cur.length?'Aktuell vorn: '+line(cur):'Noch keine Zeiten in dieser Saison.';
-  if(S0.has){const pv=await rpc('season_top',{p_from:new Date(S0.pa).toISOString(),p_to:new Date(S0.a).toISOString()});if(Array.isArray(pv)&&pv.length){h+=`<br><b style="color:var(--yel)">Letzte Saison:</b> `+line(pv);if(DB.acct&&skey(pv[0].n)===skey(DB.acct.name)){const k='s'+(S0.n-1);DB.ssn=DB.ssn||{};if(!DB.ssn[k]){DB.ssn[k]=1;DB.ssw=(DB.ssw||0)+1;save()}}}}
-  const e=document.getElementById('ssc');if(e)e.innerHTML=h}catch(e){const x=document.getElementById('ssc');if(x)x.textContent='Saison-Daten gerade nicht erreichbar.'}}
+ if(c)paint(c.cur,c.pv);
+ try{const[cur,pv]=await Promise.all([rpc('season_top',{p_from:new Date(S0.a).toISOString(),p_to:new Date(S0.b).toISOString()}),S0.has?rpc('season_top',{p_from:new Date(S0.pa).toISOString(),p_to:new Date(S0.a).toISOString()}):Promise.resolve(null)]);
+  SEAC[S0.n]={cur,pv};paint(cur,pv);
+  if(S0.has&&Array.isArray(pv)&&pv.length&&DB.acct&&skey(pv[0].n)===skey(DB.acct.name)){const k='s'+(S0.n-1);DB.ssn=DB.ssn||{};if(!DB.ssn[k]){DB.ssn[k]=1;DB.ssw=(DB.ssw||0)+1;save()}}}
+ catch(e){if(!c){const x=document.getElementById('ssc');if(x)x.textContent='Saison-Daten gerade nicht erreichbar.'}}}
 function gboard(back){
  const FSet=FF&&DB.acct?new Set([...FR.map(f=>skey(f.n)),skey(DB.acct.name)]):null,flt=a=>FSet?a.filter(x=>FSet.has(skey(x.n))):a;
  const R=flt(RR()),best=k=>{const m={};R.forEach(x=>{const t=x.g&&x.g[k];if(t!=null&&(!(x.n in m)||t<m[x.n].t))m[x.n]={n:x.n,t}});return Object.values(m).sort((a,b)=>a.t-b.t)};
@@ -1247,6 +1260,7 @@ function menu(){NBK=null;S.fi=false;setTimeout(installNudge,1200);applyTheme();a
   b.onclick=async()=>{ac();NBK=menu;b.textContent='Verbinde …';try{if(sv.t=='du')await duJoin(sv.code,sv.name,true);else await roomJoin(sv.code,sv.name)}catch(e){DB.sess=null;save();b.textContent='❌ Nicht mehr verfügbar'}}}}
  {const v=document.getElementById('ver');if(v)v.textContent='v'+(()=>{try{return BVN}catch(e){return''}})()}
  {const sb=app.querySelector('.sub');if(sb&&DB.acct){const sk=streakNow(DB.acct.name),n=(DB.runs||[]).length,d=document.createElement('div');d.className='chips';d.id='mch';d.innerHTML=`<span class="chip">🔥 ${sk.n?sk.n+(sk.n==1?' Tag':' Tage')+' Serie':'Serie starten'}</span><span class="chip">🎮 ${n} Runden</span><span class="chip" id="mlg" style="display:none"></span>`;sb.after(d);const lc=()=>{const r=ELM[skey(DB.acct.name)],e=document.getElementById('mlg');if(r!=null&&e){const lg=league(r);e.textContent=lg.e+' '+lg.n;e.style.display=''}};eloLoad().then(lc);setTimeout(lc,1200)}}
+ setTimeout(()=>{if(DB.acct&&Date.now()-BLT>120000)blFetch().catch(()=>{})},1500);
  fpFloat();
  {const mid=app.querySelector('.mid');if(mid){const b=document.createElement('button'),sk=DB.acct?streakNow(DB.acct.name):null;b.className='btn'+(sk&&!sk.today?' glow':'');b.id='dly';
   b.style.cssText='padding:12px;background:linear-gradient(180deg,var(--c1),var(--c2));border:2px solid var(--yel);box-shadow:0 5px 0 var(--g2);color:#fff';
@@ -1695,7 +1709,7 @@ setTimeout(()=>{if(DB.notif&&DB.acct)pushOn()},5000);
 try{const h=decodeURIComponent((location.hash||'').slice(1));if(h&&/^DUELL-[A-Z0-9]{4}$/i.test(h))duelOnline(h.slice(6).toUpperCase());else if(h&&(dec(h)||/^RAUM-[A-Z0-9]{4,8}$/i.test(h)))fern(h);else if(h&&/^FFA-[A-Z0-9]{4,8}$/i.test(h))ffaHub(h)}catch(e){}
 try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&location.hostname.endsWith('github.io'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-10-11';const BVN='2.4.0';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-10-12';const BVN='2.4.1';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;font-weight:800;text-align:center';
