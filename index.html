@@ -159,6 +159,11 @@ h3{color:var(--ink)}
 .frk{border:3px solid var(--ink);box-shadow:5px 5px 0 var(--ink);color:var(--ink);background:#8fd0ff}.frk.go{background:#3ddc97;color:var(--ink);box-shadow:5px 5px 0 var(--ink)}
 .ftap{background:#3ddc97;border:3px solid var(--ink);box-shadow:5px 5px 0 var(--ink);color:var(--ink)}
 .flash{animation:none}
+.hud #tm{white-space:nowrap;flex:none;font-size:26px}.hud>span:first-child{min-width:0;font-size:17px;line-height:1.15;padding-right:8px}
+#thg{display:grid!important;grid-template-columns:1fr 1fr}#thg .btn{font-size:14px;white-space:nowrap;min-width:0!important}
+#thg .btn.sel{background:var(--acc)}
+.bk{display:flex;align-items:center;justify-content:center;padding:0}.bk svg{display:block}
+#ovl .card{background:#ffe9a8!important;border:3px solid var(--ink)!important}
 .hb{background:#ff6fa8!important;color:var(--ink)!important;box-shadow:5px 5px 0 var(--ink)!important}.hb:nth-of-type(even){background:#8fd0ff!important}.hb:nth-of-type(3n){background:#3ddc97!important}
 .btn.ghost[style*=outline]{outline-color:var(--ink)!important;background:var(--acc)}
 
@@ -1103,7 +1108,7 @@ function gboard(back){
  const champ=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,5),wk=champOf(flt(WK)),TM={},tmAll=teamChamp(R),tmWk=teamChamp(flt(WK));R.forEach(x=>{if(x.team)TM[x.n]=x.team});
  const row=(i,n,t,sub)=>`<div class="rk${i==0?' w':''}" style="margin-top:6px;padding:8px 12px"><span>${med[i]||i+1+'.'}</span><b>${(avOf(n.split(' · ')[0])?avOf(n.split(' · ')[0])+' ':'')+esc(n)}</b><span>${sub||f3(t)}</span></div>`;
  const pod=L=>L.length<2?'':`<div class="pod">${[1,0,2].filter(i=>L[i]).map(i=>`<div class="p${i+1}"><div class="e">${med[i]}</div><b>${esc(L[i][0])}</b><span class="mut">${L[i][1]} 🏅</span></div>`).join('')}</div>`;
- app.innerHTML=`<div class="scr"><div class="hd">${back===menu?'':'<button class="bk" id="bt" aria-label="Zurück">‹</button>'}<h2 style="margin:6px 0 0">🏆 Bestenlisten</h2><span class="sp"></span><button class="bk" id="rt" aria-label="Aktualisieren">🔄</button></div><div class="mut" style="font-size:13px">Online-Rekorde zählen nur aus Ranked-Partien.</div>${srcBar()}
+ app.innerHTML=`<div class="scr"><div class="hd">${back===menu?'':'<button class="bk" id="bt" aria-label="Zurück">‹</button>'}<h2 style="margin:6px 0 0">🏆 Bestenlisten</h2><span class="sp"></span><button class="bk" id="rt" aria-label="Aktualisieren"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1b1b1b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v5h-5"/></svg></button></div><div class="mut" style="font-size:13px">Online-Rekorde zählen nur aus Ranked-Partien.</div>${srcBar()}
  <div style="display:flex;gap:8px"><button class="btn sm" id="g0" style="flex:1">👑 Champions</button><button class="btn sm" id="g1" style="flex:1">🎮 Pro Spiel</button></div>
  ${DB.acct?`<button class="btn ghost sm" id="gf">${FF?'👥 Nur Freunde – tippen für Alle':'🌍 Alle Spieler – tippen für Freunde'}</button>`:''}<div id="gc"></div>
  ${tabBar('rec')}</div>`;
@@ -1231,7 +1236,7 @@ function qToast(t){try{const o=document.getElementById('qtn');if(o)o.remove();co
 /* ===== App installieren & Mitteilungen ===== */
 let DIP=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();DIP=e});
 const isStandalone=()=>{try{return matchMedia('(display-mode: standalone)').matches||navigator.standalone===true}catch(e){return false}};
-function sheet(html){const old=document.getElementById('ovl');if(old)old.remove();const o=document.createElement('div');o.id='ovl';o.style.cssText='position:fixed;inset:0;z-index:999;background:rgba(10,5,30,.88);display:flex;align-items:center;justify-content:center;padding:16px';
+function sheet(html){const old=document.getElementById('ovl');if(old)old.remove();const o=document.createElement('div');o.id='ovl';o.style.cssText='position:fixed;inset:0;z-index:999;background:rgba(27,27,27,.62);display:flex;align-items:center;justify-content:center;padding:16px';
  o.innerHTML='<div class="card" style="width:100%;max-width:420px;max-height:84vh;overflow:auto;padding:14px;text-align:left;background:var(--c2);border:2px solid var(--b2)">'+html+'<button class="btn ghost sm" id="ovx" style="margin-top:12px">Schließen</button></div>';document.body.append(o);$('#ovx').onclick=()=>o.remove();return o}
 function installHelp(){const ua=navigator.userAgent,ios=/iPhone|iPad|iPod/.test(ua),and=/Android/.test(ua);DB.instNo=1;save();
  if(isStandalone()){sheet('<h3 style="margin:0 0 6px">📲 App</h3><div>✅ BLITZBRAIN läuft schon als App auf deinem Gerät.</div>');return}
@@ -1360,7 +1365,7 @@ async function friendProfile(name,back){const f=FR.find(x=>skey(x.n)==skey(name)
   const B=pb.status=='fulfilled'&&Array.isArray(pb.value)?pb.value.filter(x=>STG[x.g]&&!OFF.includes(x.g)).sort((a,b)=>a.rk-b.rk||a.ms-b.ms):[],firsts=B.filter(x=>x.rk==1).length,team=tm.status=='fulfilled'&&tm.value?tm.value:'',med=['🥇','🥈','🥉'];
   d.innerHTML=(team?'🏢 Team '+esc(team)+'<br>':'')+(B.length?`👑 ${firsts} Rekord${firsts==1?'':'e'} · ${B.length} Spiel${B.length==1?'':'e'} gespielt<div style="text-align:left;margin-top:6px">${B.slice(0,4).map(x=>`<div class="rk${x.rk==1?' w':''}" style="margin-top:6px;padding:6px 10px"><span>${med[x.rk-1]||x.rk+'.'}</span><b style="flex:1;margin-left:8px">${STG[x.g].emoji} ${STG[x.g].name}</b><span>${f3(x.ms)}</span></div>`).join('')}</div>`:'Noch keine Online-Zeiten.')}catch(e){}}
 async function inviteFriends(payload,what){ac();if(!DB.acct)return;const old=document.getElementById('ovl');if(old)old.remove();
- const o=document.createElement('div');o.id='ovl';o.style.cssText='position:fixed;inset:0;z-index:999;background:rgba(10,5,30,.88);display:flex;align-items:center;justify-content:center;padding:16px';
+ const o=document.createElement('div');o.id='ovl';o.style.cssText='position:fixed;inset:0;z-index:999;background:rgba(27,27,27,.62);display:flex;align-items:center;justify-content:center;padding:16px';
  o.innerHTML='<div class="card" style="width:100%;max-width:420px;max-height:80vh;overflow:auto;padding:14px;background:var(--c2);border:2px solid var(--b2)"><h3 style="margin:0 0 6px">👥 Freunde einladen</h3><div id="ovb" class="mut">Lade …</div><button class="btn ghost sm" id="ovx" style="margin-top:12px">Schließen</button></div>';
  document.body.append(o);$('#ovx').onclick=()=>o.remove();
  if(!FR.length)await frLoad();const b=document.getElementById('ovb');if(!b)return;
@@ -1875,7 +1880,7 @@ const claimMsg=r=>r==='blocked'?'🚫 Dieser Name ist nicht erlaubt – bitte ei
 const claimErr=e=>e&&e.status==404?'⚠️ Die Konto-Funktion fehlt noch in Supabase (SQL einrichten).':'⚠️ Server nicht erreichbar (Internet oder Server pausiert?).';
 /* Anmelde-Popup beim ersten Start (einmalig; „Später“ merkt sich die Entscheidung) */
 function loginPop(){if(DB.acct||DB.lpx||document.getElementById('lpo'))return;
- const o=document.createElement('div');o.id='lpo';o.style.cssText='position:fixed;inset:0;z-index:1000;background:rgba(10,5,30,.9);display:flex;align-items:center;justify-content:center;padding:16px';
+ const o=document.createElement('div');o.id='lpo';o.style.cssText='position:fixed;inset:0;z-index:1000;background:rgba(27,27,27,.66);display:flex;align-items:center;justify-content:center;padding:16px';
  o.innerHTML='<div class="card" style="width:100%;max-width:420px;padding:16px;text-align:left;background:var(--c2);border:2px solid var(--b2)"><h2 style="margin:0 0 6px">👤 Willkommen!</h2><div class="mut" style="margin-bottom:10px">Melde dich an, damit deine Rekorde, Freunde und dein Rang gespeichert werden. Neuer Name? Dann legst du hier gleich deine PIN fest.</div><div class="pl"><input id="lp1" maxlength="14" placeholder="Dein Name" value="'+esc(DB.fname||'')+'" autocomplete="off"></div><div class="pl"><input id="lp2" type="password" inputmode="numeric" maxlength="12" placeholder="PIN (4–12 Zeichen)" autocomplete="off"></div><button class="btn pink" id="lpg">✔ Anmelden / Registrieren</button><div class="hint" id="lpe"></div><button class="btn ghost sm" id="lpl" style="margin-top:8px">Später</button></div>';
  document.body.append(o);
  $('#lpl').onclick=()=>{DB.lpx=1;save();o.remove()};
@@ -2049,7 +2054,7 @@ function errSend(msg,src){try{if(ERRN>=3||!DB.sb||!DB.sb.url||!/^https?:/.test(l
 addEventListener('error',e=>errSend(e.message,(e.filename||'')+':'+(e.lineno||0)+':'+(e.colno||0)));
 addEventListener('unhandledrejection',e=>{const r=e.reason;if(r&&(r.auth||r.status||r.nf||r.full||r.dup))return;errSend('Promise: '+(r&&r.message||r),'')});
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-10-34';const BVN='2.15.2';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-10-35';const BVN='2.15.3';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--ink);font-weight:800;text-align:center';
