@@ -861,7 +861,7 @@ function duCount(startMs){duStop();let last=-1,iv=0;const D=DU,r=D.room,R=r.stag
    {let sh=0;const pi=setInterval(async()=>{if(DU!==D||!D.playing){clearInterval(pi);return}try{const rs=await api('GET',`results?code=eq.${D.code}-R${R}&select=name&limit=5`),o=Array.isArray(rs)&&rs.find(x=>x.name!==D.name);if(o&&!sh){sh=1;const b=document.createElement('div');b.style.cssText='position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:9999;background:var(--yel);color:#1a0b4b;font-weight:900;padding:8px 16px;border-radius:14px;pointer-events:none;box-shadow:0 4px 0 #0004';b.textContent='⚡ '+o.name+' ist schon fertig!';document.body.append(b);setTimeout(()=>{try{b.remove()}catch(e){}},4000)}}catch(e){}},2500)}
    play(async(t,pen)=>{D.played[R]=true;D.playing=false;
     app.innerHTML=`<div class="scr" id="du"><div class="mid"><div class="c mut">Runde ${R}/${r.stages.g.length}</div><div class="big">${f3(t)}</div><div class="c mut">Sende Zeit …</div></div></div>`;
-    for(let i=0;i<4;i++){try{await sbSend({n:D.name,t:Math.max(500,t),pen},{},`${D.code}-R${R}`);break}catch(e){await new Promise(z=>setTimeout(z,1200))}}
+    for(let i=0;i<4;i++){try{await sbSend({n:D.name,t:Math.max(500,t),pen},D.code===RKC?{[g]:Math.max(700,Math.round(t))}:{},`${D.code}-R${R}`);break}catch(e){await new Promise(z=>setTimeout(z,1200))}}
     if(DU===D){D.phase='';duT=setInterval(duTick,1200);duTick()}});return}
   const n=Math.ceil(rem/1000);if(n!==last){last=n;app.innerHTML=`<div class="scr" id="du"><div class="mid"><div class="c mut">Runde ${R}/${r.stages.g.length} · ${STG[g].emoji} ${STG[g].name}</div><div class="c mut">Gemeinsamer Start in …</div><div class="cd">${n}</div></div></div>`;sfx('cd')}};
  tk();iv=setInterval(tk,100)}
@@ -924,7 +924,7 @@ function duUpdate(){if(!DU||!DU.room)return;const pl=document.getElementById('pl
 /* ===== Rekorde: lokal (dieses Gerät) oder online (alle Spieler, gleiche Supabase-Tabelle) ===== */
 let ONL=[],WK=[],ONLERR='';
 const RR=()=>ONL;
-async function sbAll(){const r=await fx(DB.sb.url+'/rest/v1/results?select=code,name,total_ms,games,created_at&order=created_at.desc&limit=1000',{headers:{apikey:DB.sb.key}});if(!r.ok)throw new Error(r.status);
+async function sbAll(){const r=await fx(DB.sb.url+'/rest/v1/results?rk=eq.true&select=code,name,total_ms,games,created_at&order=created_at.desc&limit=1000',{headers:{apikey:DB.sb.key}});if(!r.ok)throw new Error(r.status);
  return(await r.json()).reverse().filter(x=>x.code!=='ARCADE-SOLO').filter(x=>x.total_ms>=700).map(x=>{const g={};Object.entries(x.games||{}).forEach(([k,v])=>{if(typeof v==='number'&&v>=700)g[k]=v});return{n:x.name,t:x.total_ms,d:String(x.created_at).slice(0,10),g,c:Object.keys(g).length}}).filter(x=>x.c>0)}
 async function sbBest(days){const r=await rpc('best_times',{p_days:days});if(!Array.isArray(r))throw new Error('rpc');return r.map(x=>({n:x.n,t:x.ms,d:x.d,g:{[x.g]:x.ms},c:1,team:x.t||''}))}
 const teamChamp=R=>{const m={};R.forEach(x=>{Object.entries(x.g||{}).forEach(([k,t])=>{const o=m[k];if(!o||t<o.t)m[k]={team:x.team,t}})});const c={};Object.values(m).forEach(o=>{if(o.team)c[o.team]=(c[o.team]||0)+1});return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,5)};
@@ -955,7 +955,7 @@ function gboard(back){
  const champ=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,5),wk=champOf(flt(WK)),TM={},tmAll=teamChamp(R),tmWk=teamChamp(flt(WK));R.forEach(x=>{if(x.team)TM[x.n]=x.team});
  const row=(i,n,t,sub)=>`<div class="rk${i==0?' w':''}" style="margin-top:6px;padding:8px 12px"><span>${med[i]||i+1+'.'}</span><b>${(avOf(n.split(' · ')[0])?avOf(n.split(' · ')[0])+' ':'')+esc(n)}</b><span>${sub||f3(t)}</span></div>`;
  const pod=L=>L.length<2?'':`<div class="pod">${[1,0,2].filter(i=>L[i]).map(i=>`<div class="p${i+1}"><div class="e">${med[i]}</div><b>${esc(L[i][0])}</b><span class="mut">${L[i][1]} 🏅</span></div>`).join('')}</div>`;
- app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🏆 Bestenlisten</h2>${srcBar()}
+ app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🏆 Bestenlisten</h2><div class="mut" style="font-size:13px">Online-Rekorde zählen nur aus Ranked-Partien.</div>${srcBar()}
  <div style="display:flex;gap:8px"><button class="btn sm" id="g0" style="flex:1">👑 Champions</button><button class="btn sm" id="g1" style="flex:1">🎮 Pro Spiel</button></div>
  ${DB.acct?`<button class="btn ghost sm" id="gf">${FF?'👥 Nur Freunde – tippen für Alle':'🌍 Alle Spieler – tippen für Freunde'}</button>`:''}<div id="gc"></div>
  <div class="tb"><button class="btn ghost sm" id="bt">⬅ Zurück</button><button class="btn ghost sm" id="rt">🔄 Aktualisieren</button></div></div>`;
@@ -963,7 +963,7 @@ function gboard(back){
  const champs=()=>{$('#gc').innerHTML=`<div class="card" id="ssn" style="padding:12px;margin-top:8px"></div><h3 style="margin:12px 0 2px">🏆 Wochen-Champion</h3><div class="mut">Meiste Bestzeiten der letzten 7 Tage</div>
   ${wk.length?pod(wk.slice(0,3))+wk.slice(3,5).map(([n,c],i)=>row(i+3,n+(TM[n]?' · '+TM[n]:''),0,c+' 🏅')).join(''):'<div class="mut" style="margin-top:6px">Diese Woche noch keine Zeiten – wer holt sich die Krone?</div>'}
   <h3 style="margin:16px 0 2px">👑 Gesamt-Rekordhalter</h3><div class="mut">Meiste Spiele mit Bestzeit aller Zeiten</div>
-  ${champ.length?champ.map(([n,c],i)=>row(i,n+(TM[n]?' · '+TM[n]:''),0,c+' 🏅')).join(''):'<div class="mut" style="margin-top:6px">Noch keine Daten – spielt eine Runde!</div>'}
+  ${champ.length?champ.map(([n,c],i)=>row(i,n+(TM[n]?' · '+TM[n]:''),0,c+' 🏅')).join(''):'<div class="mut" style="margin-top:6px">Noch keine Rekorde – sie entstehen in Ranked-Partien!</div>'}
   <h3 style="margin:16px 0 2px">🏢 Team-Wertung</h3><div class="mut">Welches Team hält die meisten Spiel-Rekorde?</div>
   ${tmAll.length?tmAll.map(([n,c],i)=>row(i,n,0,c+' 🏅')).join(''):'<div class="mut" style="margin-top:6px">Noch keine Teams – trag dein Team unter 👤 Profil ein.</div>'}
   ${tmWk.length?'<div class="mut" style="margin-top:10px">Diese Woche:</div>'+tmWk.slice(0,3).map(([n,c],i)=>row(i,n,0,c+' 🏅')).join(''):''}`};
@@ -991,7 +991,7 @@ function help(){
  <b>👤 Profil:</b> Tippe oben rechts auf deinen Namen: Serie, Team 🏢 und deine Bestzeiten.<br>
  <b>📳 Ton-Knopf:</b> wechselt zwischen Ton + Vibration, nur Vibration und stumm.<br>
  <b>🕹️ Arcade:</b> Spiele einzeln üben (Zeiten kommen nicht in die Bestenliste).<br>
- <b>🏆 Bestenlisten:</b> Beste Zeiten pro Spiel, online.<br><br>
+ <b>🏆 Bestenlisten:</b> Online-Rekorde pro Spiel – sie zählen ausschließlich aus <i>Ranked</i>-Partien. Arcade-Bestzeiten bleiben auf deinem Gerät.<br><br>
  <b>📲 App:</b> <a href="#" id="hin" style="color:var(--cyan)">So installierst du BLITZBRAIN als App</a><br><br>
  Alle Spiele laufen ohne Farben. Der Ton lässt sich unten ein- und ausschalten.</div>${bar('⬅ Zurück')}</div>`;
  $('#bt').onclick=menu;$('#hin').onclick=e=>{e.preventDefault();installHelp()};
@@ -1640,7 +1640,7 @@ setTimeout(()=>{if(DB.notif&&DB.acct)pushOn()},5000);
 try{const h=decodeURIComponent((location.hash||'').slice(1));if(h&&/^DUELL-[A-Z0-9]{4}$/i.test(h))duelOnline(h.slice(6).toUpperCase());else if(h&&(dec(h)||/^RAUM-[A-Z0-9]{4,8}$/i.test(h)))fern(h);else if(h&&/^FFA-[A-Z0-9]{4,8}$/i.test(h))ffaHub(h)}catch(e){}
 try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&location.hostname.endsWith('github.io'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-10-4';let updPend=null,updT=0;
+const BBV='2026-11-10-5';let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;font-weight:800;text-align:center';
