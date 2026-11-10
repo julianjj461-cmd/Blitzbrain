@@ -76,6 +76,8 @@ body{background:radial-gradient(120% 80% at 50% 0,var(--g1),var(--g2) 70%) fixed
 .cdr{position:relative;width:min(70vw,300px);aspect-ratio:1;margin:0 auto;display:flex;align-items:center;justify-content:center}.cdr svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}.cdr circle{fill:none;stroke:var(--yel);stroke-width:5;stroke-linecap:round;stroke-dasharray:289;animation:cdring 1s linear both}.cdr.last circle{stroke:var(--pink)}.cdr .cd{font-size:clamp(90px,34vw,150px);text-shadow:5px 5px 0 var(--pink)}@keyframes cdring{from{stroke-dashoffset:0}to{stroke-dashoffset:289}}
 @media (prefers-reduced-motion:reduce){#fl,#app.shk,.cdr circle{animation:none!important}}
 .fcard{flex:1;display:flex;flex-direction:column;min-height:0}.fsyms{flex:1;align-content:stretch;grid-auto-rows:1fr}.fsyms>span,.fsyms>button{font-size:clamp(44px,15vw,68px);display:flex;align-items:center;justify-content:center}
+.tabs{gap:2px;padding:8px 8px calc(10px + env(safe-area-inset-bottom,0px))}.tabs button{flex:1;border:0;background:none;color:var(--mut);font:800 10.5px system-ui;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0 6px;border-radius:14px;touch-action:manipulation;position:relative;white-space:nowrap}.tabs button span{font-size:22px;line-height:1}.tabs button.on{color:#fff;background:rgba(255,255,255,.14)}.tabs .dot{position:absolute;top:1px;left:calc(50% + 6px);background:var(--pink);color:#fff;border-radius:10px;font:900 10px system-ui;min-width:16px;padding:1px 4px;font-style:normal}
+.hd{display:flex;align-items:center;gap:10px}.hd h2{flex:0 1 auto;min-width:0}.hd h2.ar{border-left:0;padding-left:0;border-bottom:4px solid var(--ac,#fff);padding-bottom:2px}.hd .sp{flex:1}.bk{flex:none;width:40px;height:40px;margin-top:6px;border:0;border-radius:14px;background:rgba(255,255,255,.14);color:#fff;font:900 24px/1 system-ui;touch-action:manipulation}.bk:active{transform:scale(.94)}
 .banner{font:900 26px system-ui;text-align:center;color:var(--yel);animation:pop .5s}
 .rk{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.1);font-weight:800}
 .rk.w{background:linear-gradient(90deg,#ffd23f,#ff9f1c);color:#2a1166}
@@ -700,13 +702,13 @@ async function rankedSeason(){const e=()=>document.getElementById('rss'),S0=seas
   const hl=await rpc('elo_hall',{p_name:DB.acct.name});if(Array.isArray(hl)){if((DB.rkc||0)!==hl.length){DB.rkc=hl.length;save()}if(hl.length)h+=`<div style="margin-top:6px">👑 Du warst ${hl.length}× in den Top 3!</div>`}
   if(e())e().innerHTML=h}catch(x){}}
 async function rankedHub(){if(needAcct(rankedHub))return;
- app.innerHTML=`<div class="scr"><h2 class="ar" style="margin:6px 0 0;--ac:#ff9a3d">🏆 Ranked</h2><div class="mut">Zufälliger Gegner · 3 Spiele · wer schneller ist, gewinnt Elo.</div>
+ app.innerHTML=`<div class="scr"><div class="hd"><button class="bk" id="bt" aria-label="Zurück">‹</button><h2 class="ar" style="margin:6px 0 0;--ac:#ff9a3d">🏆 Ranked</h2></div><div class="mut">Zufälliger Gegner · 3 Spiele · wer schneller ist, gewinnt Elo.</div>
  <div class="card c" id="rme" style="padding:14px"><span class="mut">Lade deinen Rang …</span></div>
  <div class="card c" id="rss" style="padding:10px;font-size:14px"></div>
  <button class="btn pink glow" id="rgo" style="padding:22px">🔍 MATCH SUCHEN<br><small style="font-weight:700;opacity:.9">Du wirst jemandem mit ähnlicher Elo zugelost</small></button>
  <h3 style="margin:6px 0 0">Bestenliste</h3><div id="rtop" class="mut">Lade …</div>
  <details class="card" style="padding:12px"><summary style="cursor:pointer"><b>ℹ️ So funktioniert Ranked</b></summary><div class="mut" style="margin-top:8px;line-height:1.6">Start bei 1000 Elo. Gegen stärkere Gegner gibt es mehr Punkte. Ligen: 🥉 Bronze unter 950 · 🥈 Silber · 🥇 Gold ab 1100 · 💎 Diamant ab 1250. Gegen denselben Gegner zählen höchstens 3 Duelle pro 24 Stunden. Wer 95 Sekunden nach dem Gegner nicht weiterspielt, verliert.</div></details>
- ${bar('⬅ Hauptmenü')}</div>`;
+ ${tabBar('play')}</div>`;
  $('#rgo').onclick=()=>randGo(rankedHub);$('#bt').onclick=menu;
  rankedSeason();
  (async()=>{try{const L=await rpc('elo_rank',{p_name:DB.acct.name}),e=document.getElementById('rme');if(!e)return;
@@ -716,19 +718,19 @@ async function rankedHub(){if(needAcct(rankedHub))return;
 }
 function randGo(back){back=typeof back=='function'?back:menu;ac();if(needAcct(()=>randGo(back)))return;duelRandom(DB.acct.name,3,back)}
 function duelHub(){
- app.innerHTML=`<div class="scr"><h2 class="ar" style="margin:6px 0 0;--ac:#8be02e">🥊 1v1-Duell</h2><div class="mut">Zwei Spieler, jede Runde ein anderes Spiel – wer schneller ist, holt den Punkt.</div>
- <div class="mid" style="justify-content:flex-start;padding-top:6px">${hubBtn('h2','🌍','Mit Freund / Code','Duell eröffnen oder per Code beitreten','')}${hubBtn('h1','📱','Ein Handy','Reihum am selben Gerät','background:linear-gradient(180deg,#b9ff6b,#8be02e);box-shadow:0 6px 0 #4c8a0e')}<button class="btn ghost sm" id="h3">📊 Duell-Bilanz</button></div>${bar('⬅ Hauptmenü')}</div>`;
+ app.innerHTML=`<div class="scr"><div class="hd"><button class="bk" id="bt" aria-label="Zurück">‹</button><h2 class="ar" style="margin:6px 0 0;--ac:#8be02e">🥊 1v1-Duell</h2></div><div class="mut">Zwei Spieler, jede Runde ein anderes Spiel – wer schneller ist, holt den Punkt.</div>
+ <div class="mid" style="justify-content:flex-start;padding-top:6px">${hubBtn('h2','🌍','Mit Freund / Code','Duell eröffnen oder per Code beitreten','')}${hubBtn('h1','📱','Ein Handy','Reihum am selben Gerät','background:linear-gradient(180deg,#b9ff6b,#8be02e);box-shadow:0 6px 0 #4c8a0e')}<button class="btn ghost sm" id="h3">📊 Duell-Bilanz</button></div>${tabBar('play')}</div>`;
  $('#h1').onclick=duelSetup;$('#h2').onclick=()=>duelOnline();$('#h3').onclick=()=>duelStats();$('#bt').onclick=menu;
 
 }
 function duelSetup(){
  let n=DB.vr||5;const nm=DB.vn||[DB.names[0]||'',DB.names[1]||''];
- app.innerHTML=`<div class="scr"><h2 class="ar" style="margin:6px 0 0;--ac:#8be02e">🥊 1v1-Duell</h2><div class="mut">Zwei Spieler, ein Handy. Jede Runde ein anderes Spiel – wer schneller ist, holt den Punkt.</div>
+ app.innerHTML=`<div class="scr"><div class="hd"><button class="bk" id="bt" aria-label="Zurück">‹</button><h2 class="ar" style="margin:6px 0 0;--ac:#8be02e">🥊 1v1-Duell</h2></div><div class="mut">Zwei Spieler, ein Handy. Jede Runde ein anderes Spiel – wer schneller ist, holt den Punkt.</div>
  <div class="pl"><input id="v1" maxlength="14" placeholder="Spieler 1" value="${esc(nm[0])}" autocomplete="off"></div>
  <div class="pl"><input id="v2" maxlength="14" placeholder="Spieler 2" value="${esc(nm[1])}" autocomplete="off"></div>
  <div class="c mut">Wie viele Runden?</div>
  <div class="row" id="vr">${[1,3,5,7,10].map(r=>`<button class="btn ghost sm" data-r="${r}"></button>`).join('')}</div>
- <button class="btn pink" id="go">LOS GEHT'S ⚡</button>${bar()}</div>`;
+ <button class="btn pink" id="go">LOS GEHT'S ⚡</button>${tabBar('play')}</div>`;
  const mark=()=>app.querySelectorAll('#vr .btn').forEach(b=>{const on=+b.dataset.r===n;b.textContent=(on?'✔ ':'')+b.dataset.r;b.style.outline=on?'3px solid #fff':'none'});mark();
  $('#vr').onclick=e=>{const r=e.target.dataset.r;if(r){n=+r;sfx('ok');mark()}};
  $('#bt').onclick=duelHub;
@@ -801,7 +803,7 @@ const duStop=()=>{clearInterval(duT);duT=0};
 const duCode=c=>{c=String(c).trim().toUpperCase().replace(/^DUELL-/,'');return c.length==4?'1'+c:c};
 function duelOnline(pre=''){duStop();DU=null;if(needAcct(duelOnline,pre))return;
  let n=DB.vr||5;
- app.innerHTML=`<div class="scr"><h2 class="ar" style="margin:6px 0 0;--ac:#8be02e">🌍 1v1 Online</h2><div class="mut">Jeder spielt am eigenen Handy. Der Start ist für beide gleichzeitig.</div>
+ app.innerHTML=`<div class="scr"><div class="hd"><button class="bk" id="bt" aria-label="Zurück">‹</button><h2 class="ar" style="margin:6px 0 0;--ac:#8be02e">🌍 1v1 Online</h2></div><div class="mut">Jeder spielt am eigenen Handy. Der Start ist für beide gleichzeitig.</div>
  ${nameField()}
  <h3 style="margin:4px 0 0">Neues Duell eröffnen</h3>
  <div class="c mut">Wie viele Runden?</div>
@@ -809,7 +811,7 @@ function duelOnline(pre=''){duStop();DU=null;if(needAcct(duelOnline,pre))return;
  <button class="btn pink" id="dmk">✨ Duell eröffnen</button>
  <h3 style="margin:8px 0 0">Einem Duell beitreten</h3>
  <div class="pl"><input id="dcd" maxlength="9" placeholder="Duell-Code, z. B. K7P2" value="${esc(pre)}" autocomplete="off" autocapitalize="characters" style="text-transform:uppercase;letter-spacing:2px"></div>
- <button class="btn" id="djn">▶ Beitreten</button><div class="hint" id="er"></div>${bar()}</div>`;
+ <button class="btn" id="djn">▶ Beitreten</button><div class="hint" id="er"></div>${tabBar('play')}</div>`;
  const mark=()=>app.querySelectorAll('#vr .btn').forEach(b=>{const on=+b.dataset.r===n;b.textContent=(on?'✔ ':'')+b.dataset.r;b.style.outline=on?'3px solid #fff':'none'});mark();
  $('#vr').onclick=e=>{const r=e.target.dataset.r;if(r){n=+r;DB.vr=n;save();sfx('ok');mark()}};
  $('#bt').onclick=duelHub;
@@ -965,10 +967,10 @@ function gboard(back){
  const champ=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,5),wk=champOf(flt(WK)),TM={},tmAll=teamChamp(R),tmWk=teamChamp(flt(WK));R.forEach(x=>{if(x.team)TM[x.n]=x.team});
  const row=(i,n,t,sub)=>`<div class="rk${i==0?' w':''}" style="margin-top:6px;padding:8px 12px"><span>${med[i]||i+1+'.'}</span><b>${(avOf(n.split(' · ')[0])?avOf(n.split(' · ')[0])+' ':'')+esc(n)}</b><span>${sub||f3(t)}</span></div>`;
  const pod=L=>L.length<2?'':`<div class="pod">${[1,0,2].filter(i=>L[i]).map(i=>`<div class="p${i+1}"><div class="e">${med[i]}</div><b>${esc(L[i][0])}</b><span class="mut">${L[i][1]} 🏅</span></div>`).join('')}</div>`;
- app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🏆 Bestenlisten</h2><div class="mut" style="font-size:13px">Online-Rekorde zählen nur aus Ranked-Partien.</div>${srcBar()}
+ app.innerHTML=`<div class="scr"><div class="hd">${back===menu?'':'<button class="bk" id="bt" aria-label="Zurück">‹</button>'}<h2 style="margin:6px 0 0">🏆 Bestenlisten</h2><span class="sp"></span><button class="bk" id="rt" aria-label="Aktualisieren">🔄</button></div><div class="mut" style="font-size:13px">Online-Rekorde zählen nur aus Ranked-Partien.</div>${srcBar()}
  <div style="display:flex;gap:8px"><button class="btn sm" id="g0" style="flex:1">👑 Champions</button><button class="btn sm" id="g1" style="flex:1">🎮 Pro Spiel</button></div>
  ${DB.acct?`<button class="btn ghost sm" id="gf">${FF?'👥 Nur Freunde – tippen für Alle':'🌍 Alle Spieler – tippen für Freunde'}</button>`:''}<div id="gc"></div>
- <div class="tb"><button class="btn ghost sm" id="bt">⬅ Zurück</button><button class="btn ghost sm" id="rt">🔄 Aktualisieren</button></div></div>`;
+ ${tabBar('rec')}</div>`;
  const tabs=()=>[0,1].forEach(i=>{const b=$('#g'+i);b.className='btn sm'+(GTAB==i?'':' ghost');b.style.flex='1'});
  const champs=()=>{$('#gc').innerHTML=`<div class="card" id="ssn" style="padding:12px;margin-top:8px"></div><h3 style="margin:12px 0 2px">🏆 Wochen-Champion</h3><div class="mut">Meiste Bestzeiten der letzten 7 Tage</div>
   ${wk.length?pod(wk.slice(0,3))+wk.slice(3,5).map(([n,c],i)=>row(i+3,n+(TM[n]?' · '+TM[n]:''),0,c+' 🏅')).join(''):'<div class="mut" style="margin-top:6px">Diese Woche noch keine Zeiten – wer holt sich die Krone?</div>'}
@@ -987,10 +989,10 @@ function gboard(back){
  const show=()=>{tabs();GTAB?games(''):(champs(),seasonDraw())};
  $('#g0').onclick=()=>{GTAB=0;show()};$('#g1').onclick=()=>{GTAB=1;show()};show();
  if($('#gf'))$('#gf').onclick=()=>{FF=!FF;gboard(back)};
- $('#rt').onclick=()=>bestenlisten(back);$('#bt').onclick=back;
+ $('#rt').onclick=()=>bestenlisten(back);if($('#bt'))$('#bt').onclick=back;
 }
 /* ===== Startmenü & Arcade ===== */
-function help(){
+function help(back=menu){
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">❔ So geht's</h2>
  <div class="card" style="padding:14px;line-height:1.45;text-align:left">
  <b>Ziel:</b> Wer die Aufgaben am schnellsten löst, gewinnt. Jeder Fehler gibt <b>+1,5 s</b> Strafzeit. Alle bekommen dieselben Aufgaben.<br><br>
@@ -1003,8 +1005,8 @@ function help(){
  <b>🕹️ Arcade:</b> Spiele einzeln üben (Zeiten kommen nicht in die Bestenliste).<br>
  <b>🏆 Bestenlisten:</b> Online-Rekorde pro Spiel – sie zählen ausschließlich aus <i>Ranked</i>-Partien. Arcade-Bestzeiten bleiben auf deinem Gerät.<br><br>
  <b>📲 App:</b> <a href="#" id="hin" style="color:var(--cyan)">So installierst du BLITZBRAIN als App</a><br><br>
- Alle Spiele laufen ohne Farben. Der Ton lässt sich unten ein- und ausschalten.</div>${bar('⬅ Zurück')}</div>`;
- $('#bt').onclick=menu;$('#hin').onclick=e=>{e.preventDefault();installHelp()};
+ Alle Spiele laufen ohne Farben. Der Ton lässt sich unter ⚙️ Einstellungen ein- und ausschalten.</div>${bar('⬅ Zurück')}</div>`;
+ $('#bt').onclick=back;$('#hin').onclick=e=>{e.preventDefault();installHelp()};
 }
 const AVS=['🦊','🐙','🚀','🐲','🦄','🐼','🐸','🦁','🐧','🦉','🐝','🦖','🐳','🦋','🐢','🐯','🦈','🐨','🐵','🦩','🐺','🦔','👻','🤖'];let AV={},avT=0;
 async function avLoad(force){if(!force&&Date.now()-avT<60000)return;avT=Date.now();try{const r=await rpc('get_avatars',{});if(Array.isArray(r)){AV={};r.forEach(x=>AV[x.k]=x.a)}}catch(e){}}
@@ -1030,21 +1032,39 @@ function daily(){S.code=null;S.room=null;if(needAcct(daily,''))return;const D=da
  (async()=>{let h;try{const rows=await sbGet(D.code),b={};rows.forEach(x=>{if(!b[x.name]||x.total_ms<b[x.name].total_ms)b[x.name]=x});const L=Object.values(b).sort((x,y)=>x.total_ms-y.total_ms).slice(0,3),med=['🥇','🥈','🥉'];
   h=L.length?L.map((x,i)=>`<div class="rk${i==0?' w':''}"><span>${med[i]}</span><b>${esc(x.name)}</b><span>${f3(x.total_ms)}</span></div>`).join(''):'Noch niemand – sei der Erste!'}catch(e){h='⚠️ Nicht erreichbar.'}
   const el=document.getElementById('dtop');if(el)el.innerHTML=h})()}
+/* ===== Untere Leiste (Reiter): Spielen · Rekorde · Freunde · Profil · Einstellungen ===== */
+const TABS=[['play','🎮','Spielen',()=>menu()],['rec','🏆','Rekorde',()=>bestenlisten(menu)],['fr','👥','Freunde',()=>friendsScreen()],['pr','👤','Profil',()=>profile()],['st','⚙️','Einstellungen',()=>settings()]];
+const tabBar=a=>`<div class="tb tabs">${TABS.map(([k,e,n])=>`<button data-tab="${k}" class="${k===a?'on':''}" aria-label="${n}"><span>${e}</span>${n}${k==='fr'&&IB.length?`<i class="dot">${IB.length}</i>`:''}</button>`).join('')}</div>`;
+const hdBack=(h2,extra='')=>`<div class="hd"><button class="bk" id="bt" aria-label="Zurück">‹</button>${h2}${extra}</div>`;
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-tab]');if(!b)return;const t=TABS.find(x=>x[0]===b.dataset.tab);if(t){ac();t[3]()}});
+function settings(){
+ const adm=DB.acct&&skey(DB.acct.name)==='admin',nm0=DB.acct?DB.acct.name:'',sk=nm0?streakNow(nm0):{n:0},best=nm0?((DB.streak&&DB.streak[skey(nm0)]||{}).best||sk.n):0;
+ app.innerHTML=`<div class="scr"><h2 class="ar" style="margin:6px 0 0;--ac:#b9a9f5">⚙️ Einstellungen</h2>
+ <div class="card" style="padding:12px"><b>🔊 Ton & Musik</b><div class="row" style="margin-top:8px"><button class="btn ghost sm" id="smu"></button><button class="btn ghost sm" id="ssd"></button></div></div>
+ <div class="card" style="padding:12px"><b>🎨 Farbthema</b><div id="thg" style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">${Object.entries(THM).map(([k,t])=>`<button class="btn ghost sm vb${(THM[DB.thm]&&thmOk(DB.thm)?DB.thm:'std')==k?' sel':''}" data-t="${k}" style="flex:1;width:auto;padding:8px 6px;min-width:70px">${thmOk(k)?t.e+' '+t.n:'🔒 '+t.u+' Tage'}</button>`).join('')}</div><div class="hint" id="thh" style="margin-top:8px">Themen schaltest du mit deiner Tagesserie frei (Rekord: ${best} Tage).</div></div>
+ <div class="card" style="padding:12px"><b>📲 App & Mitteilungen</b><button class="btn ghost sm" id="pin" style="margin-top:8px">📲 Als App installieren</button><button class="btn ghost sm" id="dnd" style="margin-top:8px">${DB.dnd?'🌙 Ruhe-Modus an – tippen zum Ausschalten':'🌙 Ruhe-Modus (keine Einladungs-Banner)'}</button><button class="btn ghost sm" id="pnf" style="margin-top:8px">${DB.notif?'🔔 Mitteilungen an – tippen zum Ausschalten':'🔕 Mitteilungen bei Einladungen einschalten'}</button><div class="hint">Mitteilungen kommen nur an, solange die App im Hintergrund noch läuft – echte Push-Nachrichten bei geschlossener App gibt es (noch) nicht.</div></div>
+ <button class="btn ghost" id="shp">❔ So geht's</button>${adm?'<button class="btn ghost" id="sad">🛠️ Admin-Bereich</button>':''}${DB.acct?'<button class="btn ghost" id="po">🚪 Abmelden</button>':'<button class="btn" id="sln">👤 Anmelden</button>'}
+ <div class="c mut" style="font-size:12px">BLITZBRAIN v${BVN}</div>${tabBar('st')}</div>`;
+ const lab=()=>{$('#smu').textContent=DB.mus?'🎵 Musik an':'🔕 Musik aus';$('#ssd').textContent=DB.snd?'🔊 Ton an':DB.vib===false?'🔇 Stumm':'📳 Nur Vibration'};lab();
+ $('#smu').onclick=()=>{ac();DB.mus=!DB.mus;save();lab()};
+ $('#ssd').onclick=()=>{ac();if(DB.snd){DB.snd=false;DB.vib=true}else if(DB.vib!==false){DB.vib=false}else{DB.snd=true;DB.vib=true}save();lab();sfx('ok')};
+ $('#shp').onclick=()=>help(settings);if($('#sad'))$('#sad').onclick=adminScreen;if($('#sln'))$('#sln').onclick=()=>loginScreen(settings);
+ if($('#po'))$('#po').onclick=()=>{DB.acct=null;DB.sess=null;save();menu()};
+  document.querySelectorAll('#thg button').forEach(b=>b.onclick=()=>{const k=b.dataset.t;if(!thmOk(k)){$('#thh').textContent='🔒 Noch gesperrt – spiel die Tagesaufgabe '+THM[k].u+' Tage in Folge.';return}
+  DB.thm=k;save();applyTheme();document.querySelectorAll('#thg button').forEach(x=>x.classList.toggle('sel',x.dataset.t==k))});
+$('#pin').onclick=installHelp;$('#pnf').onclick=()=>notifToggle($('#pnf'));$('#dnd').onclick=()=>{DB.dnd=!DB.dnd;save();$('#dnd').textContent=DB.dnd?'🌙 Ruhe-Modus an – tippen zum Ausschalten':'🌙 Ruhe-Modus (keine Einladungs-Banner)'};
+}
 async function profile(){if(!DB.acct){loginScreen(profile);return}await Promise.race([eloLoad(),new Promise(z=>setTimeout(z,800))]);
  const nm=DB.acct.name,sk=streakNow(nm),best=(DB.streak&&DB.streak[skey(nm)]||{}).best||sk.n;
- app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0"><span style="border-radius:50%;display:inline-block${ring(nm)}">${DB.av||'👤'}</span> ${esc(nm)}</h2>
+ app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0"><span style="border-radius:50%;display:inline-block${ring(nm)}">${DB.av||'👤'}</span> ${esc(nm)}</h2>${(()=>{const r=ELM[skey(nm)];if(r==null)return'';const lg=league(r);return`<div class="chips"><span class="chip">${lg.e} ${lg.n} · ${r} Elo</span></div>`})()}
  <div class="card" style="padding:12px"><b>🔥 Tagesserie</b><div style="margin-top:4px">${streakTxt(sk)}${sk.n?(sk.today?' ✔ heute gespielt':' – heute noch spielen!'):''}</div><div class="mut" style="margin-top:2px">Rekord: ${best} Tage · 🥉 ab 3 · 🥈 ab 7 · 🥇 ab 30</div></div>
  <div class="card" style="padding:12px"><b>🙂 Avatar</b><div id="avg" style="display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-top:8px">${AVS.map(a=>`<button class="btn ghost sm vb${DB.av===a?' sel':''}" data-a="${a}" style="padding:6px 0;font-size:22px;width:auto;flex:none">${a}</button>`).join('')}</div><div class="hint" id="avh"></div></div>
- <div class="card" style="padding:12px"><b>🎨 Farbthema</b><div id="thg" style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">${Object.entries(THM).map(([k,t])=>`<button class="btn ghost sm vb${(THM[DB.thm]&&thmOk(DB.thm)?DB.thm:'std')==k?' sel':''}" data-t="${k}" style="flex:1;width:auto;padding:8px 6px;min-width:70px">${thmOk(k)?t.e+' '+t.n:'🔒 '+t.u+' Tage'}</button>`).join('')}</div><div class="hint" id="thh" style="margin-top:8px">Themen schaltest du mit deiner Tagesserie frei (Rekord: ${best} Tage).</div></div>
  <div class="card" style="padding:12px"><b>🏢 Team</b><div class="pl" style="margin-top:6px"><input id="tm" maxlength="12" list="tml" placeholder="z. B. Drachen (leer = kein Team)" value="${esc(DB.team||'')}" autocomplete="off"><datalist id="tml"></datalist></div><button class="btn sm" id="tms" style="margin-top:8px">💾 Team speichern</button><div class="hint" id="tmh"></div></div>
  <div id="bwrap">${badgesCard()}</div>
- <div class="card" style="padding:12px"><b>📲 App & Mitteilungen</b><button class="btn ghost sm" id="pin" style="margin-top:8px">📲 Als App installieren</button><button class="btn ghost sm" id="dnd" style="margin-top:8px">${DB.dnd?'🌙 Ruhe-Modus an – tippen zum Ausschalten':'🌙 Ruhe-Modus (keine Einladungs-Banner)'}</button><button class="btn ghost sm" id="pnf" style="margin-top:8px">${DB.notif?'🔔 Mitteilungen an – tippen zum Ausschalten':'🔕 Mitteilungen bei Einladungen einschalten'}</button><div class="hint">Mitteilungen kommen nur an, solange die App im Hintergrund noch läuft – echte Push-Nachrichten bei geschlossener App gibt es (noch) nicht.</div></div>
  <div class="card" style="padding:12px"><b>🏆 Meine Bestzeiten</b><div id="pb" class="mut" style="margin-top:6px">Lade …</div></div>
- <button class="btn ghost" id="pd">📊 Duell-Bilanz</button><button class="btn ghost" id="po">🚪 Abmelden</button>${bar('⬅ Zurück')}</div>`;
- $('#bt').onclick=menu;$('#pd').onclick=()=>duelStats(profile);$('#po').onclick=()=>{DB.acct=null;DB.sess=null;save();menu()};
- bindBdg();$('#pin').onclick=installHelp;$('#pnf').onclick=()=>notifToggle($('#pnf'));$('#dnd').onclick=()=>{DB.dnd=!DB.dnd;save();$('#dnd').textContent=DB.dnd?'🌙 Ruhe-Modus an – tippen zum Ausschalten':'🌙 Ruhe-Modus (keine Einladungs-Banner)'};
- document.querySelectorAll('#thg button').forEach(b=>b.onclick=()=>{const k=b.dataset.t;if(!thmOk(k)){$('#thh').textContent='🔒 Noch gesperrt – spiel die Tagesaufgabe '+THM[k].u+' Tage in Folge.';return}
-  DB.thm=k;save();applyTheme();document.querySelectorAll('#thg button').forEach(x=>x.classList.toggle('sel',x.dataset.t==k))});
+ <button class="btn ghost" id="pd">📊 Duell-Bilanz</button>${tabBar('pr')}</div>`;
+ $('#pd').onclick=()=>duelStats(profile);
+ bindBdg();
  document.querySelectorAll('#avg button').forEach(b=>b.onclick=async()=>{const a=b.dataset.a,nw=DB.av===a?'':a,h=document.getElementById('avh');h.textContent='Speichere …';
   try{const r=await rpc('set_avatar',{p_name:DB.acct.name,p_pin:DB.acct.pin,p_avatar:nw});if(r==='ok'){DB.av=nw;AV[skey(DB.acct.name)]=nw;save();document.querySelectorAll('#avg button').forEach(x=>x.classList.toggle('sel',x.dataset.a===nw));h.textContent=nw?'✔ Avatar gespeichert':'✔ Avatar entfernt';const t=document.querySelector('h2');if(t)t.textContent=(nw||'👤')+' '+DB.acct.name}else h.textContent='❌ Anmeldung prüfen (PIN).'}
   catch(e){h.textContent=e.status==404?'⚠️ Avatar-Funktion fehlt noch in Supabase (SQL einrichten).':'⚠️ Server nicht erreichbar.'}});
@@ -1116,7 +1136,7 @@ function applyTheme(){const k=THM[DB.thm]&&thmOk(DB.thm)?DB.thm:'std',t=THM[k],s
 let FRG='',NBK=null,FR=[],IB=[],FF=false,FRD='',FSEL=null;const isOn=f=>f.s!=null&&f.s<120;const IBSEEN=new Set();
 async function frLoad(){if(!DB.acct){FR=[];return}try{const r=await rpc('friends_list',{p_name:DB.acct.name,p_pin:DB.acct.pin});FR=Array.isArray(r)?r:[];DB.frN=FR.length}catch(e){}}
 async function ibLoad(){if(!DB.acct){IB=[];ibBadge();return}try{const r=await rpc('inbox_list',{p_name:DB.acct.name,p_pin:DB.acct.pin});IB=Array.isArray(r)?r:[];ibBadge();ibBanner()}catch(e){}}
-function ibBadge(){const b=document.getElementById('ib');if(b)b.textContent=IB.length?'📬 '+IB.length:'👥'}
+function ibBadge(){const b=document.querySelector('.tabs [data-tab=fr]');if(!b)return;let d=b.querySelector('.dot');if(IB.length){if(!d){d=document.createElement('i');d.className='dot';b.append(d)}d.textContent=IB.length}else if(d)d.remove()}
 const isBusy=()=>!!document.querySelector('.play,#du,#rm,.cd');
 function ibBanner(){
  if(DB.dnd)return;
@@ -1137,8 +1157,8 @@ async function joinPayload(p){ac();NBK=menu;const nm=DB.acct.name,msg=t=>{const 
  try{if(/^DUELL-[A-Z0-9]{4}$/i.test(p)){const pk=await api('GET',`picks?code=eq.${duCode(p.slice(6))}&select=name`);if(!pk.length)throw Object.assign(new Error('nf'),{nf:true});await duJoin(duCode(p.slice(6)),nm,true)}else if(/^RAUM-/i.test(p))await roomJoin(p,nm);else if(/^FFA-/i.test(p))await ffaJoin(p);else if(dec(p)){S.fi=1;fernIntro(nm,p,false)}else fern(p)}
  catch(e){msg(e.nf?'❌ Diese Einladung ist abgelaufen oder das Spiel gibt es nicht mehr.':e.full?'❌ Dort ist schon alles voll.':'❌ Beitritt nicht möglich – versuch es nochmal.')}}
 async function friendsScreen(back=menu){if(!DB.acct){loginScreen(()=>friendsScreen(back));return}
- app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">👥 Freunde</h2><div id="fr" class="c mut">Lade …</div><div class="tb"><button class="btn ghost sm" id="bt">⬅ Zurück</button></div></div>`;
- $('#bt').onclick=()=>{menu()};await Promise.all([frLoad(),ibLoad(),eloLoad()]);frDraw(back);fdDraw()}
+ app.innerHTML=`<div class="scr"><div class="hd">${back===menu?'':'<button class="bk" id="bt" aria-label="Zurück">‹</button>'}<h2 style="margin:6px 0 0">👥 Freunde</h2></div><div id="fr" class="c mut">Lade …</div>${tabBar('fr')}</div>`;
+ if($('#bt'))$('#bt').onclick=()=>{back()};await Promise.all([frLoad(),ibLoad(),eloLoad()]);frDraw(back);fdDraw()}
 let FP=null,FPMSG='';
 function fpStop(){if(FP){clearInterval(FP.iv);FP=null}}
 async function fpCancel(msg){const x=FP;if(!x)return;fpStop();fpFloat();FPMSG=msg||'';
@@ -1215,15 +1235,13 @@ function onboard(i=0){const P=[['⚡','Schnell sein!','Mini-Spiele, die du so sc
  app.innerHTML=`<div class="scr"><div class="mid"><div class="big pop" style="font-size:90px">${e}</div><div class="big" style="font-size:clamp(30px,10vw,42px);color:var(--yel)">${t}</div><div class="c mut" style="font-size:17px">${x}</div><div class="dots" style="width:120px;margin-top:8px">${P.map((_,j)=>`<i class="${j==i?'on':j<i?'dn':''}"></i>`).join('')}</div></div><button class="btn pink" id="on">${i<2?'Weiter ➜':'Los geht’s 🚀'}</button><button class="btn ghost sm" id="os">Überspringen</button></div>`;
  const end=()=>{DB.seen=1;save();menu()};$('#on').onclick=()=>{ac();i<2?onboard(i+1):end()};$('#os').onclick=end}
 function menu(){NBK=null;S.fi=false;setTimeout(installNudge,1200);applyTheme();avLoad();ibLoad();S.code=null;S.room=null;S.daily=false;
- app.innerHTML=`<div class="scr"><div id="ver"></div><h1 class="logo">BLITZ<span>BRAIN</span></h1><div class="sub" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="white-space:nowrap">${POOL().length} Mini-Games</span><button class="btn ghost sm" id="ac" style="flex:none;width:auto;padding:6px 12px;font-size:13px"></button></div>
+ app.innerHTML=`<div class="scr"><div id="ver"></div><h1 class="logo">BLITZ<span>BRAIN</span></h1><div class="sub" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="white-space:nowrap">${POOL().length} Mini-Games</span>${DB.acct?'':'<button class="btn ghost sm" id="ac" style="flex:none;width:auto;padding:6px 12px;font-size:13px">👤 Anmelden</button>'}</div>
  <div class="mid" style="gap:12px"><button class="btn glow" id="mr" style="padding:22px 16px;background:linear-gradient(180deg,#ffb347,#ff7a18);box-shadow:0 7px 0 #a24a00;color:#fff;display:flex;align-items:center;gap:14px;text-align:left"><span style="font-size:42px;flex:none;line-height:1">🏆</span><span style="flex:1;min-width:0"><b style="display:block;font-size:28px;letter-spacing:1px">RANKED</b><small id="mrs" style="font-weight:800;opacity:.92;font-size:14px">Zufälliger Gegner · 3 Spiele · Elo</small></span><span style="font-size:30px;opacity:.6;flex:none">›</span></button>
  <div class="grid g3" style="gap:10px"><button class="btn mt" id="m4" style="background:linear-gradient(180deg,#b9ff6b,#8be02e);box-shadow:0 6px 0 #4c8a0e"><span>🥊</span><b>1v1-Duell</b><small>Mit Freund</small></button>
  <button class="btn mt pink" id="m1"><span>👥</span><b>Party</b><small>Gruppe &amp; Online</small></button>
  <button class="btn mt" id="m2"><span>🕹️</span><b>Arcade</b><small>Solo üben</small></button></div></div>
- <div class="tb"><button class="btn ghost sm" id="rec">🏆 Bestenlisten</button><button class="btn ghost sm" id="mus" style="flex:0 0 64px" aria-label="Musik"></button><button class="btn ghost sm" id="snd" style="flex:0 0 64px" aria-label="Sound"></button><button class="btn ghost sm" id="hp" style="flex:0 0 64px" aria-label="So geht's">❔</button></div></div>`;
- if(DB.acct&&skey(DB.acct.name)==='admin'){const sb=app.querySelector('.sub'),ac=$('#ac');if(sb&&ac){const b=document.createElement('button');b.className='btn ghost sm';b.id='adm';b.style.cssText='flex:none;width:auto;padding:6px 12px;font-size:13px';b.textContent='🛠️ Admin';sb.insertBefore(b,ac);b.onclick=adminScreen}}
+ ${tabBar('play')}</div>`;
  if(DB.acct){eloLoad().then(()=>{const r=ELM[skey(DB.acct.name)],e=document.getElementById('mrs');if(r!=null&&e){const lg=league(r);e.textContent=lg.e+' '+lg.n+' · '+r+' Elo'}})}
- const lab=()=>{$('#mus').textContent=DB.mus?'🎵':'🔕';$('#snd').textContent=DB.snd?'🔊':DB.vib===false?'🔇':'📳'};lab();
  const sv=DB.acct&&DB.sess&&Date.now()-DB.sess.ts<90*60*1000?DB.sess:null;
  if(sv){const mid=app.querySelector('.mid');if(mid){const b=document.createElement('button');b.className='btn ghost';b.id='rs';b.textContent='↩️ Zurück ins '+(sv.t=='du'?'Duell':'Raum')+' ('+sv.code.replace(/^1/,'')+')';mid.append(b);
   b.onclick=async()=>{ac();NBK=menu;b.textContent='Verbinde …';try{if(sv.t=='du')await duJoin(sv.code,sv.name,true);else await roomJoin(sv.code,sv.name)}catch(e){DB.sess=null;save();b.textContent='❌ Nicht mehr verfügbar'}}}}
@@ -1233,20 +1251,14 @@ function menu(){NBK=null;S.fi=false;setTimeout(installNudge,1200);applyTheme();a
  {const mid=app.querySelector('.mid');if(mid){const b=document.createElement('button'),sk=DB.acct?streakNow(DB.acct.name):null;b.className='btn'+(sk&&!sk.today?' glow':'');b.id='dly';
   b.style.cssText='padding:12px;background:linear-gradient(180deg,var(--c1),var(--c2));border:2px solid var(--yel);box-shadow:0 5px 0 var(--g2);color:#fff';
   b.innerHTML='📅 HEUTE · TAGESAUFGABE<br><small style="font-weight:700;opacity:.9">'+(sk?(sk.today?'✔ heute gespielt · ':'')+streakTxt(sk):'3 neue Spiele jeden Tag · jetzt anmelden')+'</small><br><small style="font-weight:700;color:var(--yel)">'+qLine()+'</small>';mid.prepend(b);b.onclick=()=>{ac();daily()}}}
- {const b=document.getElementById('ac');if(b){b.textContent=DB.acct?(DB.av||'👤')+' '+DB.acct.name:'👤 Anmelden';
-  b.onclick=()=>{ac();if(DB.acct)profile();else loginScreen(menu)};
-  if(DB.acct){const w=document.createElement('div'),ib=document.createElement('button');w.style.cssText='display:flex;gap:6px;flex:none';ib.className='btn ghost sm';ib.id='ib';ib.style.cssText='flex:none;width:auto;padding:6px 12px;font-size:14px';ib.textContent=IB.length?'📬 '+IB.length:'👥';ib.setAttribute('aria-label','Freunde und Postfach');ib.onclick=()=>{ac();friendsScreen()};b.replaceWith(w);w.append(ib,b)}}}
- $('#hp').onclick=help;
+ {const b=document.getElementById('ac');if(b)b.onclick=()=>{ac();loginScreen(menu)}}
  $('#m1').onclick=()=>{ac();partyHub()};$('#m2').onclick=()=>{ac();arcade()};$('#m4').onclick=()=>{ac();duelHub()};$('#mr').onclick=()=>{ac();rankedHub()};
- $('#rec').onclick=()=>{ac();bestenlisten(menu)};
- $('#mus').onclick=()=>{ac();DB.mus=!DB.mus;save();lab()};
- $('#snd').onclick=()=>{ac();if(DB.snd){DB.snd=false;DB.vib=true}else if(DB.vib!==false){DB.vib=false}else{DB.snd=true;DB.vib=true}save();lab();sfx('ok')};
 }
 function arcade(){
  if(!DB.arc)DB.arc={};
- app.innerHTML=`<div class="scr"><h2 class="ar" style="margin:6px 0 0;--ac:#ffd23f">🕹️ Arcade</h2><div class="mut">Tippe ein Spiel an und teste es solo. Die Bestzeit pro Spiel wird gespeichert.</div>
+ app.innerHTML=`<div class="scr"><div class="hd"><button class="bk" id="bt" aria-label="Zurück">‹</button><h2 class="ar" style="margin:6px 0 0;--ac:#ffd23f">🕹️ Arcade</h2></div><div class="mut">Tippe ein Spiel an und teste es solo. Die Bestzeit pro Spiel wird gespeichert.</div>
  <div class="grid g2" style="gap:10px;padding-bottom:12px">${POOL().map(k=>`<button class="card ar" data-k="${k}" style="border:0;color:#fff;text-align:center;padding:12px 6px;font:inherit;background:linear-gradient(180deg,var(--b2),var(--b1));box-shadow:0 4px 0 rgba(0,0,0,.3)"><div style="font-size:34px">${STG[k].emoji}</div><b>${STG[k].name}</b><div class="mut" style="font-size:12px;margin-top:2px">${DB.arc[k]?'🏅 '+f3(DB.arc[k]):'noch nicht gespielt'}</div></button>`).join('')}</div>
- <div class="tb"><button class="btn ghost sm" id="bt">⬅ Zurück</button></div></div>`;
+ ${tabBar('play')}</div>`;
  const t0=performance.now();app.querySelectorAll('.ar').forEach(b=>b.onclick=e=>{const r=$('.tb').getBoundingClientRect();if(performance.now()-t0<400||(e.clientY&&e.clientY>=r.top-6))return;sfx('ok');arcIntro(b.dataset.k)});
  $('#bt').onclick=menu;
 }
@@ -1320,10 +1332,10 @@ const FFO=['⭐','🌙','🔥','🍀'];
 let FFX=null;
 function ffaStop(){if(FFX){clearInterval(FFX.iv)}FFX=null}
 function ffaHub(pre=''){S.code=null;S.room=null;S.fi=false;if(needAcct(ffaHub,pre))return;ffaStop();
- app.innerHTML=`<div class="scr"><h2 class="ar" style="margin:6px 0 0;--ac:#3dffa0">🎪 Free-for-All</h2><div class="mut">Alle gegen alle, live am eigenen Handy – 2 bis 10 Spieler. Wer am schnellsten oder cleversten ist, gewinnt.</div>
+ app.innerHTML=`<div class="scr"><div class="hd"><button class="bk" id="bt" aria-label="Zurück">‹</button><h2 class="ar" style="margin:6px 0 0;--ac:#3dffa0">🎪 Free-for-All</h2></div><div class="mut">Alle gegen alle, live am eigenen Handy – 2 bis 10 Spieler. Wer am schnellsten oder cleversten ist, gewinnt.</div>
  <div class="mid" style="justify-content:flex-start;padding-top:6px"><h3 style="margin:0">Raum eröffnen mit …</h3>${Object.keys(FFG).map(k=>hubBtn('fg_'+k,FFG[k].e,FFG[k].n,FFG[k].h,FFG[k].st)).join('')}
  <h3 style="margin:10px 0 0">… oder beitreten</h3><div class="pl"><input id="fcd" maxlength="8" placeholder="Raum-Code, z. B. K7P2" value="${esc(String(pre).replace(/^FFA-/i,''))}" autocomplete="off" autocapitalize="characters" style="text-transform:uppercase;letter-spacing:2px"></div>
- <button class="btn ghost" id="fjn">▶ Raum beitreten</button><div class="hint" id="er"></div></div>${bar('⬅ Party')}</div>`;
+ <button class="btn ghost" id="fjn">▶ Raum beitreten</button><div class="hint" id="er"></div></div>${tabBar('play')}</div>`;
  Object.keys(FFG).forEach(k=>$('#fg_'+k).onclick=()=>ffaCreate(k));
  $('#fjn').onclick=()=>{const c=$('#fcd').value.trim().toUpperCase();if(c.length<4){$('#er').textContent='❌ Bitte den Raum-Code eingeben.';return}ffaJoin(c,e=>{$('#er').textContent=e})};
  $('#bt').onclick=partyHub}
@@ -1462,8 +1474,8 @@ function adminPlayer(p){if(!p)return adminScreen();
  admArm($('#aw'),'',async()=>{try{const r=String(await call('admin_wipe'));if(r.startsWith('ok:')){sfx('ok');say('🧹 '+esc(r.slice(3))+' Ergebnisse und die Elo-Wertung von '+esc(p.n)+' gelöscht.');p.res=0;p.elo=null}else say('❌ Das hat nicht geklappt ('+esc(r)+').')}catch(e){say('⚠️ Server nicht erreichbar.')}})}
 
 function partyHub(){S.code=null;S.room=null;S.fi=false;
- app.innerHTML=`<div class="scr"><h2 class="ar" style="margin:6px 0 0;--ac:#ff5aa5">👥 Party</h2><div class="mut">Für Gruppen – jede Runde wird anders.</div>
- <div class="mid" style="justify-content:flex-start;padding-top:6px">${hubBtn('p1','⚔️','Ein Handy','Party-Runde, Handy wandert reihum – auch offline','background:linear-gradient(180deg,#ff7ab8,#ff3d96);box-shadow:0 6px 0 #a1155c;color:#fff')}${hubBtn('p2','🏠','Online-Raum','Jeder am eigenen Handy, gemeinsamer Countdown','background:linear-gradient(180deg,#6ff0ff,#27e1ff);box-shadow:0 6px 0 #0a7f94')}${hubBtn('p4','🎪','Free-for-All','Alle gegen alle, live: Flaschen-Grab, Symbol-Jagd …','background:linear-gradient(180deg,#8dffc4,#3dffa0);box-shadow:0 6px 0 #0f8a55')}${hubBtn('p3','⚡','Schnell-Challenge','Gleicher Code, jeder spielt, wann er will','')}</div>${bar('⬅ Hauptmenü')}</div>`;
+ app.innerHTML=`<div class="scr"><div class="hd"><button class="bk" id="bt" aria-label="Zurück">‹</button><h2 class="ar" style="margin:6px 0 0;--ac:#ff5aa5">👥 Party</h2></div><div class="mut">Für Gruppen – jede Runde wird anders.</div>
+ <div class="mid" style="justify-content:flex-start;padding-top:6px">${hubBtn('p1','⚔️','Ein Handy','Party-Runde, Handy wandert reihum – auch offline','background:linear-gradient(180deg,#ff7ab8,#ff3d96);box-shadow:0 6px 0 #a1155c;color:#fff')}${hubBtn('p2','🏠','Online-Raum','Jeder am eigenen Handy, gemeinsamer Countdown','background:linear-gradient(180deg,#6ff0ff,#27e1ff);box-shadow:0 6px 0 #0a7f94')}${hubBtn('p4','🎪','Free-for-All','Alle gegen alle, live: Flaschen-Grab, Symbol-Jagd …','background:linear-gradient(180deg,#8dffc4,#3dffa0);box-shadow:0 6px 0 #0f8a55')}${hubBtn('p3','⚡','Schnell-Challenge','Gleicher Code, jeder spielt, wann er will','')}</div>${tabBar('play')}</div>`;
  $('#p1').onclick=()=>{ac();home()};$('#p2').onclick=()=>{ac();fernRoom()};$('#p3').onclick=()=>{ac();fernChallenge()};$('#p4').onclick=()=>{ac();ffaHub()};$('#bt').onclick=menu}
 function fern(pre=''){S.code=null;S.room=null;if(!pre)return partyHub();if(needAcct(fern,pre))return;
  if(/^RAUM-/i.test(pre))return fernRoom(pre.slice(5));if(pre)return fernChallenge(pre);
@@ -1473,25 +1485,25 @@ function fern(pre=''){S.code=null;S.room=null;if(!pre)return partyHub();if(needA
  $('#a1').onclick=()=>fernRoom();$('#a2').onclick=()=>fernChallenge();$('#bt').onclick=menu;
 }
 function fernRoom(pre=''){S.code=null;S.room=null;if(needAcct(fernRoom,pre))return;
- app.innerHTML=`<div class="scr"><h2 class="ar" style="margin:6px 0 0;--ac:#ff5aa5">🏠 Raum</h2><div class="mut">Alle treten mit dem Code bei und wählen heimlich 1 von 4 Spielen. Wenn alle bereit sind, startet der Host den gemeinsamen Countdown (bis zu 10 Spieler; werden mehr als 5 Spiele gewählt, werden 5 ausgelost).</div>
+ app.innerHTML=`<div class="scr"><div class="hd"><button class="bk" id="bt" aria-label="Zurück">‹</button><h2 class="ar" style="margin:6px 0 0;--ac:#ff5aa5">🏠 Raum</h2></div><div class="mut">Alle treten mit dem Code bei und wählen heimlich 1 von 4 Spielen. Wenn alle bereit sind, startet der Host den gemeinsamen Countdown (bis zu 10 Spieler; werden mehr als 5 Spiele gewählt, werden 5 ausgelost).</div>
  ${nameField()}
  <h3 style="margin:4px 0 0">Neuen Raum eröffnen</h3>
  <button class="btn pink" id="rmk">✨ Raum eröffnen</button>
  <h3 style="margin:8px 0 0">Raum beitreten</h3>
  <div class="pl"><input id="rcd" maxlength="9" placeholder="Raum-Code, z. B. K7P2" value="${esc(pre)}" autocomplete="off" autocapitalize="characters" style="text-transform:uppercase;letter-spacing:2px"></div>
- <button class="btn" id="rjn">▶ Raum beitreten</button><div class="hint" id="er"></div>${bar()}</div>`;
+ <button class="btn" id="rjn">▶ Raum beitreten</button><div class="hint" id="er"></div>${tabBar('play')}</div>`;
  $('#rmk').onclick=async()=>{ac();const v=getName();$('#er').textContent='Eröffne Raum …';try{await roomCreate(v)}catch(e){$('#er').textContent='❌ Raum konnte nicht erstellt werden. Ist die Raum-Tabelle in Supabase angelegt?'}};
  $('#rjn').onclick=async()=>{ac();const v=getName(),c=$('#rcd').value;if(c.trim().length<4){$('#er').textContent='❌ Bitte den Raum-Code eingeben.';return}$('#er').textContent='Trete bei …';try{await roomJoin(c,v)}catch(e){$('#er').textContent=e.auth?'❌ Anmeldung ungültig – im Hauptmenü unter 👤 neu anmelden.':e.nf?'❌ Raum nicht gefunden.':e.full?'❌ Der Raum ist voll oder die Runde läuft schon.':'❌ Beitritt nicht möglich (Internet oder Server pausiert?).'}};
  $('#bt').onclick=()=>(NBK||fern)();
 }
 function fernChallenge(pre=''){S.code=null;S.room=null;S.fi=false;if(needAcct(fernChallenge,pre))return;
- app.innerHTML=`<div class="scr"><h2 class="ar" style="margin:6px 0 0;--ac:#ff5aa5">⚡ Schnell-Challenge</h2><div class="mut">Gleicher Code, jeder spielt wann er will. Die Zeiten kommen ins gemeinsame Scoreboard.</div>
+ app.innerHTML=`<div class="scr"><div class="hd"><button class="bk" id="bt" aria-label="Zurück">‹</button><h2 class="ar" style="margin:6px 0 0;--ac:#ff5aa5">⚡ Schnell-Challenge</h2></div><div class="mut">Gleicher Code, jeder spielt wann er will. Die Zeiten kommen ins gemeinsame Scoreboard.</div>
  ${nameField()}
  <button class="btn pink" id="mk">✨ Neue Challenge erstellen</button>
  <div class="c mut">oder Code von einem Freund eingeben</div>
  <div class="pl"><input id="cd" maxlength="24" placeholder="XXXX-XXXX-XXXX" value="${esc(pre)}" autocomplete="off" autocapitalize="characters" style="text-transform:uppercase;letter-spacing:2px"></div>
  <button class="btn" id="jn">▶ Mit Code mitspielen</button><div class="hint" id="er"></div>
- <button class="btn ghost sm" id="vw">📊 Scoreboard zu diesem Code ansehen</button>${bar()}</div>`;
+ <button class="btn ghost sm" id="vw">📊 Scoreboard zu diesem Code ansehen</button>${tabBar('play')}</div>`;
  $('#mk').onclick=()=>{ac();const v=getName();fernIntro(v,enc((Math.random()*2e9)|0,shuffle(Object.keys(STG).map((_,i)=>i).filter(i=>!OFF.includes(Object.keys(STG)[i])),Math.random).slice(0,3)),true)};
  $('#jn').onclick=()=>{ac();const v=getName(),c=$('#cd').value;if(!dec(c)){$('#er').textContent='❌ Dieser Code ist ungültig.';return}fernIntro(v,c,false)};
  $('#vw').onclick=()=>{const d=dec($('#cd').value);if(!d){$('#er').textContent='❌ Bitte oben den Code eingeben.';return}sbView(enc(d.seed,d.idx))};
@@ -1683,7 +1695,7 @@ setTimeout(()=>{if(DB.notif&&DB.acct)pushOn()},5000);
 try{const h=decodeURIComponent((location.hash||'').slice(1));if(h&&/^DUELL-[A-Z0-9]{4}$/i.test(h))duelOnline(h.slice(6).toUpperCase());else if(h&&(dec(h)||/^RAUM-[A-Z0-9]{4,8}$/i.test(h)))fern(h);else if(h&&/^FFA-[A-Z0-9]{4,8}$/i.test(h))ffaHub(h)}catch(e){}
 try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&location.hostname.endsWith('github.io'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-10-10';const BVN='2.3.1';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-10-11';const BVN='2.4.0';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;font-weight:800;text-align:center';
