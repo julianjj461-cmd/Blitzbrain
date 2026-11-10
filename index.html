@@ -633,16 +633,21 @@ function countdown(cb){
 function play(cb){
  app.innerHTML=`<div class="scr play"><div class="hud"><span>${esc(S.names[S.cur])}</span><span id="tm">0,000 s</span></div><div class="dots">${S.stages.map(()=>'<i></i>').join('')}</div><div class="hint" id="hint"></div><div id="stg"></div></div>`;
  const el=$('#stg'),tm=$('#tm'),dots=[...document.querySelectorAll('.dots i')];
- let pen=0,si=0,live=true,ts=0;const gt={},t0=performance.now();
- (function tick(){if(!live)return;tm.textContent=f3(performance.now()-t0+pen);requestAnimationFrame(tick)})();
+ let pen=0,si=0,live=true,ts=0,t0=performance.now(),pz=0;const gt={};
+ (function tick(){if(!live)return;tm.textContent=f3((pz||performance.now())-t0+pen);requestAnimationFrame(tick)})();
  const err=(b,ms=1500)=>{pen+=ms;sfx('bad');if(b){b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake')}
   const p=document.createElement('div');p.className='pen';p.textContent=ms==1500?'+1,5 s':'+'+(ms/1000).toFixed(2).replace('.',',')+' s';document.body.append(p);setTimeout(()=>p.remove(),800);
   app.firstChild.classList.remove('flash');void app.firstChild.offsetWidth;app.firstChild.classList.add('flash')};
  const next=()=>{
   if(si>=S.stages.length){live=false;(cb||finish)(performance.now()-t0+pen,pen,gt);return}
   dots.forEach((d,i)=>d.className=i<si?'dn':i==si?'on':'');
-  const g=STG[S.stages[si]];$('#hint').textContent=g.emoji+' '+g.hint;
-  g.run(el,mulberry(S.seed*31+si*7919+1),()=>{const now=performance.now()-t0+pen;gt[S.stages[si]]=Math.round(now-ts);ts=now;si++;sfx('ok');next()},err)};
+  const g=STG[S.stages[si]],gk=S.stages[si];$('#hint').textContent=g.emoji+' '+g.hint;
+  const go=()=>g.run(el,mulberry(S.seed*31+si*7919+1),()=>{const now=performance.now()-t0+pen;gt[S.stages[si]]=Math.round(now-ts);ts=now;si++;sfx('ok');next()},err);
+  if(DB.gx&&DB.gx[gk]){go();return}
+  /* Erstes Mal dieses Spiel: kurze Erklärung, Zeit steht still bis „Los!“ */
+  pz=performance.now();const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:900;background:rgba(10,5,30,.94);display:flex;align-items:center;justify-content:center;padding:16px';
+  o.innerHTML=`<div class="card" style="width:100%;max-width:420px;padding:18px;text-align:center;background:var(--c2);border:2px solid var(--b2)"><div class="mut" style="font-weight:800;letter-spacing:1px;font-size:13px">SO GEHT’S · Spiel ${si+1}/${S.stages.length}</div><div class="big pop" style="font-size:72px">${g.emoji}</div><div class="big" style="font-size:clamp(26px,8vw,34px);color:var(--yel)">${esc(g.name)}</div><div style="font-size:18px;line-height:1.45;margin:10px 0 6px">${g.hint}</div><div class="mut" style="font-size:14px;margin-bottom:12px">Jeder Fehler kostet +1,5 s. Deine Zeit ist gerade angehalten – sie läuft erst nach „Los!“ weiter.</div><button class="btn pink" id="gxo">▶ Verstanden – Los!</button></div>`;
+  document.body.append(o);$('#gxo').onclick=()=>{ac();t0+=performance.now()-pz;pz=0;o.remove();DB.gx=DB.gx||{};DB.gx[gk]=1;save();go()}};
  next();
 }
 const CM={rec:['🌍 NEUER ALLZEIT-REKORD! Das Handy bebt!','🚀 REKORD! Legende. Das Siegerpodest wackelt.','👑 Allzeit-Bestzeit – unfassbar!'],
@@ -1942,7 +1947,7 @@ function errSend(msg,src){try{if(ERRN>=3||!DB.sb||!DB.sb.url||!/^https?:/.test(l
 addEventListener('error',e=>errSend(e.message,(e.filename||'')+':'+(e.lineno||0)+':'+(e.colno||0)));
 addEventListener('unhandledrejection',e=>{const r=e.reason;if(r&&(r.auth||r.status||r.nf||r.full||r.dup))return;errSend('Promise: '+(r&&r.message||r),'')});
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-10-24';const BVN='2.13.1';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-10-25';const BVN='2.13.2';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;font-weight:800;text-align:center';
