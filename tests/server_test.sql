@@ -113,5 +113,20 @@ begin
  v := public.ffa_do('ZTRD','Zt_h',ta,'get',null,null);
  o := o || case when v->>'ph' = 'play' then 'PASS' else 'FAIL' end || E' bereit_countdown_endet_im_spiel\n';
 
+ -- 10) Ranked-Bots (elo_bot)
+ perform public._auth('Zt_bot','pin1234',true);
+ v := public.elo_bot('Zt_bot','pin1234',2,1);
+ o := o || case when (v->>'d')::integer = 6 and (v->>'r')::integer = 1006 then 'PASS' else 'FAIL' end || E' bot_sieg_gegen_gleich_starken_gibt_6\n';
+ v := public.elo_bot('Zt_bot','pin1234',6,0);
+ o := o || case when (v->>'d')::integer = 0 then 'PASS' else 'FAIL' end || E' bot_niederlage_gegen_starken_kostet_fast_nichts\n';
+ v := public.elo_bot('Zt_bot','pin1234',1,1);
+ o := o || case when (v->>'d')::integer = 0 and (v->>'r')::integer = 1006 then 'PASS' else 'FAIL' end || E' bot_sieg_gegen_schwachen_bringt_nichts_ueber_cap\n';
+ v := public.elo_bot('Zt_bot','falsch12',1,1);
+ o := o || case when v ? 'e' then 'PASS' else 'FAIL' end || E' bot_falsche_pin\n';
+ v := public.elo_bot('Zt_bot','pin1234',9,1);
+ o := o || case when v->>'e' = 'invalid' then 'PASS' else 'FAIL' end || E' bot_ungueltiges_level\n';
+ for i in 1..6 loop v := public.elo_bot('Zt_bot','pin1234',2,2); end loop;
+ o := o || case when (v->>'lim')::boolean then 'PASS' else 'FAIL' end || E' bot_tageslimit_6\n';
+
  raise exception E'RESULT\n%', o;
 end $t$;

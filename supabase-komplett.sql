@@ -1812,3 +1812,33 @@ begin
   execute src;
  end if;
 end $mig$;
+
+-- ===== 25) Ranked-Bots: Elo gegen Bot-Gegner (Level 1–6, max. 6 Elo-Duelle/24 h, Gewinn nur bis Bot-Wertung + 75) =====
+create table if not exists public.elo_bot_log (id bigserial primary key, name_key text not null, lv integer not null, res integer not null, d integer not null, at timestamptz not null default now());
+create index if not exists elo_bot_log_k on public.elo_bot_log(name_key, at);
+alter table public.elo_bot_log enable row level security;
+create or replace function public.elo_bot(p_name text, p_pin text, p_lv integer, p_res integer) returns jsonb language plpgsql security definer set search_path = public, extensions as $$
+declare s text; me text; nm text; r integer; br integer; e numeric; sc numeric; d integer; nr integer;
+begin
+ s := public._auth(p_name, p_pin, false);
+ if s not like 'ok:%' then return jsonb_build_object('e', s); end if;
+ nm := substr(s, 4); me := lower(nm);
+ if p_lv is null or p_lv not between 1 and 6 or p_res is null or p_res not in (0, 1, 2) then return jsonb_build_object('e', 'invalid'); end if;
+ insert into public.elo(name_key, name) values (me, nm) on conflict (name_key) do nothing;
+ select e1.r into r from public.elo e1 where e1.name_key = me;
+ if (select count(*) from public.elo_bot_log where name_key = me and at > now() - interval '24 hours') >= 6 then
+  return jsonb_build_object('d', 0, 'r', r, 'lim', true);
+ end if;
+ br := (array[850, 1000, 1150, 1300, 1450, 1600])[p_lv];
+ e := 1 / (1 + power(10, (br - r) / 400.0));
+ sc := case p_res when 1 then 1 when 0 then 0 else 0.5 end;
+ d := round(12 * (sc - e));
+ nr := r + d;
+ if d > 0 and nr > greatest(r, br + 75) then nr := greatest(r, br + 75); end if;
+ d := nr - r;
+ update public.elo set r = nr, g = g + 1, w = w + (case when p_res = 1 then 1 else 0 end) where name_key = me;
+ insert into public.elo_bot_log(name_key, lv, res, d) values (me, p_lv, p_res, d);
+ return jsonb_build_object('d', d, 'r', nr, 'lim', false);
+end $$;
+revoke all on function public.elo_bot(text, text, integer, integer) from public;
+grant execute on function public.elo_bot(text, text, integer, integer) to anon, authenticated;
