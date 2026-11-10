@@ -823,7 +823,7 @@ async function rankedHub(){if(needAcct(rankedHub))return;
  <div class="card c" id="rss" style="padding:10px;font-size:14px"></div>
  <button class="btn pink glow" id="rgo" style="padding:22px">🔍 MATCH SUCHEN<br><small style="font-weight:700;opacity:.9">Du wirst jemandem mit ähnlicher Elo zugelost</small></button>
  <h3 style="margin:6px 0 0">Bestenliste</h3><div id="rtop" class="mut">Lade …</div>
- <details class="card" style="padding:12px"><summary style="cursor:pointer"><b>ℹ️ So funktioniert Ranked</b></summary><div class="mut" style="margin-top:8px;line-height:1.6">Start bei 1000 Elo. Gegen stärkere Gegner gibt es mehr Punkte. Ligen: 🥉 Bronze unter 950 · 🥈 Silber · 🥇 Gold ab 1100 · 💎 Diamant ab 1250. Gegen denselben Gegner zählen höchstens 3 Duelle pro 24 Stunden. Findet sich niemand, tritt nach ca. 10 Sekunden ein Bot an: Stufe 1–6 (🤖 Robo bis Omega), passend zu deiner Elo und immer ein Stück stärker – je besser du wirst, desto schneller sind sie. Bot-Duelle zählen für Elo (bis 6 pro 24 h, Gewinne nur bis knapp über der Bot-Wertung), aber nicht für Rekorde. Wer 95 Sekunden nach dem Gegner nicht weiterspielt, verliert.</div></details>
+ <details class="card" style="padding:12px"><summary style="cursor:pointer"><b>ℹ️ So funktioniert Ranked</b></summary><div class="mut" style="margin-top:8px;line-height:1.6">Start bei 1000 Elo. Gegen stärkere Gegner gibt es mehr Punkte. Ligen: 🥉 Bronze unter 950 · 🥈 Silber · 🥇 Gold ab 1100 · 💎 Diamant ab 1250. Gegen denselben Gegner zählen höchstens 3 Duelle pro 24 Stunden. Wer 95 Sekunden nach dem Gegner nicht weiterspielt, verliert.</div></details>
  ${tabBar('play')}</div>`;
  $('#rgo').onclick=()=>randGo(rankedHub);$('#bt').onclick=menu;
  rankedSeason();
@@ -857,7 +857,7 @@ function duelSetup(){
   if(!bl)DB.vn=[a,b];DB.vr=n;save();V={names:[a,b],rounds:n,bots:bl?{1:bl}:null};duelStart()};
 }
 function duelStart(){
- V.games=shuffle(POOL(),Math.random).slice(0,V.rounds);V.rec=0;V.er=0;V.i=0;V.sc=[0,0];V.tot=[0,0];V.hist=[];duelRound();
+ V.games=shuffle(POOL(),Math.random).slice(0,V.rounds);V.rec=0;V.i=0;V.sc=[0,0];V.tot=[0,0];V.hist=[];duelRound();
 }
 function duelRound(){V.seed=(Math.random()*1e9)|0;V.k=V.games[V.i];V.first=(V.bots&&V.bots[1]&&!V.bots[0])?0:V.i%2;V.t=[null,null];duelTurn(0)}
 function duelTurn(j){
@@ -897,33 +897,28 @@ function duelEnd(){
  <div class="c mut">${win>=0?'gewinnt das Duell':'Absolut gleichauf!'}${x==y&&win>=0?' (schnellere Gesamtzeit)':''}</div>
  <div class="big" style="font-size:clamp(40px,13vw,60px)">${x} : ${y}</div><div class="c mut">${esc(N[0])} · ${esc(N[1])}<br>Gesamtzeit ${f3(V.tot[0])} · ${f3(V.tot[1])}</div>${h2hLine(N[0],N[1])}
  <div class="card" style="padding:10px">${V.hist.map(h=>`<div style="display:flex;justify-content:space-between;gap:8px;padding:3px 0"><span>${STG[h.k].emoji} ${STG[h.k].name}</span><span>${h.win===0?'🏆 ':''}${f3(h.t[0])} | ${h.win===1?'🏆 ':''}${f3(h.t[1])}</span></div>`).join('')}</div>
- ${V.rk?'<div class="card c" id="bke" style="font-weight:800">Elo wird berechnet …</div>':''}<button class="btn pink" id="r1">🔁 Revanche</button><button class="btn" id="r2">⚙️ Andere Einstellungen</button>${bar('🏠 Hauptmenü')}</div>`;
- if(V.rk&&!V.er&&DB.acct){V.er=1;const res=win==0?1:win==1?0:2;rpc('elo_bot',{p_name:DB.acct.name,p_pin:DB.acct.pin,p_lv:V.rk.lv,p_res:res}).then(q=>{const e=document.getElementById('bke');if(!e)return;if(!q||q.e){e.textContent='Elo konnte nicht gespeichert werden.';return}
-   ELM[skey(DB.acct.name)]=q.r;eloT=0;const lg=league(q.r);e.innerHTML=q.lim?`${lg.e} ${q.r} Elo<br><span class="mut" style="font-weight:600">Tageslimit für Bot-Duelle erreicht (6 pro 24 h) – kein Elo mehr heute.</span>`:`${lg.e} ${q.r} Elo (${q.d>0?'+':''}${q.d})${q.d==0&&res==1?'<br><span class="mut" style="font-weight:600">Gegen diese Bot-Stufe ist keine Steigerung mehr drin – such menschliche Gegner!</span>':''}`}).catch(()=>{const e=document.getElementById('bke');if(e)e.textContent='Elo konnte nicht gespeichert werden.'})}
+ <button class="btn pink" id="r1">🔁 Revanche</button><button class="btn" id="r2">⚙️ Andere Einstellungen</button>${bar('🏠 Hauptmenü')}</div>`;
  $('#r1').onclick=()=>agree(V.bots?[N[0]]:N,'Revanche?',duelStart,duelEnd);$('#r2').onclick=duelSetup;$('#bt').onclick=menu;
 }
 
 function duelRandom(name,n,back){back=back||menu;
  let alive=true,t0=Date.now();const games=shuffle(POOL(),Math.random).slice(0,n);
- app.innerHTML=`<div class="scr"><div class="mid"><div class="big bounce" style="font-size:70px">🎲</div><div class="big" style="font-size:28px">Ranked: Suche Gegner …</div><div class="c mut">${n} Runden · wer gerade ebenfalls sucht, wird dir zugelost – sonst tritt nach ca. 10 s ein Bot deiner Stärke an.</div><div class="c" id="rs" style="font-size:22px">0 s</div></div><button class="btn ghost" id="rc">✖ Abbrechen</button></div>`;
+ app.innerHTML=`<div class="scr"><div class="mid"><div class="big bounce" style="font-size:70px">🎲</div><div class="big" style="font-size:28px">Ranked: Suche Gegner …</div><div class="c mut">${n} Runden · wer gerade ebenfalls sucht, wird dir zugelost.</div><div class="c" id="rs" style="font-size:22px">0 s</div></div><button class="btn ghost" id="rc">✖ Abbrechen</button></div>`;
  const done=async c=>{alive=false;clearInterval(tm);if(!c){back();return}
   RKC=c;sfx('go');let on='',or=null;
   try{const pk=await api('GET',`picks?code=eq.${encodeURIComponent(c)}&select=name`);on=((pk||[]).find(x=>x.name!==name)||{}).name||'';if(on){const L=await rpc('elo_rank',{p_name:on});or=Array.isArray(L)&&L[0]?L[0].r:1000}}catch(e){}
   if(on){const lg=league(or||1000);app.innerHTML=`<div class="scr"><div class="mid"><div class="c mut">🏆 Ranked · Gegner gefunden</div><div class="big pop" style="font-size:clamp(32px,10vw,46px)">${esc(name)}<br><span style="color:var(--pink)">VS</span><br>${esc(on)}</div><div class="card c" style="font-size:20px">${lg.e} ${lg.n} · ${or||1000} Elo</div></div></div>`;await new Promise(z=>setTimeout(z,2200))}
   duEnter(c,name,{})};
  const mc=r=>typeof r==='string'&&r.startsWith('match:')?r.slice(6):null;
- const botGo=async()=>{alive=false;clearInterval(tm);let c='';try{c=await rpc('cancel_match',{p_name:DB.acct.name,p_pin:DB.acct.pin})}catch(x){}if(mc(c))return done(mc(c));
-  try{await eloLoad()}catch(e){}const r=ELM[skey(name)]==null?1000:ELM[skey(name)],lv=rbotLv(r),B=RBOT[lv],lg=league(B.r);
-  app.innerHTML=`<div class="scr"><div class="mid"><div class="c mut">🏆 Ranked · Gegner gefunden</div><div class="big pop" style="font-size:clamp(32px,10vw,46px)">${esc(name)}<br><span style="color:var(--pink)">VS</span><br>${esc(B.n)}</div><div class="card c" style="font-size:20px">${lg.e} ${lg.n} · ${B.r} Elo · Bot Stufe ${lv}/6</div></div></div>`;sfx('go');
-  await new Promise(z=>setTimeout(z,2200));V={names:[name,B.n],rounds:n,bots:{1:lv},rk:{lv}};duelStart()};
- const fail=m=>{alive=false;clearInterval(tm);app.innerHTML=`<div class="scr"><div class="mid"><div class="big" style="font-size:60px">😕</div><div class="big" style="font-size:26px">${m}</div></div><button class="btn pink" id="ra">🎲 Nochmal suchen</button>${bar('⬅ Zurück')}</div>`;$('#ra').onclick=()=>duelRandom(name,n,back);$('#bt').onclick=back};
+ const fail=m=>{alive=false;clearInterval(tm);app.innerHTML=`<div class="scr"><div class="mid"><div class="big" style="font-size:60px">😕</div><div class="big" style="font-size:26px">${m}</div></div><button class="btn pink" id="ra">🎲 Nochmal suchen</button>${/niemand/.test(m)?'<button class="btn" id="rb">🤖 Gegen Bot spielen (ohne Elo)</button><div class="hint">Der Bot passt sich deiner Liga an. Dieses Duell zählt nicht für Elo oder Rekorde.</div>':''}${bar('⬅ Zurück')}</div>`;$('#ra').onclick=()=>duelRandom(name,n,back);$('#bt').onclick=back;
+  if($('#rb'))$('#rb').onclick=()=>{ac();const r=ELM[skey(name)],lv=r==null?2:r>=1250?4:r>=1100?3:r>=950?2:1;V={names:[name,'🤖Robo'],rounds:n,bots:{1:lv}};duelStart()}};
  let tm=0;
  $('#rc').onclick=async()=>{if(!alive)return;alive=false;clearInterval(tm);let r='';try{r=await rpc('cancel_match',{p_name:DB.acct.name,p_pin:DB.acct.pin})}catch(e){}done(mc(r))};
  (async()=>{let r;try{r=await rpc('find_match',{p_name:DB.acct.name,p_pin:DB.acct.pin,p_rounds:n,p_games:games})}catch(e){return fail('Suche nicht möglich (Internet oder Server pausiert?).')}
   if(mc(r))return done(mc(r));if(r!=='wait')return fail('Suche nicht möglich – bitte neu anmelden.');
   tm=setInterval(async()=>{if(!alive)return;const sec=Math.floor((Date.now()-t0)/1000);const e=document.getElementById('rs');if(e)e.textContent=sec+' s';
-   if(sec>=10)return botGo();
-   try{const q=await rpc('match_status',{p_name:DB.acct.name,p_pin:DB.acct.pin});if(!alive)return;if(mc(q))done(mc(q));else if(q==='none'&&sec>3)botGo()}catch(x){}},2000)})();
+   if(sec>=60){alive=false;clearInterval(tm);let c='';try{c=await rpc('cancel_match',{p_name:DB.acct.name,p_pin:DB.acct.pin})}catch(x){}if(mc(c))return done(mc(c));return fail('Gerade niemand gefunden.')}
+   try{const q=await rpc('match_status',{p_name:DB.acct.name,p_pin:DB.acct.pin});if(!alive)return;if(mc(q))done(mc(q));else if(q==='none'&&sec>3)fail('Gerade niemand gefunden.')}catch(x){}},2000)})();
 }
 
 /* ===== Online-1v1: zwei Handys, gleicher Start, jede Runde ein anderes Spiel (Supabase: rooms + picks + results) ===== */
@@ -1557,7 +1552,7 @@ const BPK={Pixel:'h',Zap:'h',Bolt:'h',Echo:'s',Luna:'s',Nova:'s'},BPL={h:'Hektik
   s:{w:['Ruhe bewahren zahlt sich aus. 🎯','Präzision schlägt Tempo.','Alles nach Plan.'],l:['Ich hab nur kurz nachgedacht.','Das war Absicht. Glaub ich.','Ein Sniper braucht Geduld.']}};
 const bKind=n=>BPK[String(n).replace(/^🤖/,'').replace(/\d+$/,'')]||'n',bLbl=n=>BPL[bKind(n)]||'',bSay=(n,k,seed)=>{const L=BSAY[bKind(n)][k];return L[(seed+String(n).length)%L.length]},
  bQuote=(n,k,seed)=>`<div class="c mut" style="font-size:14px">${esc(n)}: „${bSay(n,k,seed)}“</div>`;
-const BLV=['','Leicht','Mittel','Schwer','Profi','Meister','Legende'],RBOT=[null,{n:'🤖Robo',r:850},{n:'🤖Pixel',r:1000},{n:'🤖Blitz',r:1150},{n:'🤖Turbo',r:1300},{n:'🤖Nova',r:1450},{n:'🤖Omega',r:1600}],rbotLv=e=>{let l=1;for(let i=1;i<=6;i++)if(RBOT[i].r<=(e||1000)+125)l=i;return l},TMS={A:{e:'⚡',n:'Blitz'},B:{e:'🧠',n:'Hirn'}};
+const BLV=['','Leicht','Mittel','Schwer','Profi','Meister','Legende'],TMS={A:{e:'⚡',n:'Blitz'},B:{e:'🧠',n:'Hirn'}};
 function ffaScr(){const f=FFX,v=f.v,g=FFG[v.g],me=v.host===f.me;
  if(v.ph==='lobby'){
   app.innerHTML=`<div class="scr" id="ffa"><div class="c mut">Free-for-All · Raum-Code</div><div class="big" style="font-size:clamp(40px,14vw,64px);letter-spacing:8px;color:var(--ink)">${f.code}</div>
@@ -2062,7 +2057,7 @@ function errSend(msg,src){try{if(ERRN>=3||!DB.sb||!DB.sb.url||!/^https?:/.test(l
 addEventListener('error',e=>errSend(e.message,(e.filename||'')+':'+(e.lineno||0)+':'+(e.colno||0)));
 addEventListener('unhandledrejection',e=>{const r=e.reason;if(r&&(r.auth||r.status||r.nf||r.full||r.dup))return;errSend('Promise: '+(r&&r.message||r),'')});
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-10-37';const BVN='2.16.1';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-10-38';const BVN='2.16.2';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--ink);font-weight:800;text-align:center';
