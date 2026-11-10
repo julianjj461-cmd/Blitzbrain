@@ -94,5 +94,24 @@ begin
  s := public.log_error('t','Testfehler','x:1:1') || public.log_error('t','Testfehler','x:1:1');
  o := o || case when s = 'okok' and (select max(n) from public.app_errors where msg = 'Testfehler') = 2 then 'PASS' else 'FAIL' end || E' fehlerbericht_dedupe\n';
 
+ -- 9) Bereit-System im Free-for-All
+ a := public.ffa_create('Zt_h','654321','ZTRD','quiz',3); ta := a->>'tk';
+ tb := (public.ffa_join('Zt_k','654321','ZTRD'))->>'tk';
+ perform public.ffa_do('ZTRD','Zt_h',ta,'addbot',null,2);
+ perform public.ffa_do('ZTRD','Zt_h',ta,'vote','quiz',null);
+ v := public.ffa_do('ZTRD','Zt_h',ta,'start',null,null);
+ o := o || case when v->>'ph' = 'intro' and (v->'st'->>'cd')::boolean is false then 'PASS' else 'FAIL' end || E' bereit_intro_wartet\n';
+ update public.ffa set tp = tp - 7000 where code = 'ZTRD';
+ v := public.ffa_do('ZTRD','Zt_h',ta,'get',null,null);
+ o := o || case when v->>'ph' = 'intro' then 'PASS' else 'FAIL' end || E' bereit_kein_start_nach_5s\n';
+ v := public.ffa_do('ZTRD','Zt_h',ta,'rdy',null,null);
+ o := o || case when (v->'st'->>'cd')::boolean is false then 'PASS' else 'FAIL' end || E' bereit_einer_reicht_nicht\n';
+ update public.ffa set pl = jsonb_set(pl, '{Zt_k,seen}', to_jsonb(public._fnow() + 600000)) where code = 'ZTRD';
+ v := public.ffa_do('ZTRD','Zt_k',tb,'rdy',null,null);
+ o := o || case when (v->'st'->>'cd')::boolean and (v->>'tot')::integer = 3000 and v->>'ph' = 'intro' then 'PASS' else 'FAIL' end || E' bereit_alle_dann_3s_countdown\n';
+ update public.ffa set st = st || jsonb_build_object('go', (st->>'go')::bigint - 3500) where code = 'ZTRD';
+ v := public.ffa_do('ZTRD','Zt_h',ta,'get',null,null);
+ o := o || case when v->>'ph' = 'play' then 'PASS' else 'FAIL' end || E' bereit_countdown_endet_im_spiel\n';
+
  raise exception E'RESULT\n%', o;
 end $t$;

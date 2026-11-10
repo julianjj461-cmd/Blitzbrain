@@ -1762,3 +1762,53 @@ begin
  end if;
  return public._ffa_view(r, p_name);
 end $function$;
+
+-- ============================================================
+-- 24) v2.14.0: Bereit-System im Free-for-All
+--     Intro wartet, bis alle Menschen "Bereit" gedrueckt haben (Bots sofort bereit, nach 20 s automatisch),
+--     danach 3 Sekunden gemeinsamer Countdown. Neuer Befehl ffa_do(..., 'rdy', ...).
+--     (idempotent: laeuft nur, wenn die Funktionen noch den alten Stand haben)
+-- ============================================================
+do $mig$
+declare src text;
+begin
+ create or replace function pg_temp.rp(s text, a text, b text) returns text language plpgsql as $f$
+ begin
+  if position(a in s) = 0 then raise exception 'Muster nicht gefunden: %', left(a, 60); end if;
+  return replace(s, a, b);
+ end $f$;
+
+ src := pg_get_functiondef('public._ffa_tick(public.ffa)'::regprocedure);
+ if position($c$if r.st ? 'go' then
+    exit when t < (r.st->>'go')::bigint;
+    r := public._ffa_round(r);$c$ in src) = 0 then
+  src := pg_temp.rp(src, $a$   exit when t - r.tp < 5000;
+   r := public._ffa_round(r);$a$, $b$   if r.st ? 'go' then
+    exit when t < (r.st->>'go')::bigint;
+    r := public._ffa_round(r);
+   else
+    if t - r.tp >= 20000 or not exists (select 1 from jsonb_each(r.pl) where not (value ? 'bot') and (value->>'seen')::bigint > t - 15000 and coalesce((value->>'rd')::boolean, false) is not true) then
+     r.st := r.st || jsonb_build_object('go', t + 3000);
+    end if;
+    exit;
+   end if;$b$);
+  execute src;
+ end if;
+
+ src := pg_get_functiondef('public._ffa_view(public.ffa,text)'::regprocedure);
+ if position($c$'cd', r.st ? 'go'$c$ in src) = 0 then
+  src := pg_temp.rp(src, $a$'bot', value->'bot', 'tt', value->'tt')$a$, $b$'bot', value->'bot', 'tt', value->'tt', 'rd', case when value ? 'bot' then true else coalesce((value->>'rd')::boolean, false) end)$b$);
+  src := pg_temp.rp(src, $a$st := jsonb_build_object('vote', r.st->'vote');$a$, $b$st := jsonb_build_object('vote', r.st->'vote', 'cd', r.st ? 'go');$b$);
+  src := pg_temp.rp(src, $a$case r.phase when 'intro' then 5000 when$a$, $b$case r.phase when 'intro' then (case when r.st ? 'go' then 3000 else 20000 end) when$b$);
+  src := pg_temp.rp(src, $a$lft := case when tot is null then null else tot - (t - r.tp) end;$a$, $b$lft := case when tot is null then null when r.phase = 'intro' and r.st ? 'go' then (r.st->>'go')::bigint - t else tot - (t - r.tp) end;$b$);
+  execute src;
+ end if;
+
+ src := pg_get_functiondef('public.ffa_do(text,text,text,text,text,integer)'::regprocedure);
+ if position($c$p_op = 'rdy'$c$ in src) = 0 then
+  src := pg_temp.rp(src, $a$ elsif p_op = 'pick' and r.phase = 'play'$a$, $b$ elsif p_op = 'rdy' and r.phase = 'intro' and not (r.st ? 'go') then
+  r.pl := jsonb_set(r.pl, array[p_name, 'rd'], 'true'::jsonb);
+ elsif p_op = 'pick' and r.phase = 'play'$b$);
+  execute src;
+ end if;
+end $mig$;
