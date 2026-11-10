@@ -1289,7 +1289,7 @@ async function inviteFriends(payload,what){ac();if(!DB.acct)return;const old=doc
 /* ===== Onboarding (nur beim allerersten Start) ===== */
 function onboard(i=0){const P=[['⚡','Schnell sein!','Mini-Spiele, die du so schnell wie möglich löst. Jeder Fehler kostet +1,5 s – die niedrigste Zeit gewinnt.'],['👥','Gemeinsam spielen','Ranked gegen Zufallsgegner, 1v1-Duelle oder Party mit einem Handy oder online. Mit Freunden: Einladung direkt ins Postfach oder per Code.'],['📅','Jeden Tag dabei','Die Tagesaufgabe gibt jeden Tag 3 neue Spiele. Spiel täglich für eine 🔥 Serie und schalte Farbthemen frei.']],[e,t,x]=P[i];
  app.innerHTML=`<div class="scr"><div class="mid"><div class="big pop" style="font-size:90px">${e}</div><div class="big" style="font-size:clamp(30px,10vw,42px);color:var(--yel)">${t}</div><div class="c mut" style="font-size:17px">${x}</div><div class="dots" style="width:120px;margin-top:8px">${P.map((_,j)=>`<i class="${j==i?'on':j<i?'dn':''}"></i>`).join('')}</div></div><button class="btn pink" id="on">${i<2?'Weiter ➜':'Los geht’s 🚀'}</button><button class="btn ghost sm" id="os">Überspringen</button></div>`;
- const end=()=>{DB.seen=1;save();menu()};$('#on').onclick=()=>{ac();i<2?onboard(i+1):end()};$('#os').onclick=end}
+ const end=()=>{DB.seen=1;save();menu();setTimeout(loginPop,300)};$('#on').onclick=()=>{ac();i<2?onboard(i+1):end()};$('#os').onclick=end}
 function menu(){NBK=null;S.fi=false;S.bots=null;setTimeout(installNudge,1200);applyTheme();avLoad();ibLoad();S.code=null;S.room=null;S.daily=false;
  app.innerHTML=`<div class="scr"><div id="ver"></div><h1 class="logo">BLITZ<span>BRAIN</span></h1><div class="sub" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="white-space:nowrap">${POOL().length} Mini-Games</span>${DB.acct?'':'<button class="btn ghost sm" id="ac" style="flex:none;width:auto;padding:6px 12px;font-size:13px">👤 Anmelden</button>'}</div>
  <div class="mid" style="gap:12px"><button class="btn glow" id="mr" style="padding:22px 16px;background:linear-gradient(180deg,#ffb347,#ff7a18);box-shadow:0 7px 0 #a24a00;color:#fff;display:flex;align-items:center;gap:14px;text-align:left"><span style="font-size:42px;flex:none;line-height:1">🏆</span><span style="flex:1;min-width:0"><b style="display:block;font-size:28px;letter-spacing:1px">RANKED</b><small id="mrs" style="font-weight:800;opacity:.92;font-size:14px">Zufälliger Gegner · 3 Spiele · Elo</small></span><span style="font-size:30px;opacity:.6;flex:none">›</span></button>
@@ -1774,6 +1774,21 @@ async function sbSend(r,g,code){if(!DB.acct||String(r.n).toLowerCase()!==DB.acct
  const s=await rpc('submit_result',{p_name:DB.acct.name,p_pin:DB.acct.pin,p_code:code,p_total:Math.round(r.t),p_pen:Math.round(r.pen||0),p_games:g});if(s!=='ok')throw Object.assign(new Error(s),{auth:true})}
 async function joinPick(code,name){if(!DB.acct||DB.acct.name.toLowerCase()!==String(name).toLowerCase())throw Object.assign(new Error('kein Konto'),{auth:true});
  const s=await rpc('join_room',{p_name:DB.acct.name,p_pin:DB.acct.pin,p_code:code});if(s!=='ok')throw Object.assign(new Error(s),{auth:true})}
+const claimMsg=r=>r==='blocked'?'🚫 Dieser Name ist nicht erlaubt – bitte einen netten Namen wählen.':r==='wrong'?'❌ PIN falsch – oder der Name gehört schon jemand anderem.':r==='banned'?'🚫 Dieses Konto wurde gesperrt.':r==='locked'?'⏳ Zu viele Fehlversuche. Bitte 5 Minuten warten.':'❌ Name: 1–14 Zeichen, PIN: 4–12 Zeichen.';
+const claimErr=e=>e&&e.status==404?'⚠️ Die Konto-Funktion fehlt noch in Supabase (SQL einrichten).':'⚠️ Server nicht erreichbar (Internet oder Server pausiert?).';
+/* Anmelde-Popup beim ersten Start (einmalig; „Später“ merkt sich die Entscheidung) */
+function loginPop(){if(DB.acct||DB.lpx||document.getElementById('lpo'))return;
+ const o=document.createElement('div');o.id='lpo';o.style.cssText='position:fixed;inset:0;z-index:1000;background:rgba(10,5,30,.9);display:flex;align-items:center;justify-content:center;padding:16px';
+ o.innerHTML='<div class="card" style="width:100%;max-width:420px;padding:16px;text-align:left;background:var(--c2);border:2px solid var(--b2)"><h2 style="margin:0 0 6px">👤 Willkommen!</h2><div class="mut" style="margin-bottom:10px">Melde dich an, damit deine Rekorde, Freunde und dein Rang gespeichert werden. Neuer Name? Dann legst du hier gleich deine PIN fest.</div><div class="pl"><input id="lp1" maxlength="14" placeholder="Dein Name" value="'+esc(DB.fname||'')+'" autocomplete="off"></div><div class="pl"><input id="lp2" type="password" inputmode="numeric" maxlength="12" placeholder="PIN (4–12 Zeichen)" autocomplete="off"></div><button class="btn pink" id="lpg">✔ Anmelden / Registrieren</button><div class="hint" id="lpe"></div><button class="btn ghost sm" id="lpl" style="margin-top:8px">Später</button></div>';
+ document.body.append(o);
+ $('#lpl').onclick=()=>{DB.lpx=1;save();o.remove()};
+ $('#lpg').onclick=async()=>{ac();const nm=$('#lp1').value.trim(),pn=$('#lp2').value,er=$('#lpe');
+  if(!nm||pn.length<4){er.textContent='❌ Name und PIN (mindestens 4 Zeichen) eingeben.';return}
+  er.textContent='Prüfe …';
+  try{const r=String(await rpc('claim_name',{p_name:nm,p_pin:pn})),m=/^(new|ok):(.+)$/.exec(r);
+   if(m){DB.acct={name:m[2],pin:pn};DB.fname=m[2];save();sfx('win');o.remove();menu();return}
+   er.textContent=claimMsg(r)}
+  catch(e){er.textContent=claimErr(e)}}}
 function loginScreen(next,msg=''){
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">👤 Anmelden</h2><div class="mut">Dein Name wird mit einer PIN geschützt, sodass niemand unter deinem Namen spielen kann. Neuer Name? Dann legst du hier gleich deine PIN fest.</div>
  <div class="pl"><input id="an1" maxlength="14" placeholder="Dein Name" value="${esc(DB.acct?DB.acct.name:(DB.fname||''))}" autocomplete="off"></div>
@@ -1785,8 +1800,8 @@ function loginScreen(next,msg=''){
   er.textContent='Prüfe …';
   try{const r=String(await rpc('claim_name',{p_name:nm,p_pin:pn})),m=/^(new|ok):(.+)$/.exec(r);
    if(m){DB.acct={name:m[2],pin:pn};DB.fname=m[2];save();sfx('win');(next||menu)();return}
-   er.textContent=r==='blocked'?'🚫 Dieser Name ist nicht erlaubt – bitte einen netten Namen wählen.':r==='wrong'?'❌ PIN falsch – oder der Name gehört schon jemand anderem.':r==='banned'?'🚫 Dieses Konto wurde gesperrt.':r==='locked'?'⏳ Zu viele Fehlversuche. Bitte 5 Minuten warten.':'❌ Name: 1–14 Zeichen, PIN: 4–12 Zeichen.'}
-  catch(e){er.textContent=e.status==404?'⚠️ Die Konto-Funktion fehlt noch in Supabase (SQL einrichten).':'⚠️ Server nicht erreichbar (Internet oder Server pausiert?).'}};
+   er.textContent=claimMsg(r)}
+  catch(e){er.textContent=claimErr(e)}};
 }
 const needAcct=(f,pre)=>{if(DB.acct)return false;loginScreen(()=>f(pre));return true};
 async function sbGet(code){const r=await fx(`${DB.sb.url}/rest/v1/results?code=eq.${encodeURIComponent(code)}&select=name,total_ms,pen_ms,games&order=total_ms.asc&limit=200`,{headers:{apikey:DB.sb.key}});if(!r.ok)throw new Error(r.status);return r.json()}
@@ -1916,7 +1931,7 @@ function remoteEnd(){
 DB.vis=(DB.vis||0)+1;save();
 if(DB.rv!==1){if((DB.runs||[]).length||Object.keys(DB.arc||{}).length)DB.seen=1;DB.rv=1;DB.runs=[];DB.arc={};save()}
 applyTheme();if(DB.acct||DB.runs.length)DB.seen=1;
-DB.seen?menu():onboard();
+DB.seen?(menu(),setTimeout(loginPop,400)):onboard();
 setTimeout(()=>{if(DB.notif&&DB.acct)pushOn()},5000);
 try{const h=decodeURIComponent((location.hash||'').slice(1));if(h&&/^DUELL-[A-Z0-9]{4}$/i.test(h))duelOnline(h.slice(6).toUpperCase());else if(h&&(dec(h)||/^RAUM-[A-Z0-9]{4,8}$/i.test(h)))fern(h);else if(h&&/^FFA-[A-Z0-9]{4,8}$/i.test(h))ffaHub(h)}catch(e){}
 try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&location.hostname.endsWith('github.io'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
@@ -1927,7 +1942,7 @@ function errSend(msg,src){try{if(ERRN>=3||!DB.sb||!DB.sb.url||!/^https?:/.test(l
 addEventListener('error',e=>errSend(e.message,(e.filename||'')+':'+(e.lineno||0)+':'+(e.colno||0)));
 addEventListener('unhandledrejection',e=>{const r=e.reason;if(r&&(r.auth||r.status||r.nf||r.full||r.dup))return;errSend('Promise: '+(r&&r.message||r),'')});
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-10-23';const BVN='2.13.0';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-10-24';const BVN='2.13.1';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;font-weight:800;text-align:center';
