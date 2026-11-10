@@ -1385,6 +1385,7 @@ const lgDot=r=>{const c=r>=1250?'#5ce1ff':r>=1100?'#ffd23f':r>=950?'#cfd6e0':'#c
 const FFG={flask:{e:'🍾',n:'Flaschen-Grab',h:'Eine Flasche weniger als Spieler – schnapp dir eine, sonst bist du raus!',st:'background:linear-gradient(180deg,#6ff0ff,#27e1ff);box-shadow:0 6px 0 #0a7f94'},
  dobble:{e:'🔎',n:'Symbol-Jagd',h:'Finde als Erster das Symbol, das auf deiner Karte und in der Mitte liegt.',st:'background:linear-gradient(180deg,#ff7ab8,#ff3d96);box-shadow:0 6px 0 #a1155c;color:#fff'},
  minor:{e:'🎯',n:'Minderheit gewinnt',h:'Wähle, was die wenigsten wählen – die Seltensten punkten.',st:'background:linear-gradient(180deg,#ffe27a,#ffd23f);box-shadow:0 6px 0 #b66a00'},
+ quiz:{e:'🧠',n:'Speed-Quiz',h:'Eine Frage, vier Antworten – wer zuerst richtig antwortet, bekommt den Punkt. Falsch = kurz gesperrt.',st:'background:linear-gradient(180deg,#b9a9f5,#8d7cf0);box-shadow:0 6px 0 #4b3aa8;color:#fff'},
  kartoffel:{e:'🥔',n:'Heiße Kartoffel',h:'Gib die Kartoffel schnell weiter – wer sie hält, wenn sie hochgeht, geht leer aus. Alle anderen punkten.'},
  sprint:{e:'👆',n:'Tipp-Sprint',h:'Nach dem Countdown 6 Sekunden lang so schnell wie möglich tippen – die meisten Taps gewinnen.'},
  einzig:{e:'🔢',n:'Einzigartige Zahl',h:'Wähle eine Zahl. Gewonnen hat die kleinste Zahl, die kein anderer gewählt hat.'},
@@ -1448,6 +1449,12 @@ function ffaRender(){const f=FFX,v=f.v;if(!v)return;
  if(f.key&&!document.getElementById('ffa')){ffaStop();return}
  const key=v.ph+'|'+v.rnd+'|'+v.g;
  if(key!==f.key){f.key=key;f.dyn='';ffaScr()}else ffaUpd()}
+const BPK={Pixel:'h',Zap:'h',Bolt:'h',Echo:'s',Luna:'s',Nova:'s'},BPL={h:'Hektiker',s:'Sniper'},
+ BSAY={n:{w:['Zu leicht! 😎','GG, war knapp.','Ich sag nur: Zack.'],l:['Nächstes Mal!','Gut gespielt, ihr.','Ich war abgelenkt …']},
+  h:{w:['Zu schnell für euch! ⚡','Huch, schon vorbei?','Rums – gewonnen!'],l:['Ich war zu schnell … oder so.','Hektik ist keine Strategie. 😅','Moment, nochmal!']},
+  s:{w:['Ruhe bewahren zahlt sich aus. 🎯','Präzision schlägt Tempo.','Alles nach Plan.'],l:['Ich hab nur kurz nachgedacht.','Das war Absicht. Glaub ich.','Ein Sniper braucht Geduld.']}};
+const bKind=n=>BPK[String(n).replace(/^🤖/,'').replace(/\d+$/,'')]||'n',bLbl=n=>BPL[bKind(n)]||'',bSay=(n,k,seed)=>{const L=BSAY[bKind(n)][k];return L[(seed+String(n).length)%L.length]},
+ bQuote=(n,k,seed)=>`<div class="c mut" style="font-size:14px">${esc(n)}: „${bSay(n,k,seed)}“</div>`;
 const BLV=['','Leicht','Mittel','Schwer','Profi'],TMS={A:{e:'⚡',n:'Blitz'},B:{e:'🧠',n:'Hirn'}};
 function ffaScr(){const f=FFX,v=f.v,g=FFG[v.g],me=v.host===f.me;
  if(v.ph==='lobby'){
@@ -1485,6 +1492,7 @@ function ffaScr(){const f=FFX,v=f.v,g=FFG[v.g],me=v.host===f.me;
   app.innerHTML=`<div class="scr" id="ffa"><div class="mid" style="justify-content:flex-start;padding-top:10px"><div class="c mut">${v.tm?'🏆 Mini-Turnier – Gesamtwertung':g.e+' '+g.n}</div><div class="big pop" style="font-size:clamp(34px,11vw,52px)">${iw?'🏆 Du hast gewonnen!':'🏁 Geschafft!'}</div>
   <div class="banner" style="font-size:22px">${v.team?(tw.length>1?'Unentschieden: ':'Siegerteam: ')+tw.map(t=>TMS[t].e+' '+TMS[t].n).join(' & ')+` (${ts.A} : ${ts.B})`:(win.length>1?'Unentschieden: ':'Sieger: ')+win.map(nmx).join(', ')}</div>
   <div class="card" style="width:100%">${ord.map((p,i)=>`<div class="rk" style="margin:4px 0${p.n===f.me?';outline:2px solid var(--yel)':''}"><span style="width:30px;text-align:center">${med[i]||(i+1)+'.'}</span><b style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">${v.team&&p.tt?TMS[p.tt].e+' ':''}${nmx(p.n)}</b><span>${p.s} ${v.tm||v.g==='flask'?'Pkt':g.e}</span></div>`).join('')}</div>
+  ${(()=>{const bw=L.filter(p=>p.bot&&win.includes(p.n))[0],bl=[...L].filter(p=>p.bot).sort((a,b)=>a.s-b.s)[0];return bw?bQuote(bw.n,'w',v.rnd):bl&&!win.includes(bl.n)?bQuote(bl.n,'l',v.rnd):''})()}
   ${me?'<button class="btn pink" id="fag">🔁 Nochmal (Lobby)</button>':'<div class="hint">Der Host kann direkt eine neue Runde starten.</div>'}<div class="hint" id="fst"></div></div>${ffaBar()}</div>`;
   if(me)$('#fag').onclick=()=>{$('#fag').disabled=true;ffaCall('again')};ffaBindLeave();sfx(iw?'win':'ok');if(iw)confetti(160);return}
  if(v.ph==='between'){ffaBetween();return}
@@ -1494,6 +1502,10 @@ function ffaScr(){const f=FFX,v=f.v,g=FFG[v.g],me=v.host===f.me;
   $('#fgrid').onclick=e=>{const b=e.target.closest('button[data-i]');if(!b||b.disabled)return;const i=+b.dataset.i,x=FFX.v;if(!x||x.ph!=='play')return;
    const al=x.st.al||[];if(!al.includes(FFX.me))return;const cur=x.st.b[i];if(cur.o===FFX.me||(cur.o&&cur.prot)){sfx('bad');return}
    x.st.b=x.st.b.map((q,j)=>j===i?{o:FFX.me,prot:true}:q.o===FFX.me?{o:null,prot:false}:q);sfx('tap',i);ffaUpd();ffaCall('grab',null,i)};
+  ffaBindLeave();sfx('go')}
+ else if(v.g==='quiz'){
+  app.innerHTML=`<div class="scr" id="ffa"><div id="fsr"></div><div class="c" style="font-weight:900;font-size:16px">Runde ${v.rnd} von ${v.rounds}</div><div class="fcard"><div class="big" id="fqq" style="font-size:clamp(20px,6vw,28px);line-height:1.25;min-height:72px"></div></div><div class="grid g2" id="fqa" style="gap:10px"></div><div class="fbar"><i id="ftm"></i></div><div class="hint" id="fst"></div>${ffaBar()}</div>`;
+  $('#fqa').onclick=e=>{const b=e.target.closest('button[data-i]');if(!b||b.disabled)return;const x=FFX.v;if(!x||x.ph!=='play'||Date.now()<FFX.lkUntil){sfx('bad');return}sfx('tap',+b.dataset.i);ffaCall('ans',null,+b.dataset.i)};
   ffaBindLeave();sfx('go')}
  else if(v.g==='dobble'){
   app.innerHTML=`<div class="scr" id="ffa"><div id="fsr"></div><div class="fcard"><div class="c mut" style="font-size:13px">Mitte</div><div class="fsyms" id="fmid"></div></div>
@@ -1545,6 +1557,7 @@ function ffaScr(){const f=FFX,v=f.v,g=FFG[v.g],me=v.host===f.me;
  ffaUpd()}
 function ffaBetween(){const f=FFX,v=f.v,me=v.host===f.me,st=v.st;let head='',body='';
  if(v.g==='flask'){const last=st.last||[];head=last.length?`💥 ${last.map(nmx).join(', ')} ${last.length>1?'sind':'ist'} raus!`:'Keiner raus';body=`<div class="c mut">Noch ${(st.al||[]).length} im Spiel</div>${last.includes(f.me)?'<div class="c">Du bleibst als Zuschauer dabei 👀</div>':'<div class="c">Gleich geht’s weiter – mach dich bereit!</div>'}`;if(last.includes(f.me))sfx('lose');else sfx('ok')}
+ else if(v.g==='quiz'){const w=st.w,o=st.o||[];head=w?(w===f.me?'🏆 Richtig – du warst am schnellsten!':`🏁 ${nmx(w)} war am schnellsten!`):'⏱ Keiner hat es gewusst';body=`<div class="c mut">${esc(st.q||'')}</div><div class="banner" style="font-size:22px">✅ ${esc(o[st.c]||'')}</div>`;sfx(w===f.me?'win':w?'ok':'bad')}
  else if(v.g==='dobble'){const w=st.w,com=(st.my||[]).find(s=>(st.c||[]).includes(s));head=w?(w===f.me?'🏆 Du warst am schnellsten!':`🏁 ${nmx(w)} war am schnellsten!`):'⏱ Keiner hat es gefunden';body=`<div class="c mut">Das gesuchte Symbol:</div><div style="font-size:64px;text-align:center">${com||'❓'}</div>`;sfx(w===f.me?'win':w?'ok':'bad')}
  else if(v.g==='zwei3'){const res=st.res||{win:[],avg:0,tg:0},picks=st.picks||{},rows=Object.keys(picks).sort((a,b)=>Math.abs(picks[a]-res.tg)-Math.abs(picks[b]-res.tg));
   head=`⅔ des Durchschnitts: ${res.tg}`;body=`<div class="c mut">Durchschnitt ${res.avg} → Ziel ${res.tg}</div><div class="c">${res.win.length?'Am nächsten dran: '+res.win.map(nmx).join(', '):''}</div><div class="card" style="width:100%">${rows.map(n=>`<div class="rk" style="margin:4px 0${res.win.includes(n)?';outline:3px solid var(--yel)':''}"><b style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">${nmx(n)}</b><span>${picks[n]}</span></div>`).join('')}</div>`;sfx(res.win.includes(f.me)?'win':'ok')}
@@ -1563,7 +1576,7 @@ function ffaBetween(){const f=FFX,v=f.v,me=v.host===f.me,st=v.st;let head='',bod
   head=res.win.length?`🎯 Punkte für: ${res.win.map(nmx).join(', ')}`:'Niemand bekommt einen Punkt';
   body=`<div class="grid g2" style="gap:10px">${FFO.map((e,o)=>`<div class="card c" style="padding:10px${(res.win||[]).some(w=>picks[w]===o)?';outline:3px solid var(--yel)':''}"><div style="font-size:38px">${e}</div><b>${by(o).length}×</b><div class="mut" style="font-size:12px">${by(o).map(nmx).join(', ')||'–'}</div></div>`).join('')}</div>`;
   sfx(res.win.includes(f.me)?'win':'ok')}
- app.innerHTML=`<div class="scr" id="ffa"><div id="fsr"></div><div class="mid" style="justify-content:center"><div class="banner pop" style="font-size:24px">${head}</div>${body}</div><div class="hint" id="fst"></div>${ffaBar()}</div>`;ffaBindLeave();ffaUpd()}
+ app.innerHTML=`<div class="scr" id="ffa"><div id="fsr"></div><div class="mid" style="justify-content:center"><div class="banner pop" style="font-size:24px">${head}</div>${body}${(()=>{const w=st.w||(st.res&&st.res.win&&st.res.win[0])||(st.res&&st.res.ord&&st.res.ord[0]);const bp=w&&v.pl.find(p=>p.n===w&&p.bot);return bp?bQuote(w,'w',v.rnd):''})()}</div><div class="hint" id="fst"></div>${ffaBar()}</div>`;ffaBindLeave();ffaUpd()}
 function ffaMerkTick(){const f=FFX;if(!f||!document.getElementById('fshow'))return;const v=f.v,n=Date.now()-f.rs,sh=v.st.sh,sq=v.st.sq,el=$('#fshow'),hd=$('#fhd');
  if(n<sh){const i=Math.floor((n-400)/700),ph=(n-400)%700;el.textContent=(n>=400&&i>=0&&i<sq.length&&ph<560)?FFO[sq[i]]:'·'}
  else if(!f.inp){f.inp=true;if(hd)hd.textContent='Jetzt du! Tippe die Reihenfolge …';el.textContent='❔'}
@@ -1576,7 +1589,7 @@ function ffaSprTick(){const f=FFX;if(!f||!document.getElementById('ftap'))return
 function ffaUpd(){const f=FFX,v=f.v;if(!v||!document.getElementById('ffa'))return;
  const sr=$('#fsr');if(sr)sr.innerHTML=ffaStrip(v);
  if(v.ph==='lobby'){const d=$('#fdyn');if(!d)return;const me=v.host===f.me,vt=v.st.vt||{},mv=v.st.mv,ex=v.st.ex||[],tm=!!v.st.tm,en=Object.keys(FFG).filter(k=>!ex.includes(k));
-  const h=`<div class="card" style="padding:10px"><div class="fstrip">${(()=>{const chip=p=>p.bot?`<span class="fchip">${esc(p.n)} <small>${BLV[p.bot]}</small></span>`:`<span class="fchip${p.n===f.me?' me':''}${!p.on?' off':''}">${p.n===v.host?'👑 ':''}${nmx(p.n)}${!p.on?' 📴':''}</span>`;
+  const h=`<div class="card" style="padding:10px"><div class="fstrip">${(()=>{const chip=p=>p.bot?`<span class="fchip">${esc(p.n)} <small>${BLV[p.bot]}${bLbl(p.n)?' · '+bLbl(p.n):''}</small></span>`:`<span class="fchip${p.n===f.me?' me':''}${!p.on?' off':''}">${p.n===v.host?'👑 ':''}${nmx(p.n)}${!p.on?' 📴':''}</span>`;
    if(!v.st.team)return v.pl.map(chip).join('');
    return'</div>'+['A','B'].map(t=>`<div class="c" style="font-weight:900;margin-top:8px">${TMS[t].e} Team ${TMS[t].n}</div><div class="fstrip">${v.pl.filter(p=>p.tt===t).map(chip).join('')||'<span class="mut">–</span>'}</div>`).join('')+'<div>'})()}</div><div class="mut c" style="font-size:12px;margin-top:6px">${v.pl.length} von max. 10 Spielern</div></div>
   <div class="card" style="padding:12px">${tm?'<div class="c" style="font-weight:900">🏆 Mini-Turnier</div><div class="c mut" style="font-size:13px;margin-top:4px">Es werden bis zu 4 zufällige Spiele nacheinander gespielt (je 3 Runden). Pro Spiel gibt es Punkte nach Platz, am Ende gewinnt die Gesamtwertung.</div>':`<div class="c" style="font-weight:900">🗳️ Welches Spiel soll es sein?</div><div class="c mut" style="font-size:13px;margin:2px 0 8px">Das Spiel mit den meisten Stimmen wird gespielt (bei Gleichstand entscheidet das Los).</div>
@@ -1586,7 +1599,7 @@ function ffaUpd(){const f=FFX,v=f.v;if(!v||!document.getElementById('ffa'))retur
   ${me?`<div class="card" style="padding:10px"><div class="row"><button class="btn ghost sm" id="ftmb">🏆 Mini-Turnier: ${tm?'AN':'AUS'}</button><button class="btn ghost sm" id="ftem">👥 Teams: ${v.st.team?'AN':'AUS'}</button></div><details ${f.xo?'open':''} ontoggle="FFX&&(FFX.xo=this.open)" style="margin-top:8px"><summary style="cursor:pointer;font-weight:800">⚙️ Spiele ein-/ausschalten</summary><div class="fstrip" style="margin-top:8px">${Object.keys(FFG).map(k=>`<button class="fchip" data-x="${k}" style="border:0;color:#fff;${ex.includes(k)?'opacity:.4;text-decoration:line-through':''}">${FFG[k].e} ${FFG[k].n}</button>`).join('')}</div></details></div>`:(tm?'<div class="hint">🏆 Der Host hat das Mini-Turnier aktiviert.</div>':'')}
   ${v.st.team?`<div class="card" style="padding:10px"><div class="c" style="font-weight:900">👥 Teams – wähle dein Team</div><div class="row" style="margin-top:8px">${['A','B'].map(t=>{const mine=(v.pl.find(p=>p.n===f.me)||{}).tt===t;return`<button class="btn ghost sm" data-tm="${t}" style="${mine?'outline:3px solid var(--yel)':''}">${mine?'✔ ':''}${TMS[t].e} ${TMS[t].n}</button>`}).join('')}</div><div class="hint">Die Punkte beider Teams werden addiert. Das Team mit der höheren Summe gewinnt.</div></div>`:''}
   ${me?(()=>{const bl=v.pl.filter(p=>p.bot);return`<div class="card" style="padding:10px"><div class="row" style="align-items:center;justify-content:space-between"><b>🤖 Bots</b><span class="row" style="align-items:center;gap:8px;flex:none;width:auto"><button class="btn ghost sm" data-bm="-1" style="width:44px;padding:8px" ${bl.length?'':'disabled'}>−</button><b style="min-width:20px;text-align:center">${bl.length}</b><button class="btn ghost sm" data-bm="1" style="width:44px;padding:8px" ${bl.length>=5||v.pl.length>=10?'disabled':''}>＋</button></span></div>
-  ${bl.map(p=>`<div style="display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap"><span style="flex:1;min-width:90px;font-weight:800">${esc(p.n)}</span>${v.st.team?`<button class="btn ghost sm" data-bt="${esc(p.n)}|${p.tt==='A'?1:0}" style="width:auto;padding:6px 8px" title="Team wechseln">${TMS[p.tt||'A'].e} ${TMS[p.tt||'A'].n}</button>`:''}<span style="display:flex;gap:4px">${[1,2,3,4].map(l=>`<button class="btn ghost sm${p.bot===l?' sel':''}" data-bl="${esc(p.n)}|${l}" style="width:auto;padding:6px 8px;font-size:12px;${p.bot===l?'outline:2px solid var(--yel)':''}">${BLV[l]}</button>`).join('')}</span><button class="btn ghost sm" data-rb="${esc(p.n)}" style="width:auto;padding:6px 10px">✕</button></div>`).join('')}
+  ${bl.map(p=>`<div style="display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap"><span style="flex:1;min-width:90px;font-weight:800">${esc(p.n)}${bLbl(p.n)?` <small class="mut">${bLbl(p.n)}</small>`:''}</span>${v.st.team?`<button class="btn ghost sm" data-bt="${esc(p.n)}|${p.tt==='A'?1:0}" style="width:auto;padding:6px 8px" title="Team wechseln">${TMS[p.tt||'A'].e} ${TMS[p.tt||'A'].n}</button>`:''}<span style="display:flex;gap:4px">${[1,2,3,4].map(l=>`<button class="btn ghost sm${p.bot===l?' sel':''}" data-bl="${esc(p.n)}|${l}" style="width:auto;padding:6px 8px;font-size:12px;${p.bot===l?'outline:2px solid var(--yel)':''}">${BLV[l]}</button>`).join('')}</span><button class="btn ghost sm" data-rb="${esc(p.n)}" style="width:auto;padding:6px 10px">✕</button></div>`).join('')}
   <div class="hint">Bots füllen den Raum auf (Zahl und Stufe je Bot einstellbar). Sie zählen nicht für Statistik, Wochenaufgabe und Elo; Statistik gibt es erst ab 2 echten Spielern. Antworten und Zeiten sind Schätzwerte.</div></div>`})():''}
   ${me?`<button class="btn pink" id="fgo" ${v.pl.filter(p=>p.on).length<2?'disabled':''}>${v.pl.filter(p=>p.on).length<2?'⏳ Warte auf Mitspieler …':'🚀 Los geht’s!'}</button>`:'<div class="hint">Der Host startet, sobald alle da sind.</div>'}`;
   if(h!==f.dyn){f.dyn=h;d.innerHTML=h}return}
@@ -1595,6 +1608,11 @@ function ffaUpd(){const f=FFX,v=f.v;if(!v||!document.getElementById('ffa'))retur
  if(v.g==='flask'){const st=v.st,al=st.al||[],alive=al.includes(f.me),hd=$('#fhd'),gr=$('#fgrid');
   if(hd)hd.innerHTML=alive?`🍾 Schnapp dir eine Flasche!<div class="mut" style="font-size:14px;font-weight:700">${st.b.length} Flaschen · ${al.length} Spieler – jederzeit kann Schluss sein …</div>`:'👀 Du bist raus – schau zu';
   const sig=JSON.stringify([st.b,alive]);if(gr&&sig!==f.dyn){f.dyn=sig;gr.innerHTML=st.b.map((b,i)=>{const mine=b.o===f.me;return`<button class="fb${mine?' mine':''}${b.o&&!mine?' held':''}" data-i="${i}" ${alive?'':'disabled'}><span class="fe">🍾</span><small>${mine?'✋ Du':b.o?nmx(b.o)+(b.prot?' 🔒':''):'frei'}</small></button>`}).join('')}}
+ else if(v.g==='quiz'){const st=v.st,lk=Date.now()<f.lkUntil,qq=$('#fqq'),qa=$('#fqa');
+  if(qq&&qq.dataset.k!==st.q){qq.dataset.k=st.q;qq.textContent=st.q}
+  if(qa){const k=JSON.stringify(st.o)+lk;if(qa.dataset.k!==k){qa.dataset.k=k;qa.innerHTML=(st.o||[]).map((t,i)=>`<button class="btn ghost" data-i="${i}" ${lk?'disabled':''} style="padding:14px 8px;font-size:17px;line-height:1.2"><b style="color:var(--yel)">${'ABCD'[i]}</b> ${esc(t)}</button>`).join('')}}
+  const hs=$('#fst');if(hs)hs.textContent=lk?'❌ Falsch – kurz gesperrt …':'';
+  if(lk){setTimeout(()=>{if(FFX===f)ffaUpd()},Math.max(50,f.lkUntil-Date.now()+30))}}
  else if(v.g==='dobble'){const st=v.st,mid=$('#fmid'),my=$('#fmy'),lk=Date.now()<f.lkUntil;
   if(mid&&mid.dataset.k!==String(st.c)){mid.dataset.k=String(st.c);mid.innerHTML=st.c.map(s=>`<span>${s}</span>`).join('')}
   if(my){const k=String(st.my)+lk;if(my.dataset.k!==k){my.dataset.k=k;my.innerHTML=(st.my||[]).map(s=>`<button data-s="${s}" ${lk?'disabled':''}>${s}</button>`).join('')}}
@@ -1909,7 +1927,7 @@ function errSend(msg,src){try{if(ERRN>=3||!DB.sb||!DB.sb.url||!/^https?:/.test(l
 addEventListener('error',e=>errSend(e.message,(e.filename||'')+':'+(e.lineno||0)+':'+(e.colno||0)));
 addEventListener('unhandledrejection',e=>{const r=e.reason;if(r&&(r.auth||r.status||r.nf||r.full||r.dup))return;errSend('Promise: '+(r&&r.message||r),'')});
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-10-22';const BVN='2.12.0';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-10-23';const BVN='2.13.0';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;font-weight:800;text-align:center';
