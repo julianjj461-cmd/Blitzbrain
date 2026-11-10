@@ -641,8 +641,11 @@ let S={names:[],seed:0,stages:[],cur:0,res:[]};
 const names=()=>DB.names;
 const BNAMES=['🤖Robo','🤖Pixel','🤖Blitz','🤖Turbo','🤖Nova'];
 /* Bot-Zeit für ein Spiel: Basis = Median deiner bisherigen Zeiten in diesem Spiel (sonst 3,2 s), mal Stufen-Faktor, +Zufall, evtl. Fehler (+1,5 s) */
-function botTime(lv,k,seed){const r=mulberry((seed|0)+lv*977),a=(DB.runs||[]).map(x=>x.g&&typeof x.g[k]==='number'?x.g[k]:null).filter(x=>x&&x>=400&&x<=60000).sort((x,y)=>x-y),
- base=a.length>=3?a[a.length>>1]:3200,f=[1,1.7,1.3,1.05,.85,.72,.6][lv]||1.3,pen=r()<[0,.5,.3,.12,.03,.01,0][lv]?1500:0;
+const BDEF={emoji:5500,folge:16000,fuenfzig:8800,gross:2400,pfeile:8000,prim:14600,sprint:2500,tier:7500,waage:21000,weg:9500},BRF=[1,1.47,1.25,1.09,.96,.86,.78];
+function botTime(lv,k,seed,ref){const r=mulberry((seed|0)+lv*977);
+ if(ref>0){const pen=r()<[0,.15,.1,.06,.03,.01,0][lv]?1500:0,t=Math.min(90000,Math.max(500,Math.round(ref*BRF[lv]*(.6+r()*.8)))+pen);return{t,pen}}
+ const a=(DB.runs||[]).map(x=>x.g&&typeof x.g[k]==='number'?x.g[k]:null).filter(x=>x&&x>=400&&x<=60000).sort((x,y)=>x-y),
+ base=a.length>=3?a[a.length>>1]:(BDEF[k]||7000),f=[1,1.7,1.3,1.05,.85,.72,.6][lv]||1.3,pen=r()<[0,.5,.3,.12,.03,.01,0][lv]?1500:0;
  return{t:Math.round(base*f*(.88+r()*.24)+pen),pen}}
 function botBox(){DB.pb=DB.pb||[];const n=DB.pb.length;
  return`<div class="card" style="padding:10px"><div class="row" style="align-items:center;justify-content:space-between"><b>🤖 Bots</b><span class="row" style="align-items:center;gap:8px;flex:none;width:auto"><button class="btn ghost sm" data-pm="-1" style="width:44px;padding:8px" ${n?'':'disabled'}>−</button><b style="min-width:20px;text-align:center">${n}</b><button class="btn ghost sm" data-pm="1" style="width:44px;padding:8px" ${n>=5?'disabled':''}>＋</button></span></div>
@@ -856,10 +859,10 @@ function duelSetup(){
 function duelStart(){
  V.games=shuffle(POOL(),Math.random).slice(0,V.rounds);V.rec=0;V.er=0;V.i=0;V.sc=[0,0];V.tot=[0,0];V.hist=[];duelRound();
 }
-function duelRound(){V.seed=(Math.random()*1e9)|0;V.k=V.games[V.i];V.first=V.i%2;V.t=[null,null];duelTurn(0)}
+function duelRound(){V.seed=(Math.random()*1e9)|0;V.k=V.games[V.i];V.first=(V.bots&&V.bots[1]&&!V.bots[0])?0:V.i%2;V.t=[null,null];duelTurn(0)}
 function duelTurn(j){
  const p=j==0?V.first:1-V.first,G=STG[V.k],N=V.names;
- if(V.bots&&V.bots[p]){const b=botTime(V.bots[p],V.k,V.seed);
+ if(V.bots&&V.bots[p]){const b=botTime(V.bots[p],V.k,V.seed,V.t[1-p]);
   app.innerHTML=`<div class="scr"><div class="c mut">Runde ${V.i+1}/${V.rounds} · ${esc(N[0])} <b>${V.sc[0]} : ${V.sc[1]}</b> ${esc(N[1])}</div><div class="mid"><div class="big bounce" style="font-size:70px">🤖</div><div class="big" style="font-size:clamp(30px,10vw,44px);color:var(--cyan)">${esc(N[p])}</div><div class="c mut">${G.emoji} ${G.name} …</div><div class="c" id="bts">spielt …</div></div></div>`;
   setTimeout(()=>{const e=$('#bts');if(e){e.innerHTML=`⏱ <b>${f3(b.t)}</b>${b.pen?' (mit Fehler)':''}`;sfx('ok')}},1100);
   setTimeout(()=>{V.t[p]=b.t;j==0?duelTurn(1):duelResult()},2000);return}
@@ -2059,7 +2062,7 @@ function errSend(msg,src){try{if(ERRN>=3||!DB.sb||!DB.sb.url||!/^https?:/.test(l
 addEventListener('error',e=>errSend(e.message,(e.filename||'')+':'+(e.lineno||0)+':'+(e.colno||0)));
 addEventListener('unhandledrejection',e=>{const r=e.reason;if(r&&(r.auth||r.status||r.nf||r.full||r.dup))return;errSend('Promise: '+(r&&r.message||r),'')});
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-10-36';const BVN='2.16.0';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-10-37';const BVN='2.16.1';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--ink);font-weight:800;text-align:center';
