@@ -65,7 +65,7 @@ body{background:radial-gradient(120% 80% at 50% 0,var(--g1),var(--g2) 70%) fixed
 @keyframes up{to{transform:translate(-50%,-70px);opacity:0}}
 .cd{font:900 clamp(140px,50vw,220px) system-ui;text-align:center;color:var(--yel);text-shadow:8px 8px 0 var(--pink);animation:pop .5s}
 @keyframes pop{from{transform:scale(2);opacity:0}}
-.fstrip{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}.fchip{background:rgba(255,255,255,.12);border-radius:12px;padding:4px 9px;font-weight:800;font-size:13px}.fchip b{color:var(--yel);margin-left:3px}.fchip.me{outline:2px solid var(--yel)}.fchip.off{opacity:.45}.fchip.out{text-decoration:line-through;opacity:.55}
+.fstrip{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}.fchip{background:rgba(255,255,255,.12);border-radius:12px;padding:4px 9px;font-weight:800;font-size:13px}.fchip b{color:var(--yel);margin-left:3px}.fchip.me{outline:2px solid var(--yel)}.fchip.off{visibility:visible;opacity:.45}.fchip.out{text-decoration:line-through;opacity:.55}
 .fcard{width:100%;border-radius:20px;padding:10px;background:linear-gradient(180deg,var(--c1),var(--c2));border:2px solid #5a3fb0}.fcard.mine{border-color:var(--yel)}.fsyms{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}.fsyms>span,.fsyms>button{font-size:clamp(34px,11vw,52px);background:rgba(255,255,255,.1);border:0;border-radius:14px;padding:8px 0;text-align:center;line-height:1.1;touch-action:manipulation}.fsyms>button:disabled{opacity:.4}.fsyms>button:active{background:rgba(255,255,255,.3)}
 .fbar{height:6px;border-radius:3px;background:#ffffff22;overflow:hidden;width:100%}.fbar i{display:block;height:100%;width:100%;background:var(--yel)}
 .fb{border:0;border-radius:18px;padding:14px 4px;background:linear-gradient(180deg,var(--b2),var(--b1));color:#fff;box-shadow:0 5px 0 rgba(0,0,0,.3);font:800 13px system-ui;touch-action:manipulation;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:min(30vh,190px);justify-content:center}.fb .fe{font-size:clamp(64px,22vw,92px)}.fb.held{opacity:.55}.fb.mine{outline:4px solid var(--yel);background:linear-gradient(180deg,#8a63ff,#5a2fe0)}.fb:active{transform:translateY(3px)}.fb:disabled{opacity:.4}
@@ -1964,7 +1964,7 @@ function errSend(msg,src){try{if(ERRN>=3||!DB.sb||!DB.sb.url||!/^https?:/.test(l
 addEventListener('error',e=>errSend(e.message,(e.filename||'')+':'+(e.lineno||0)+':'+(e.colno||0)));
 addEventListener('unhandledrejection',e=>{const r=e.reason;if(r&&(r.auth||r.status||r.nf||r.full||r.dup))return;errSend('Promise: '+(r&&r.message||r),'')});
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-10-28';const BVN='2.14.0';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-10-29';const BVN='2.14.1';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;font-weight:800;text-align:center';
