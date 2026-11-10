@@ -981,3 +981,35 @@ begin
 end $$;
 grant execute on function public.ffa_do(text, text, text, text, text, integer) to anon, authenticated;
 revoke all on function public._ffa_next(public.ffa), public._ffa_view(public.ffa, text), public._ffa_stat(public.ffa) from public, anon, authenticated;
+
+-- ============================================================
+-- 21) v2.10.0: Bots einstellbar (botlv) + Bots im Online-Raum (room_bot, room_bot_result)
+-- ============================================================
+-- ffa_do: zusaetzlicher Zweig  elsif p_op = 'botlv' and r.host = p_name and r.phase = 'lobby' and p_n between 1 and 4 and r.pl ? p_arg and (r.pl->p_arg) ? 'bot' then r.pl := jsonb_set(r.pl, array[p_arg, 'bot'], to_jsonb(p_n));
+-- (vor dem Zweig 'rmbot' in ffa_do aus Abschnitt 20 einfuegen)
+create or replace function public.room_bot(p_name text, p_pin text, p_code text, p_bot text, p_game text) returns text language plpgsql security definer set search_path = public, extensions as $$
+declare s text; me text; r public.rooms;
+begin
+ s := public._auth(p_name, p_pin, false); if s not like 'ok:%' then return s; end if; me := substr(s, 4);
+ select * into r from public.rooms where code = p_code; if not found then return 'stale'; end if;
+ if r.host <> me then return 'denied'; end if;
+ if r.stages is not null or left(p_code, 1) = '1' then return 'stale'; end if;
+ if left(p_bot, 1) <> '🤖' or char_length(p_bot) > 14 or char_length(p_bot) < 2 then return 'invalid'; end if;
+ if (select count(*) from public.picks where code = p_code) >= r.size or (select count(*) from public.picks where code = p_code and name like '🤖%') >= 5 then return 'full'; end if;
+ insert into public.picks(code, name, game, picked_at) values (p_code, p_bot, p_game, now());
+ return 'ok';
+exception when unique_violation then return 'exists';
+end $$;
+create or replace function public.room_bot_result(p_name text, p_pin text, p_code text, p_bot text, p_total integer, p_pen integer, p_games jsonb) returns text language plpgsql security definer set search_path = public, extensions as $$
+declare s text; me text; r public.rooms;
+begin
+ s := public._auth(p_name, p_pin, false); if s not like 'ok:%' then return s; end if; me := substr(s, 4);
+ select * into r from public.rooms where code = p_code; if not found then return 'stale'; end if;
+ if r.host <> me or r.stages is null or left(p_code, 1) = '1' then return 'denied'; end if;
+ if not exists (select 1 from public.picks where code = p_code and name = p_bot and p_bot like '🤖%') then return 'invalid'; end if;
+ if p_total not between 700 and 600000 or coalesce(p_pen, 0) < 0 then return 'invalid'; end if;
+ delete from public.results where code = 'RAUM-' || p_code and name = p_bot;
+ insert into public.results(code, name, total_ms, pen_ms, games, rk) values ('RAUM-' || p_code, p_bot, p_total, coalesce(p_pen, 0), coalesce(p_games, '{}'::jsonb), false);
+ return 'ok';
+end $$;
+grant execute on function public.room_bot(text, text, text, text, text), public.room_bot_result(text, text, text, text, integer, integer, jsonb) to anon, authenticated;

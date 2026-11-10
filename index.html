@@ -559,19 +559,36 @@ const OFF=['rhythmus','stop0','balance','drehung'];/* aus der Auswahl genommen �
 const POOL=()=>Object.keys(STG).filter(k=>!OFF.includes(k));
 let S={names:[],seed:0,stages:[],cur:0,res:[]};
 const names=()=>DB.names;
+const BNAMES=['🤖Robo','🤖Pixel','🤖Blitz','🤖Turbo','🤖Nova'];
+/* Bot-Zeit für ein Spiel: Basis = Median deiner bisherigen Zeiten in diesem Spiel (sonst 3,2 s), mal Stufen-Faktor, +Zufall, evtl. Fehler (+1,5 s) */
+function botTime(lv,k,seed){const r=mulberry((seed|0)+lv*977),a=(DB.runs||[]).map(x=>x.g&&typeof x.g[k]==='number'?x.g[k]:null).filter(x=>x&&x>=400&&x<=60000).sort((x,y)=>x-y),
+ base=a.length>=3?a[a.length>>1]:3200,f=[1,1.7,1.3,1.05,.85][lv]||1.3,pen=r()<[0,.5,.3,.12,.03][lv]?1500:0;
+ return{t:Math.round(base*f*(.88+r()*.24)+pen),pen}}
+function botBox(){DB.pb=DB.pb||[];const n=DB.pb.length;
+ return`<div class="card" style="padding:10px"><div class="row" style="align-items:center;justify-content:space-between"><b>🤖 Bots</b><span class="row" style="align-items:center;gap:8px;flex:none;width:auto"><button class="btn ghost sm" data-pm="-1" style="width:44px;padding:8px" ${n?'':'disabled'}>−</button><b style="min-width:20px;text-align:center">${n}</b><button class="btn ghost sm" data-pm="1" style="width:44px;padding:8px" ${n>=5?'disabled':''}>＋</button></span></div>
+ ${DB.pb.map((l,i)=>`<div style="display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap"><span style="flex:1;min-width:80px;font-weight:800">${BNAMES[i]}</span>${[1,2,3,4].map(x=>`<button class="btn ghost sm" data-pl="${i}|${x}" style="width:auto;padding:6px 8px;font-size:12px;${l===x?'outline:2px solid var(--yel)':''}">${BLV[x]}</button>`).join('')}</div>`).join('')}
+ <div class="hint">Bots spielen mit Zeiten passend zu deinen bisherigen Ergebnissen (Stufe = schneller/langsamer). Sie zählen nicht für Bestenlisten.</div></div>`}
 function home(){S.code=null;S.room=null;
  app.innerHTML=`<div class="scr"><h1 class="logo">BLITZ<span>BRAIN</span></h1><p class="sub">⚔️ Party-Runde · 1 Handy · 0 Gnade</p>
  <div class="c mut">Wer spielt mit?</div>
  <div id="pl" style="display:flex;flex-direction:column;gap:8px"></div>
- <button class="btn ghost sm" id="add">＋ Spieler hinzufügen</button>
+ <button class="btn ghost sm" id="add">＋ Spieler hinzufügen</button><div id="pbx"></div>
  <button class="btn pink" id="go">LOS GEHT'S ⚡</button>${bar('⬅ Zurück')}</div>`;
+ const pb=()=>{$('#pbx').innerHTML=botBox()};pb();
+ $('#pbx').onclick=e=>{const b=e.target.closest('button');if(!b)return;DB.pb=DB.pb||[];
+  if(b.dataset.pm){if(b.dataset.pm==='1'&&DB.pb.length<5)DB.pb.push(DB.pb.length?DB.pb[DB.pb.length-1]:2);else if(b.dataset.pm==='-1')DB.pb.pop()}
+  else if(b.dataset.pl){const[i,l]=b.dataset.pl.split('|');DB.pb[+i]=+l}
+  save();sfx('tap',2);pb()};
  const pl=()=>{$('#pl').innerHTML=DB.names.map((n,i)=>`<div class="pl"><input data-i="${i}" maxlength="14" placeholder="Spieler ${i+1}" value="${esc(n)}" autocomplete="off">${DB.names.length>1?`<button data-x="${i}">✕</button>`:''}</div>`).join('')};
  pl();
  $('#pl').oninput=e=>{if(e.target.dataset.i!=null){DB.names[+e.target.dataset.i]=e.target.value;save()}};
  $('#pl').onclick=e=>{const x=e.target.dataset.x;if(x!=null){DB.names.splice(+x,1);save();pl()}};
  $('#add').onclick=()=>{ac();DB.names.push('');save();pl();$('#pl').lastChild.querySelector('input').focus()};
  $('#bt').onclick=partyHub;
- $('#go').onclick=()=>{ac();S.names=DB.names.map((n,i)=>(n.trim()||'Spieler '+(i+1)));newRound(true)};
+ $('#go').onclick=()=>{ac();S.names=DB.names.map((n,i)=>(n.trim()||'Spieler '+(i+1)));S.bots=null;
+  if((DB.pb||[]).length){S.bots={};DB.pb.forEach((l,i)=>{S.names.push(BNAMES[i]);S.bots[BNAMES[i]]=l})}
+  if(S.names.length>10){S.names=S.names.slice(0,10)}
+  newRound(true)};
 }
 function newRound(fresh){
  if(fresh){S.seed=(Math.random()*1e9)|0;S.rd=(S.rd||0)+1;draft();return}
@@ -585,6 +602,7 @@ function draft(){
  const view=()=>{const i=order.length;
   if(i>=K){S.stages=order.slice();S.cur=0;S.res=[];pass();return}
   const who=S.names[(off+i)%n];
+  if(S.bots&&S.bots[who]){order.push(shuffle(POOL().filter(k=>!order.includes(k)),Math.random)[0]);view();return}
   app.innerHTML=`<div class="scr"><div class="mid"><div class="c mut">Spiele-Wahl ${i+1}/${K} · geheim 🤫</div><div class="c mut">Handy weitergeben an</div><div class="big" style="font-size:clamp(40px,13vw,60px);color:var(--cyan)">${esc(who)}</div><div class="c mut">Du wählst 1 von 4 Spielen.<br>Die anderen sehen nicht, was du nimmst.</div></div><button class="btn pink" id="ok">ICH BIN'S – SPIELE ZEIGEN</button>${bar('⬅ Abbrechen')}</div>`;
   $('#bt').onclick=home;
   $('#ok').onclick=()=>{ac();const pool=shuffle(POOL().filter(k=>!order.includes(k)),Math.random).slice(0,4);
@@ -593,7 +611,13 @@ function draft(){
    app.querySelectorAll('.dp').forEach(b=>b.onclick=()=>{sfx('ok');order.push(b.dataset.k);view()})}};
  view();
 }
+function botTurn(){const n=S.names[S.cur],lv=S.bots[n];let t=0,pen=0;
+ S.stages.forEach((k,i)=>{const b=botTime(lv,k,S.seed+i*131+n.length);t+=b.t;pen+=b.pen});t=Math.round(t);
+ app.innerHTML=`<div class="scr"><div class="mid"><div class="big bounce" style="font-size:70px">🤖</div><div class="big" style="font-size:clamp(30px,10vw,44px);color:var(--cyan)">${esc(n)}</div><div class="c mut" id="bts">spielt …</div></div></div>`;
+ setTimeout(()=>{const e=$('#bts');if(e){e.innerHTML=`⏱ <b>${f3(t)}</b>${pen?' (mit Fehler)':''}`;sfx('ok')}},1300);
+ setTimeout(()=>{S.res.push({n,t,pen:Math.round(pen)});const more=S.cur<S.names.length-1;S.cur++;more?pass():board()},2400)}
 function pass(){
+ if(S.bots&&!S.code&&S.bots[S.names[S.cur]])return botTurn();
  const lead=S.res.length?[...S.res].sort((a,b)=>a.t-b.t)[0]:null;
  app.innerHTML=`<div class="scr"><div class="mid"><div class="c mut">${S.daily&&S.code?'📅 Tagesaufgabe · du spielst als':S.code?'Challenge '+S.code+' · du spielst als':'Handy weitergeben an'}</div><div class="big" style="font-size:clamp(40px,13vw,60px);color:var(--cyan)">${esc(S.names[S.cur])}</div>
  ${lead?`<div class="c">👑 Führt: <b>${esc(lead.n)}</b> mit ${f3(lead.t)}</div>`:''}
@@ -662,7 +686,7 @@ function board(){
  <div class="c mut">${roast}</div>
  <button class="btn pink" id="r1">🔁 Nochmal spielen</button>
  <div class="row"><button class="btn ghost sm" id="rc">🏆 Bestenlisten</button><button class="btn ghost sm" id="mn">🏠 Hauptmenü</button></div></div>`;
- $('#r1').onclick=()=>agree(S.names,'Nochmal spielen?',()=>newRound(true),board);$('#rc').onclick=()=>bestenlisten(board);$('#mn').onclick=menu;
+ $('#r1').onclick=()=>agree(S.names.filter(n=>!(S.bots&&S.bots[n])),'Nochmal spielen?',()=>newRound(true),board);$('#rc').onclick=()=>bestenlisten(board);$('#mn').onclick=menu;
 }
 /* ===== 1v1-Duell: zwei Spieler, jede Runde ein anderes Spiel ===== */
 let V=null;
@@ -736,15 +760,18 @@ function duelSetup(){
  let n=DB.vr||5;const nm=DB.vn||[DB.names[0]||'',DB.names[1]||''];
  app.innerHTML=`<div class="scr"><div class="hd"><button class="bk" id="bt" aria-label="Zurück">‹</button><h2 class="ar" style="margin:6px 0 0;--ac:#8be02e">🥊 1v1-Duell</h2></div><div class="mut">Zwei Spieler, ein Handy. Jede Runde ein anderes Spiel – wer schneller ist, holt den Punkt.</div>
  <div class="pl"><input id="v1" maxlength="14" placeholder="Spieler 1" value="${esc(nm[0])}" autocomplete="off"></div>
- <div class="pl"><input id="v2" maxlength="14" placeholder="Spieler 2" value="${esc(nm[1])}" autocomplete="off"></div>
+ <div class="pl" id="v2w"><input id="v2" maxlength="14" placeholder="Spieler 2" value="${esc(nm[1])}" autocomplete="off"></div>
+ <div class="c mut">Gegner:</div><div class="row" id="vb">${[0,1,2,3,4].map(l=>`<button class="btn ghost sm" data-b="${l}" style="padding:8px 2px">${l?'🤖 '+BLV[l]:'👤 Mensch'}</button>`).join('')}</div>
  <div class="c mut">Wie viele Runden?</div>
  <div class="row" id="vr">${[1,3,5,7,10].map(r=>`<button class="btn ghost sm" data-r="${r}"></button>`).join('')}</div>
  <button class="btn pink" id="go">LOS GEHT'S ⚡</button>${tabBar('play')}</div>`;
  const mark=()=>app.querySelectorAll('#vr .btn').forEach(b=>{const on=+b.dataset.r===n;b.textContent=(on?'✔ ':'')+b.dataset.r;b.style.outline=on?'3px solid #fff':'none'});mark();
  $('#vr').onclick=e=>{const r=e.target.dataset.r;if(r){n=+r;sfx('ok');mark()}};
+ let bl=DB.vb||0;const mk2=()=>{app.querySelectorAll('#vb .btn').forEach(b=>b.style.outline=+b.dataset.b===bl?'3px solid #fff':'none');$('#v2w').style.display=bl?'none':''};mk2();
+ $('#vb').onclick=e=>{const b=e.target.closest('[data-b]');if(b){bl=+b.dataset.b;DB.vb=bl;save();sfx('ok');mk2()}};
  $('#bt').onclick=duelHub;
- $('#go').onclick=()=>{ac();let a=$('#v1').value.trim()||'Spieler 1',b=$('#v2').value.trim()||'Spieler 2';if(a.toLowerCase()===b.toLowerCase())b+=' 2';
-  DB.vn=[a,b];DB.vr=n;save();V={names:[a,b],rounds:n};duelStart()};
+ $('#go').onclick=()=>{ac();let a=$('#v1').value.trim()||'Spieler 1',b=bl?'🤖Robo':($('#v2').value.trim()||'Spieler 2');if(a.toLowerCase()===b.toLowerCase())b+=' 2';
+  if(!bl)DB.vn=[a,b];DB.vr=n;save();V={names:[a,b],rounds:n,bots:bl?{1:bl}:null};duelStart()};
 }
 function duelStart(){
  V.games=shuffle(POOL(),Math.random).slice(0,V.rounds);V.rec=0;V.i=0;V.sc=[0,0];V.tot=[0,0];V.hist=[];duelRound();
@@ -752,6 +779,10 @@ function duelStart(){
 function duelRound(){V.seed=(Math.random()*1e9)|0;V.k=V.games[V.i];V.first=V.i%2;V.t=[null,null];duelTurn(0)}
 function duelTurn(j){
  const p=j==0?V.first:1-V.first,G=STG[V.k],N=V.names;
+ if(V.bots&&V.bots[p]){const b=botTime(V.bots[p],V.k,V.seed);
+  app.innerHTML=`<div class="scr"><div class="c mut">Runde ${V.i+1}/${V.rounds} · ${esc(N[0])} <b>${V.sc[0]} : ${V.sc[1]}</b> ${esc(N[1])}</div><div class="mid"><div class="big bounce" style="font-size:70px">🤖</div><div class="big" style="font-size:clamp(30px,10vw,44px);color:var(--cyan)">${esc(N[p])}</div><div class="c mut">${G.emoji} ${G.name} …</div><div class="c" id="bts">spielt …</div></div></div>`;
+  setTimeout(()=>{const e=$('#bts');if(e){e.innerHTML=`⏱ <b>${f3(b.t)}</b>${b.pen?' (mit Fehler)':''}`;sfx('ok')}},1100);
+  setTimeout(()=>{V.t[p]=b.t;j==0?duelTurn(1):duelResult()},2000);return}
  app.innerHTML=`<div class="scr"><div class="c mut">Runde ${V.i+1}/${V.rounds} · ${esc(N[0])} <b>${V.sc[0]} : ${V.sc[1]}</b> ${esc(N[1])}</div>
  <div class="mid">${j==1?`<div class="card c">${esc(N[V.first])} hat <b>${f3(V.t[V.first])}</b> vorgelegt</div>`:''}
  <div class="big" style="font-size:80px">${G.emoji}</div><div class="big" style="font-size:clamp(30px,10vw,44px);color:var(--cyan)">${G.name}</div>
@@ -777,14 +808,14 @@ function duelResult(){
 }
 function duelEnd(){
  const N=V.names,[x,y]=V.sc,win=x>y?0:y>x?1:V.tot[0]<V.tot[1]?0:V.tot[1]<V.tot[0]?1:-1;
- if(!V.rec){V.rec=1;h2hAdd(N[0],N[1],win>=0?N[win]:null)}
+ if(!V.rec){V.rec=1;if(!V.bots)h2hAdd(N[0],N[1],win>=0?N[win]:null)}
  sfx('win');confetti(win>=0?200:60);
  app.innerHTML=`<div class="scr"><div class="c" style="font-size:54px">${win>=0?'👑':'🤝'}</div><div class="big" style="font-size:clamp(34px,11vw,52px);color:var(--yel)">${win>=0?esc(N[win]):'Unentschieden'}</div>
  <div class="c mut">${win>=0?'gewinnt das Duell':'Absolut gleichauf!'}${x==y&&win>=0?' (schnellere Gesamtzeit)':''}</div>
  <div class="big" style="font-size:clamp(40px,13vw,60px)">${x} : ${y}</div><div class="c mut">${esc(N[0])} · ${esc(N[1])}<br>Gesamtzeit ${f3(V.tot[0])} · ${f3(V.tot[1])}</div>${h2hLine(N[0],N[1])}
  <div class="card" style="padding:10px">${V.hist.map(h=>`<div style="display:flex;justify-content:space-between;gap:8px;padding:3px 0"><span>${STG[h.k].emoji} ${STG[h.k].name}</span><span>${h.win===0?'🏆 ':''}${f3(h.t[0])} | ${h.win===1?'🏆 ':''}${f3(h.t[1])}</span></div>`).join('')}</div>
  <button class="btn pink" id="r1">🔁 Revanche</button><button class="btn" id="r2">⚙️ Andere Einstellungen</button>${bar('🏠 Hauptmenü')}</div>`;
- $('#r1').onclick=()=>agree(N,'Revanche?',duelStart,duelEnd);$('#r2').onclick=duelSetup;$('#bt').onclick=menu;
+ $('#r1').onclick=()=>agree(V.bots?[N[0]]:N,'Revanche?',duelStart,duelEnd);$('#r2').onclick=duelSetup;$('#bt').onclick=menu;
 }
 
 function duelRandom(name,n,back){back=back||menu;
@@ -1258,7 +1289,7 @@ async function inviteFriends(payload,what){ac();if(!DB.acct)return;const old=doc
 function onboard(i=0){const P=[['⚡','Schnell sein!','Mini-Spiele, die du so schnell wie möglich löst. Jeder Fehler kostet +1,5 s – die niedrigste Zeit gewinnt.'],['👥','Gemeinsam spielen','Ranked gegen Zufallsgegner, 1v1-Duelle oder Party mit einem Handy oder online. Mit Freunden: Einladung direkt ins Postfach oder per Code.'],['📅','Jeden Tag dabei','Die Tagesaufgabe gibt jeden Tag 3 neue Spiele. Spiel täglich für eine 🔥 Serie und schalte Farbthemen frei.']],[e,t,x]=P[i];
  app.innerHTML=`<div class="scr"><div class="mid"><div class="big pop" style="font-size:90px">${e}</div><div class="big" style="font-size:clamp(30px,10vw,42px);color:var(--yel)">${t}</div><div class="c mut" style="font-size:17px">${x}</div><div class="dots" style="width:120px;margin-top:8px">${P.map((_,j)=>`<i class="${j==i?'on':j<i?'dn':''}"></i>`).join('')}</div></div><button class="btn pink" id="on">${i<2?'Weiter ➜':'Los geht’s 🚀'}</button><button class="btn ghost sm" id="os">Überspringen</button></div>`;
  const end=()=>{DB.seen=1;save();menu()};$('#on').onclick=()=>{ac();i<2?onboard(i+1):end()};$('#os').onclick=end}
-function menu(){NBK=null;S.fi=false;setTimeout(installNudge,1200);applyTheme();avLoad();ibLoad();S.code=null;S.room=null;S.daily=false;
+function menu(){NBK=null;S.fi=false;S.bots=null;setTimeout(installNudge,1200);applyTheme();avLoad();ibLoad();S.code=null;S.room=null;S.daily=false;
  app.innerHTML=`<div class="scr"><div id="ver"></div><h1 class="logo">BLITZ<span>BRAIN</span></h1><div class="sub" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="white-space:nowrap">${POOL().length} Mini-Games</span>${DB.acct?'':'<button class="btn ghost sm" id="ac" style="flex:none;width:auto;padding:6px 12px;font-size:13px">👤 Anmelden</button>'}</div>
  <div class="mid" style="gap:12px"><button class="btn glow" id="mr" style="padding:22px 16px;background:linear-gradient(180deg,#ffb347,#ff7a18);box-shadow:0 7px 0 #a24a00;color:#fff;display:flex;align-items:center;gap:14px;text-align:left"><span style="font-size:42px;flex:none;line-height:1">🏆</span><span style="flex:1;min-width:0"><b style="display:block;font-size:28px;letter-spacing:1px">RANKED</b><small id="mrs" style="font-weight:800;opacity:.92;font-size:14px">Zufälliger Gegner · 3 Spiele · Elo</small></span><span style="font-size:30px;opacity:.6;flex:none">›</span></button>
  <div class="grid g3" style="gap:10px"><button class="btn mt" id="m4" style="background:linear-gradient(180deg,#b9ff6b,#8be02e);box-shadow:0 6px 0 #4c8a0e"><span>🥊</span><b>1v1-Duell</b><small>Mit Freund</small></button>
@@ -1426,7 +1457,8 @@ function ffaScr(){const f=FFX,v=f.v,g=FFG[v.g],me=v.host===f.me;
   $('#fdyn').onclick=e=>{const b=e.target.closest('button');if(!b)return;
    if(b.id==='fgo'){ac();b.disabled=true;ffaCall('start')}
    else if(b.id==='ftmb')ffaCall('tmode')
-   else if(b.dataset.ab){sfx('tap',2);ffaCall('addbot',null,+b.dataset.ab)}
+   else if(b.dataset.bm){sfx('tap',2);const bl=FFX.v.pl.filter(p=>p.bot);if(b.dataset.bm==='1')ffaCall('addbot',null,bl.length?bl[bl.length-1].bot:2);else if(bl.length)ffaCall('rmbot',bl[bl.length-1].n)}
+   else if(b.dataset.bl){sfx('tap',2);const[n,l]=b.dataset.bl.split('|');ffaCall('botlv',n,+l)}
    else if(b.dataset.rb){sfx('tap',1);ffaCall('rmbot',b.dataset.rb)}
    else if(b.dataset.x)ffaCall('ex',b.dataset.x)
    else if(b.dataset.g){const x=FFX.v,g=b.dataset.g;if(x&&x.st){const vt=x.st.vt=x.st.vt||{};if(x.st.mv&&vt[x.st.mv])vt[x.st.mv]--;vt[g]=(vt[g]||0)+1;x.st.mv=g;sfx('tap',2);ffaUpd()}ffaCall('vote',g,null)}
@@ -1538,13 +1570,15 @@ function ffaSprTick(){const f=FFX;if(!f||!document.getElementById('ftap'))return
 function ffaUpd(){const f=FFX,v=f.v;if(!v||!document.getElementById('ffa'))return;
  const sr=$('#fsr');if(sr)sr.innerHTML=ffaStrip(v);
  if(v.ph==='lobby'){const d=$('#fdyn');if(!d)return;const me=v.host===f.me,vt=v.st.vt||{},mv=v.st.mv,ex=v.st.ex||[],tm=!!v.st.tm,en=Object.keys(FFG).filter(k=>!ex.includes(k));
-  const h=`<div class="card" style="padding:10px"><div class="fstrip">${v.pl.map(p=>p.bot?(me?`<button class="fchip" data-rb="${esc(p.n)}" style="border:0;color:#fff">${esc(p.n)} <small>${BLV[p.bot]}</small> ✕</button>`:`<span class="fchip">${esc(p.n)} <small>${BLV[p.bot]}</small></span>`):`<span class="fchip${p.n===f.me?' me':''}${!p.on?' off':''}">${p.n===v.host?'👑 ':''}${nmx(p.n)}${!p.on?' 📴':''}</span>`).join('')}</div><div class="mut c" style="font-size:12px;margin-top:6px">${v.pl.length} von max. 10 Spielern</div></div>
+  const h=`<div class="card" style="padding:10px"><div class="fstrip">${v.pl.map(p=>p.bot?`<span class="fchip">${esc(p.n)} <small>${BLV[p.bot]}</small></span>`:`<span class="fchip${p.n===f.me?' me':''}${!p.on?' off':''}">${p.n===v.host?'👑 ':''}${nmx(p.n)}${!p.on?' 📴':''}</span>`).join('')}</div><div class="mut c" style="font-size:12px;margin-top:6px">${v.pl.length} von max. 10 Spielern</div></div>
   <div class="card" style="padding:12px">${tm?'<div class="c" style="font-weight:900">🏆 Mini-Turnier</div><div class="c mut" style="font-size:13px;margin-top:4px">Es werden bis zu 4 zufällige Spiele nacheinander gespielt (je 3 Runden). Pro Spiel gibt es Punkte nach Platz, am Ende gewinnt die Gesamtwertung.</div>':`<div class="c" style="font-weight:900">🗳️ Welches Spiel soll es sein?</div><div class="c mut" style="font-size:13px;margin:2px 0 8px">Das Spiel mit den meisten Stimmen wird gespielt (bei Gleichstand entscheidet das Los).</div>
   <div class="grid g3" style="gap:6px">${en.map(k=>{const n=vt[k]||0;return`<button class="btn ghost sm fvb${k===mv?' sel':''}" data-g="${k}"><span style="font-size:28px">${FFG[k].e}</span><span>${FFG[k].n}</span><b>${n} ${n===1?'Stimme':'Stimmen'}</b></button>`}).join('')}</div>`}
   ${mv&&!tm&&FFG[mv]?`<div class="c mut" style="font-size:13px;margin-top:8px">${FFG[mv].e} ${FFG[mv].h}</div>`:''}
   <div class="row" style="align-items:center;justify-content:center;margin-top:10px"><span class="mut" style="font-size:13px">Runden:</span>${me?'<button class="btn ghost sm" data-r="-1" style="width:44px;padding:8px">−</button>':''}<b>${v.rounds}</b>${me?'<button class="btn ghost sm" data-r="1" style="width:44px;padding:8px">＋</button>':''}</div><div class="c mut" style="font-size:12px">(Flaschen-Grab läuft, bis nur noch einer übrig ist)</div></div>
   ${me?`<div class="card" style="padding:10px"><button class="btn ghost sm" id="ftmb">🏆 Mini-Turnier: ${tm?'AN':'AUS'}</button><details ${f.xo?'open':''} ontoggle="FFX&&(FFX.xo=this.open)" style="margin-top:8px"><summary style="cursor:pointer;font-weight:800">⚙️ Spiele ein-/ausschalten</summary><div class="fstrip" style="margin-top:8px">${Object.keys(FFG).map(k=>`<button class="fchip" data-x="${k}" style="border:0;color:#fff;${ex.includes(k)?'opacity:.4;text-decoration:line-through':''}">${FFG[k].e} ${FFG[k].n}</button>`).join('')}</div></details></div>`:(tm?'<div class="hint">🏆 Der Host hat das Mini-Turnier aktiviert.</div>':'')}
-  ${me?`<div class="card" style="padding:10px"><b>🤖 Bots hinzufügen</b><div class="row" style="margin-top:8px;gap:6px">${[1,2,3,4].map(l=>`<button class="btn ghost sm" data-ab="${l}" style="padding:8px 4px;flex:1;width:auto">${BLV[l]}</button>`).join('')}</div><div class="hint">Bots füllen den Raum auf. Sie zählen nicht für Statistik, Wochenaufgabe und Elo; Statistik gibt es erst ab 2 echten Spielern. Antworten und Zeiten sind Schätzwerte.</div></div>`:''}
+  ${me?(()=>{const bl=v.pl.filter(p=>p.bot);return`<div class="card" style="padding:10px"><div class="row" style="align-items:center;justify-content:space-between"><b>🤖 Bots</b><span class="row" style="align-items:center;gap:8px;flex:none;width:auto"><button class="btn ghost sm" data-bm="-1" style="width:44px;padding:8px" ${bl.length?'':'disabled'}>−</button><b style="min-width:20px;text-align:center">${bl.length}</b><button class="btn ghost sm" data-bm="1" style="width:44px;padding:8px" ${bl.length>=5||v.pl.length>=10?'disabled':''}>＋</button></span></div>
+  ${bl.map(p=>`<div style="display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap"><span style="flex:1;min-width:90px;font-weight:800">${esc(p.n)}</span><span style="display:flex;gap:4px">${[1,2,3,4].map(l=>`<button class="btn ghost sm${p.bot===l?' sel':''}" data-bl="${esc(p.n)}|${l}" style="width:auto;padding:6px 8px;font-size:12px;${p.bot===l?'outline:2px solid var(--yel)':''}">${BLV[l]}</button>`).join('')}</span><button class="btn ghost sm" data-rb="${esc(p.n)}" style="width:auto;padding:6px 10px">✕</button></div>`).join('')}
+  <div class="hint">Bots füllen den Raum auf (Zahl und Stufe je Bot einstellbar). Sie zählen nicht für Statistik, Wochenaufgabe und Elo; Statistik gibt es erst ab 2 echten Spielern. Antworten und Zeiten sind Schätzwerte.</div></div>`})():''}
   ${me?`<button class="btn pink" id="fgo" ${v.pl.filter(p=>p.on).length<2?'disabled':''}>${v.pl.filter(p=>p.on).length<2?'⏳ Warte auf Mitspieler …':'🚀 Los geht’s!'}</button>`:'<div class="hint">Der Host startet, sobald alle da sind.</div>'}`;
   if(h!==f.dyn){f.dyn=h;d.innerHTML=h}return}
  const lt=$('#ftm');if(lt&&v.left!=null){const left=Math.max(0,v.left-(Date.now()-f.t0)),tot=v.tot||10000;lt.style.transition='none';lt.style.width=(left/tot*100)+'%';requestAnimationFrame(()=>{lt.style.transition='width '+(left/1000)+'s linear';lt.style.width='0%'})}
@@ -1639,10 +1673,16 @@ function fernRoom(pre=''){S.code=null;S.room=null;if(needAcct(fernRoom,pre))retu
  app.innerHTML=`<div class="scr"><div class="hd"><button class="bk" id="bt" aria-label="Zurück">‹</button><h2 class="ar" style="margin:6px 0 0;--ac:#ff5aa5">🏠 Raum</h2></div><div class="mut">Alle treten mit dem Code bei und wählen heimlich 1 von 4 Spielen. Wenn alle bereit sind, startet der Host den gemeinsamen Countdown (bis zu 10 Spieler; werden mehr als 5 Spiele gewählt, werden 5 ausgelost).</div>
  ${nameField()}
  <h3 style="margin:4px 0 0">Neuen Raum eröffnen</h3>
+ <div id="pbx"></div>
  <button class="btn pink" id="rmk">✨ Raum eröffnen</button>
  <h3 style="margin:8px 0 0">Raum beitreten</h3>
  <div class="pl"><input id="rcd" maxlength="9" placeholder="Raum-Code, z. B. K7P2" value="${esc(pre)}" autocomplete="off" autocapitalize="characters" style="text-transform:uppercase;letter-spacing:2px"></div>
  <button class="btn" id="rjn">▶ Raum beitreten</button><div class="hint" id="er"></div>${tabBar('play')}</div>`;
+ {const pb=()=>{$('#pbx').innerHTML=botBox()};pb();
+  $('#pbx').onclick=e=>{const b=e.target.closest('button');if(!b)return;DB.pb=DB.pb||[];
+   if(b.dataset.pm){if(b.dataset.pm==='1'&&DB.pb.length<5)DB.pb.push(DB.pb.length?DB.pb[DB.pb.length-1]:2);else if(b.dataset.pm==='-1')DB.pb.pop()}
+   else if(b.dataset.pl){const[i,l]=b.dataset.pl.split('|');DB.pb[+i]=+l}
+   save();sfx('tap',2);pb()}}
  $('#rmk').onclick=async()=>{ac();const v=getName();$('#er').textContent='Eröffne Raum …';try{await roomCreate(v)}catch(e){$('#er').textContent='❌ Raum konnte nicht erstellt werden. Ist die Raum-Tabelle in Supabase angelegt?'}};
  $('#rjn').onclick=async()=>{ac();const v=getName(),c=$('#rcd').value;if(c.trim().length<4){$('#er').textContent='❌ Bitte den Raum-Code eingeben.';return}$('#er').textContent='Trete bei …';try{await roomJoin(c,v)}catch(e){$('#er').textContent=e.auth?'❌ Anmeldung ungültig – im Hauptmenü unter 👤 neu anmelden.':e.nf?'❌ Raum nicht gefunden.':e.full?'❌ Der Raum ist voll oder die Runde läuft schon.':'❌ Beitritt nicht möglich (Internet oder Server pausiert?).'}};
  $('#bt').onclick=()=>(NBK||fern)();
@@ -1745,12 +1785,14 @@ async function roomRpc(fn,args){if(!DB.acct)throw Object.assign(new Error('kein 
  const s=await rpc(fn,{p_name:DB.acct.name,p_pin:DB.acct.pin,...args});
  if(s==='exists'||s==='taken')throw Object.assign(new Error('HTTP 409'),{status:409});
  if(s!=='ok'&&s!=='stale')throw Object.assign(new Error(String(s)),{auth:true});return s}
-const RMCH='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let RM=null,rmT=0;
+const RMCH='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let RM=null,rmT=0,RMB=null;
 const rmStop=()=>{clearInterval(rmT);rmT=0};
 async function roomCreate(name){
  for(let i=0;i<6;i++){const code=[...Array(4)].map(()=>RMCH[Math.random()*RMCH.length|0]).join('');
   try{await roomRpc('create_room',{p_code:code,p_seed:(Math.random()*2e9)|0,p_size:10,p_stages:null})}catch(e){if(e.status==409)continue;throw e}
-  await joinPick(code,name);roomEnter(code,name);return code}
+  await joinPick(code,name);
+  RMB=null;{const bl=(DB.pb||[]).slice(0,9),used=[],ok=[];for(let i=0;i<bl.length;i++){const g=shuffle(POOL().filter(k=>!used.includes(k)),Math.random)[0];used.push(g);try{if(await rpc('room_bot',{p_name:DB.acct.name,p_pin:DB.acct.pin,p_code:code,p_bot:BNAMES[i],p_game:g})==='ok')ok.push({n:BNAMES[i],l:bl[i]})}catch(e){}}if(ok.length)RMB={code,bots:ok}}
+  roomEnter(code,name);return code}
  throw new Error('Code')}
 async function roomJoin(code,name,x){code=code.trim().toUpperCase().replace(/^RAUM-/,'');
  const rm=await api('GET',`rooms?code=eq.${encodeURIComponent(code)}&select=*`);if(!rm||!rm[0])throw Object.assign(new Error('nf'),{nf:true});
@@ -1836,7 +1878,10 @@ function remoteEnd(){
  countUp();bindRate();$('#sh').onclick=()=>shareTxt(txt,$('#sh'));$('#shi').onclick=()=>shareImg({name:r.n,sub:dly?'📅 Tagesaufgabe':'⚡ Challenge',big:f3(r.t),lines:[r.pen?'inkl. '+f3(r.pen)+' Strafzeit':'✨ Fehlerfrei!',...S.stages.map(k=>STG[k].emoji+' '+STG[k].name+': '+f3(g[k]||0))]});
  $('#cp').onclick=dly?()=>sbView(code,daily,1):()=>shareTxt(`⚡ BLITZBRAIN-Challenge! Code: ${code}${lnk(code)}\nUnter „Party“ → „Schnell-Challenge“ eingeben und meine Zeit schlagen.`,$('#cp'));
  $('#again').onclick=()=>{if(S.room)return roomRematch();if(dly)S.seed=(Math.random()*1e9)|0;S.cur=0;S.res=[];pass()};$('#mn').onclick=menu;if($('#fri'))$('#fri').onclick=()=>friendsScreen();
- if(on){const up=()=>sbSend(r,g,code).then(()=>sbRender(code,S.room?S.stages:null),()=>{const el=document.getElementById('sbv');if(el){el.innerHTML='⚠️ Zeit konnte nicht gesendet werden. <button class="btn ghost sm" id="rt">Nochmal senden</button>';$('#rt').onclick=()=>{el.textContent='Sende Zeit …';up()}}});up()}
+ const sendB=()=>{if(!(on&&RMB&&S.room&&code==='RAUM-'+RMB.code))return Promise.resolve();
+  return Promise.all(RMB.bots.map((b,bi)=>{let t=0,pen=0;const gm={};S.stages.forEach((k,i)=>{const x=botTime(b.l,k,S.seed+i*131+b.n.length);t+=x.t;pen+=x.pen;gm[k]=x.t});
+   return rpc('room_bot_result',{p_name:DB.acct.name,p_pin:DB.acct.pin,p_code:RMB.code,p_bot:b.n,p_total:Math.max(700,Math.round(t)),p_pen:Math.round(pen),p_games:gm}).catch(()=>{})}))};
+ if(on){const up=()=>sendB().then(()=>sbSend(r,g,code)).then(()=>sbRender(code,S.room?S.stages:null),()=>{const el=document.getElementById('sbv');if(el){el.innerHTML='⚠️ Zeit konnte nicht gesendet werden. <button class="btn ghost sm" id="rt">Nochmal senden</button>';$('#rt').onclick=()=>{el.textContent='Sende Zeit …';up()}}});up()}
 }
 DB.vis=(DB.vis||0)+1;save();
 if(DB.rv!==1){if((DB.runs||[]).length||Object.keys(DB.arc||{}).length)DB.seen=1;DB.rv=1;DB.runs=[];DB.arc={};save()}
@@ -1846,7 +1891,7 @@ setTimeout(()=>{if(DB.notif&&DB.acct)pushOn()},5000);
 try{const h=decodeURIComponent((location.hash||'').slice(1));if(h&&/^DUELL-[A-Z0-9]{4}$/i.test(h))duelOnline(h.slice(6).toUpperCase());else if(h&&(dec(h)||/^RAUM-[A-Z0-9]{4,8}$/i.test(h)))fern(h);else if(h&&/^FFA-[A-Z0-9]{4,8}$/i.test(h))ffaHub(h)}catch(e){}
 try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&location.hostname.endsWith('github.io'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-10-17';const BVN='2.9.0';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-10-18';const BVN='2.10.0';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;font-weight:800;text-align:center';
