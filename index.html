@@ -671,7 +671,7 @@ function h2hAdd(a,b,w){DB.h2h=DB.h2h||{};const k=h2hKey(a,b),e=DB.h2h[k]||(DB.h2
  if(w&&DB.acct&&skey(w)==skey(DB.acct.name))qAdd('duelwin');e.t=Date.now();e.n[a.toLowerCase()]=a;e.n[b.toLowerCase()]=b;if(w){const l=w.toLowerCase();e.w[l]=(e.w[l]||0)+1}else e.d++;save()}
 function h2hLine(a,b){const e=DB.h2h&&DB.h2h[h2hKey(a,b)];if(!e)return'';const x=e.w[a.toLowerCase()]||0,y=e.w[b.toLowerCase()]||0;
  return `<div class="card c">📊 Bilanz gesamt<br><b>${esc(a)} ${x} : ${y} ${esc(b)}</b>${e.d?` · ${e.d}× unentschieden`:''}</div>`}
-function h2hMini(a,b){const e=DB.h2h&&DB.h2h[h2hKey(a,b)];if(!e)return'';return `Du ${e.w[a.toLowerCase()]||0} : ${e.w[b.toLowerCase()]||0}`}
+function h2hMini(a,b){const e=DB.h2h&&DB.h2h[h2hKey(a,b)];if(!e)return'';const x=e.w[a.toLowerCase()]||0,y=e.w[b.toLowerCase()]||0;return `Du ${x} : ${y}${x>y?' – du führst':x<y?' – Revanche!':''}`}
 function duelStats(back){back=back||duelHub;
  const L=Object.values(DB.h2h||{}).map(e=>{const k=Object.keys(e.n);return{a:e.n[k[0]],b:e.n[k[1]]||'?',x:e.w[k[0]]||0,y:e.w[k[1]]||0,d:e.d}}).sort((p,q)=>(q.x+q.y+q.d)-(p.x+p.y+p.d));
  const row=r=>`<div class="rk" style="flex-wrap:wrap"><b>${esc(r.a)}</b><span>${r.x} : ${r.y}</span><b>${esc(r.b)}</b>${r.d?`<small style="width:100%">${r.d}× unentschieden</small>`:''}</div>`;
@@ -691,8 +691,9 @@ function duelStats(back){back=back||duelHub;
 }
 const league=r=>r>=1250?{e:'💎',n:'Diamant'}:r>=1100?{e:'🥇',n:'Gold'}:r>=950?{e:'🥈',n:'Silber'}:{e:'🥉',n:'Bronze'};
 let RKC='',ELM={},eloT=0;
-async function eloLoad(){if(Date.now()-eloT<120000)return;eloT=Date.now();try{const r=await rpc('elo_map',{});if(Array.isArray(r)){ELM={};r.forEach(x=>ELM[skey(x.n)]=x.r)}}catch(e){}}
-const ring=n=>{const r=ELM[skey(n)];if(r==null)return'';const c=r>=1250?'#5ce1ff':r>=1100?'#ffd23f':r>=950?'#cfd6e0':'#cd7f32';return`;box-shadow:0 0 0 3px ${c}`};
+let CRN={};const medal=n=>CRN[skey(n)]?' '+['','🥇','🥈','🥉'][CRN[skey(n)]]:'';
+async function eloLoad(){if(Date.now()-eloT<120000)return;eloT=Date.now();try{const [r,m]=await Promise.all([rpc('elo_map',{}),rpc('elo_medals',{}).catch(()=>[])]);if(Array.isArray(r)){ELM={};r.forEach(x=>ELM[skey(x.n)]=x.r)}if(Array.isArray(m)){CRN={};m.forEach(x=>CRN[skey(x.n)]=x.p)}}catch(e){}}
+const ring=n=>{const r=ELM[skey(n)];if(r==null)return'';const c=r>=1250?'#5ce1ff':r>=1100?'#ffd23f':r>=950?'#cfd6e0':'#cd7f32';return`;box-shadow:0 0 0 3px ${c}${CRN[skey(n)]?',0 0 14px 4px #ffd23f99':''}`};
 function connMsg(el,n,retry){if(!el)return;el.innerHTML=(n>=8?'📡 Keine Verbindung – prüfe dein Internet. ':'⚠️ Verbindung wackelt … ')+'<button class="btn ghost sm" id="rtb" style="width:auto;display:inline-block;padding:4px 12px;margin-left:6px">🔄 Erneut versuchen</button>';const b=el.querySelector('#rtb');if(b)b.onclick=()=>{el.textContent='Verbinde …';retry()}}
 function eloCount(a,z){try{const el=document.getElementById('elv');if(!el||(typeof matchMedia!=='undefined'&&matchMedia('(prefers-reduced-motion: reduce)').matches))return;const t0=performance.now();const f=t=>{const k=Math.min(1,(t-t0)/1000),e=1-Math.pow(1-k,3);if(!el.isConnected)return;el.textContent=Math.round(a+(z-a)*e);if(k<1)requestAnimationFrame(f)};requestAnimationFrame(f)}catch(e){}}
 async function eloShow(code,me){const box=()=>document.getElementById('elr');
@@ -1032,7 +1033,7 @@ function help(back=menu){
 const AVS=['🦊','🐙','🚀','🐲','🦄','🐼','🐸','🦁','🐧','🦉','🐝','🦖','🐳','🦋','🐢','🐯','🦈','🐨','🐵','🦩','🐺','🦔','👻','🤖'];let AV={},avT=0;
 async function avLoad(force){if(!force&&Date.now()-avT<60000)return;avT=Date.now();try{const r=await rpc('get_avatars',{});if(Array.isArray(r)){AV={};r.forEach(x=>AV[x.k]=x.a)}}catch(e){}}
 const avOf=n=>{n=String(n||'');if(DB.acct&&skey(DB.acct.name)===skey(n)&&DB.av)return DB.av;return AV[skey(n)]||''};
-const nmx=n=>(avOf(n)?avOf(n)+' ':'')+esc(n);
+const nmx=n=>(avOf(n)?avOf(n)+' ':'')+esc(n)+medal(n);
 function countUp(){try{const el=app.querySelector('.big');if(!el)return;const m=/^(\d+),(\d{3}) s$/.exec(el.textContent.trim());if(!m||(typeof matchMedia!=='undefined'&&matchMedia('(prefers-reduced-motion: reduce)').matches))return;const to=+m[1]*1000+ +m[2],t0=performance.now();
  const tick=n=>{const k=Math.min(1,(n-t0)/800),e=1-Math.pow(1-k,3);el.textContent=f3(Math.round(to*e));if(k<1)requestAnimationFrame(tick)};requestAnimationFrame(tick)}catch(e){}}
 const dayAdd=(p,n)=>new Date(Date.parse(p+'T12:00:00Z')+n*864e5).toISOString().slice(0,10);
@@ -1081,11 +1082,12 @@ async function profile(){if(!DB.acct){loginScreen(profile);return}await Promise.
  <div class="card" style="padding:12px"><b>🔥 Tagesserie</b><div style="margin-top:4px">${streakTxt(sk)}${sk.n?(sk.today?' ✔ heute gespielt':' – heute noch spielen!'):''}</div><div class="mut" style="margin-top:2px">Rekord: ${best} Tage · 🥉 ab 3 · 🥈 ab 7 · 🥇 ab 30</div></div>
  <div class="card" style="padding:12px"><b>🙂 Avatar</b><div id="avg" style="display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-top:8px">${AVS.map(a=>`<button class="btn ghost sm vb${DB.av===a?' sel':''}" data-a="${a}" style="padding:6px 0;font-size:22px;width:auto;flex:none">${a}</button>`).join('')}</div><div class="hint" id="avh"></div></div>
  <div class="card" style="padding:12px"><b>🏢 Team</b><div class="pl" style="margin-top:6px"><input id="tm" maxlength="12" list="tml" placeholder="z. B. Drachen (leer = kein Team)" value="${esc(DB.team||'')}" autocomplete="off"><datalist id="tml"></datalist></div><button class="btn sm" id="tms" style="margin-top:8px">💾 Team speichern</button><div class="hint" id="tmh"></div></div>
+ <div class="card" id="ffs" style="padding:12px"><b>🎪 Free-for-All</b><div class="mut" style="margin-top:6px">Lade …</div></div>${CRN[skey(nm)]?`<div class="card" style="padding:12px"><b>🏅 Saison-Medaille</b><div style="margin-top:4px">${['','🥇 Platz 1','🥈 Platz 2','🥉 Platz 3'][CRN[skey(nm)]]} in einer vergangenen Ranked-Saison – du trägst die Medaille hinter deinem Namen und einen goldenen Glanz um den Avatar.</div></div>`:''}
  <div id="bwrap">${badgesCard()}</div>
  <div class="card" style="padding:12px"><b>🏆 Meine Bestzeiten</b><div id="pb" class="mut" style="margin-top:6px">Lade …</div></div>
  <button class="btn ghost" id="pd">📊 Duell-Bilanz</button>${tabBar('pr')}</div>`;
  $('#pd').onclick=()=>duelStats(profile);
- bindBdg();
+ bindBdg();ffaStatLoad('ffs',true);
  document.querySelectorAll('#avg button').forEach(b=>b.onclick=async()=>{const a=b.dataset.a,nw=DB.av===a?'':a,h=document.getElementById('avh');h.textContent='Speichere …';
   try{const r=await rpc('set_avatar',{p_name:DB.acct.name,p_pin:DB.acct.pin,p_avatar:nw});if(r==='ok'){DB.av=nw;AV[skey(DB.acct.name)]=nw;save();document.querySelectorAll('#avg button').forEach(x=>x.classList.toggle('sel',x.dataset.a===nw));h.textContent=nw?'✔ Avatar gespeichert':'✔ Avatar entfernt';const t=document.querySelector('h2');if(t)t.textContent=(nw||'👤')+' '+DB.acct.name}else h.textContent='❌ Anmeldung prüfen (PIN).'}
   catch(e){h.textContent=e.status==404?'⚠️ Avatar-Funktion fehlt noch in Supabase (SQL einrichten).':'⚠️ Server nicht erreichbar.'}});
@@ -1361,15 +1363,23 @@ const ffaOpts=v=>v.g==='minor'?FFO.map((e,o)=>[o,e]):v.g==='einzig'?Array.from({
 const FFO=['⭐','🌙','🔥','🍀'];
 let FFX=null;
 function ffaStop(){if(FFX){clearInterval(FFX.iv)}FFX=null}
+const wkBar=(v,m,l)=>`<div style="margin-top:6px"><div style="display:flex;justify-content:space-between;font-size:13px"><span>${l}</span><b>${Math.min(v,m)}/${m}${v>=m?' ✔':''}</b></div><div class="fbar" style="height:8px"><i style="width:${Math.min(100,v/m*100)}%"></i></div></div>`;
+const wkHtml=s=>`<b>🗓️ Wochenaufgabe</b><div class="mut" style="font-size:12px">Gilt diese Woche (Mo–So), Free-for-All${s.wc?` · schon ${s.wc}× geschafft`:''}</div>${wkBar(s.wg||0,5,'Spiele 5 Partien')}${wkBar(s.ww||0,3,'Gewinne 3 Partien')}${(s.wg>=5&&s.ww>=3)?'<div class="c" style="margin-top:6px;font-weight:900">🏅 Diese Woche geschafft!</div>':''}`;
+async function ffaStatLoad(id,full){const el=document.getElementById(id);if(!el||!DB.acct)return;
+ try{const s=await rpc('ffa_stats',{p_name:DB.acct.name}),e2=document.getElementById(id);if(!e2||!s)return;
+  if(!full){e2.style.display='';e2.innerHTML=wkHtml(s);return}
+  const by=s.by||{},fav=Object.keys(by).filter(k=>k==='tm'||FFG[k]).sort((a,b)=>(by[b].g||0)-(by[a].g||0))[0],nm=k=>k==='tm'?'🏆 Mini-Turnier':FFG[k].e+' '+FFG[k].n;
+  e2.innerHTML=`<b>🎪 Free-for-All</b>${s.g?`<div class="row" style="margin-top:8px;text-align:center"><div><div style="font-size:26px;font-weight:900">${s.g}</div><div class="mut" style="font-size:12px">Partien</div></div><div><div style="font-size:26px;font-weight:900">${s.w}</div><div class="mut" style="font-size:12px">Siege</div></div><div><div style="font-size:26px;font-weight:900">${Math.round(s.w/s.g*100)}%</div><div class="mut" style="font-size:12px">Siegquote</div></div></div>${fav?`<div class="mut" style="margin-top:6px">Lieblingsspiel: ${nm(fav)} (${by[fav].g}× gespielt, ${by[fav].w}× gewonnen)</div>`:''}`:'<div class="mut" style="margin-top:6px">Noch keine Partie gespielt – unter Party → Free-for-All geht es los.</div>'}<div style="border-top:1px solid rgba(255,255,255,.15);margin-top:10px;padding-top:8px">${wkHtml(s)}</div>`}
+ catch(e){const e2=document.getElementById(id);if(e2&&full)e2.innerHTML='<b>🎪 Free-for-All</b><div class="mut" style="margin-top:6px">⚠️ Nicht erreichbar.</div>'}}
 function ffaHub(pre=''){S.code=null;S.room=null;S.fi=false;if(needAcct(ffaHub,pre))return;ffaStop();
- app.innerHTML=`<div class="scr"><div class="hd"><button class="bk" id="bt" aria-label="Zurück">‹</button><h2 class="ar" style="margin:6px 0 0;--ac:#3dffa0">🎪 Free-for-All</h2></div><div class="mut">Alle gegen alle, live am eigenen Handy – 2 bis 10 Spieler. Wer am schnellsten oder cleversten ist, gewinnt.</div>
+ app.innerHTML=`<div class="scr"><div class="hd"><button class="bk" id="bt" aria-label="Zurück">‹</button><h2 class="ar" style="margin:6px 0 0;--ac:#3dffa0">🎪 Free-for-All</h2></div><div class="mut">Alle gegen alle, live am eigenen Handy – 2 bis 10 Spieler. Wer am schnellsten oder cleversten ist, gewinnt.</div><div class="card" id="fwk" style="padding:10px;display:none"></div>
  <div class="mid" style="justify-content:flex-start;padding-top:6px"><h3 style="margin:0">Neuer Raum</h3>${hubBtn('fnew','🎪','Raum eröffnen','Im Raum stimmen alle ab, welches Spiel gespielt wird','background:linear-gradient(180deg,#6dffbd,#3dffa0);box-shadow:0 6px 0 #138a58')}
  <div class="c mut" style="font-size:13px">${Object.keys(FFG).map(k=>FFG[k].e+' '+FFG[k].n).join(' · ')}</div>
  <h3 style="margin:10px 0 0">… oder beitreten</h3><div class="pl"><input id="fcd" maxlength="8" placeholder="Raum-Code, z. B. K7P2" value="${esc(String(pre).replace(/^FFA-/i,''))}" autocomplete="off" autocapitalize="characters" style="text-transform:uppercase;letter-spacing:2px"></div>
  <button class="btn ghost" id="fjn">▶ Raum beitreten</button><div class="hint" id="er"></div></div>${tabBar('play')}</div>`;
  $('#fnew').onclick=()=>ffaCreate('flask');
  $('#fjn').onclick=()=>{const c=$('#fcd').value.trim().toUpperCase();if(c.length<4){$('#er').textContent='❌ Bitte den Raum-Code eingeben.';return}ffaJoin(c,e=>{$('#er').textContent=e})};
- $('#bt').onclick=partyHub}
+ $('#bt').onclick=partyHub;ffaStatLoad('fwk',false)}
 const ffaErr=r=>r==='none'?'❌ Raum nicht gefunden.':r==='started'?'❌ Die Runde läuft schon – warte auf die nächste.':r==='full'?'❌ Der Raum ist voll (max. 10).':r==='auth'?'❌ Anmeldung ungültig – im Hauptmenü unter 👤 neu anmelden.':'❌ Das hat nicht geklappt.';
 async function ffaCreate(game){ac();const el=$('#er');if(el)el.textContent='Eröffne Raum …';
  try{for(let i=0;i<6;i++){const code=[...Array(4)].map(()=>RMCH[Math.random()*RMCH.length|0]).join('');
@@ -1819,7 +1829,7 @@ setTimeout(()=>{if(DB.notif&&DB.acct)pushOn()},5000);
 try{const h=decodeURIComponent((location.hash||'').slice(1));if(h&&/^DUELL-[A-Z0-9]{4}$/i.test(h))duelOnline(h.slice(6).toUpperCase());else if(h&&(dec(h)||/^RAUM-[A-Z0-9]{4,8}$/i.test(h)))fern(h);else if(h&&/^FFA-[A-Z0-9]{4,8}$/i.test(h))ffaHub(h)}catch(e){}
 try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&location.hostname.endsWith('github.io'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-10-14';const BVN='2.6.0';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-10-15';const BVN='2.7.0';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;font-weight:800;text-align:center';

@@ -609,3 +609,56 @@ create or replace function public.admin_reset_pin(p_name text, p_pin text, p_tar
 create or replace function public.admin_wipe(p_name text, p_pin text, p_target text) returns text language plpgsql security definer set search_path = public, extensions as $$ declare k text := lower(btrim(p_target)); n integer; begin if not public._adm(p_name, p_pin) then return 'no'; end if; if k = 'admin' or not exists (select 1 from public.players where name_key = k) then return 'bad'; end if; delete from public.results where lower(name) = k; get diagnostics n = row_count; delete from public.elo where name_key = k; delete from public.elo_season where name_key = k; return 'ok:' || n; end $$;
 revoke all on function public._adm(text, text) from public, anon, authenticated;
 grant execute on function public.admin_list(text, text, text), public.admin_ban(text, text, text, boolean), public.admin_reset_pin(text, text, text), public.admin_wipe(text, text, text) to anon, authenticated;
+
+-- 18) Free-for-All-Statistik, Wochenaufgabe, Saison-Medaillen
+create table if not exists public.ffa_stats (name_key text primary key, name text not null, g integer not null default 0, w integer not null default 0, by jsonb not null default '{}', wk text not null default '', wg integer not null default 0, ww integer not null default 0, wc integer not null default 0, wcw text not null default '');
+alter table public.ffa_stats enable row level security;
+create or replace function public._ffa_stat(r public.ffa) returns void language plpgsql set search_path = public as $$
+declare x text; mx integer; cw text := to_char(now() at time zone 'Europe/Berlin', 'IYYY-IW'); gk text := case when r.tm is not null then 'tm' else r.game end; win boolean; nk text;
+begin
+ select max((value->>'s')::integer) into mx from jsonb_each(r.pl);
+ for x in select key from jsonb_each(r.pl) loop
+  win := coalesce(mx, 0) > 0 and (r.pl->x->>'s')::integer = mx;
+  nk := lower(btrim(x));
+  insert into public.ffa_stats(name_key, name) values (nk, x) on conflict (name_key) do nothing;
+  update public.ffa_stats s set name = x, g = s.g + 1, w = s.w + (case when win then 1 else 0 end),
+   by = jsonb_set(coalesce(s.by, '{}'::jsonb), array[gk], jsonb_build_object('g', coalesce((s.by->gk->>'g')::integer, 0) + 1, 'w', coalesce((s.by->gk->>'w')::integer, 0) + (case when win then 1 else 0 end)), true),
+   wg = (case when s.wk = cw then s.wg else 0 end) + 1,
+   ww = (case when s.wk = cw then s.ww else 0 end) + (case when win then 1 else 0 end),
+   wk = cw
+   where s.name_key = nk;
+  update public.ffa_stats s set wc = s.wc + 1, wcw = cw where s.name_key = nk and s.wk = cw and s.wg >= 5 and s.ww >= 3 and s.wcw is distinct from cw;
+ end loop;
+end $$;
+create or replace function public._ffa_fin(r public.ffa) returns public.ffa language plpgsql set search_path = public as $$
+declare t bigint := public._fnow(); x text; cnt integer; pts integer; gp jsonb := '{}'; tot jsonb; q text[]; i integer;
+begin
+ if r.tm is null then r.phase := 'done'; r.tp := t; perform public._ffa_stat(r); return r; end if;
+ tot := coalesce(r.tm->'tot', '{}'::jsonb);
+ for x in select key from jsonb_each(r.pl) loop
+  select count(*) into cnt from jsonb_each(r.pl) where (value->>'s')::integer > (r.pl->x->>'s')::integer;
+  pts := greatest(0, 3 - cnt);
+  gp := gp || jsonb_build_object(x, pts);
+  tot := jsonb_set(tot, array[x], to_jsonb(coalesce((tot->>x)::integer, 0) + pts), true);
+ end loop;
+ i := (r.tm->>'i')::integer; q := array(select jsonb_array_elements_text(r.tm->'q'));
+ r.tm := r.tm || jsonb_build_object('tot', tot);
+ r.tp := t;
+ if i + 1 < cardinality(q) then
+  r.phase := 'inter'; r.st := jsonb_build_object('gp', gp, 'tot', tot, 'g', r.game, 'next', q[i + 2]);
+ else
+  select jsonb_object_agg(key, ((value - 'out') - 'w') || jsonb_build_object('s', coalesce((tot->>key)::integer, 0))) into r.pl from jsonb_each(r.pl);
+  r.phase := 'done'; r.st := jsonb_build_object('tmfin', true);
+  perform public._ffa_stat(r);
+ end if;
+ return r;
+end $$;
+create or replace function public.ffa_stats(p_name text) returns jsonb language sql stable security definer set search_path = public as $$
+ select coalesce((select jsonb_build_object('g', g, 'w', w, 'by', by,
+   'wg', case when wk = to_char(now() at time zone 'Europe/Berlin', 'IYYY-IW') then wg else 0 end,
+   'ww', case when wk = to_char(now() at time zone 'Europe/Berlin', 'IYYY-IW') then ww else 0 end, 'wc', wc)
+  from public.ffa_stats where name_key = lower(btrim(p_name))), jsonb_build_object('g', 0, 'w', 0, 'by', '{}'::jsonb, 'wg', 0, 'ww', 0, 'wc', 0)) $$;
+create or replace function public.elo_medals() returns table(n text, p integer) language sql stable security definer set search_path = public as $$
+ select e.name, min(e.pos)::integer from public.elo_season e where e.pos <= 3 and e.name_key not in (select name_key from public.bans) group by e.name $$;
+revoke all on function public._ffa_stat(public.ffa), public._ffa_fin(public.ffa) from public, anon, authenticated;
+grant execute on function public.ffa_stats(text), public.elo_medals() to anon, authenticated;
