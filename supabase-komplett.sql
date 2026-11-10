@@ -1112,3 +1112,37 @@ begin
 end $$;
 grant execute on function public.room_bot(text, text, text, text, text), public.room_bot_result(text, text, text, text, integer, integer, jsonb) to anon, authenticated;
 
+
+-- ============================================================
+-- 22) v2.12.0: Anonyme App-Fehlerberichte (app_errors, log_error, admin_errors, admin_errors_clear)
+-- ============================================================
+create table if not exists public.app_errors (id bigint generated always as identity primary key, at timestamptz not null default now(), v text, msg text not null, src text, n integer not null default 1);
+alter table public.app_errors enable row level security;
+create index if not exists app_errors_at_idx on public.app_errors(at);
+
+create or replace function public.log_error(p_v text, p_msg text, p_src text) returns text language plpgsql security definer set search_path = public as $$
+declare m text := left(coalesce(p_msg, ''), 200); id0 bigint;
+begin
+ if char_length(m) < 2 then return 'invalid'; end if;
+ if (select count(*) from public.app_errors where at > now() - interval '1 minute') >= 30 then return 'limit'; end if;
+ select id into id0 from public.app_errors where msg = m and v is not distinct from left(p_v, 12) and at > now() - interval '1 day' order by id desc limit 1;
+ if id0 is not null then update public.app_errors set n = n + 1, at = now() where id = id0;
+ else
+  delete from public.app_errors where at < now() - interval '14 days';
+  insert into public.app_errors(v, msg, src) values (left(p_v, 12), m, left(p_src, 120));
+ end if;
+ return 'ok';
+end $$;
+
+create or replace function public.admin_errors(p_name text, p_pin text) returns jsonb language plpgsql security definer set search_path = public, extensions as $$
+begin
+ if not public._adm(p_name, p_pin) then return jsonb_build_object('r', 'no'); end if;
+ return jsonb_build_object('r', 'ok', 'list', coalesce((select jsonb_agg(jsonb_build_object('id', id, 'v', v, 'msg', msg, 'src', src, 'n', n, 'at', at) order by at desc) from (select * from public.app_errors order by at desc limit 50) x), '[]'::jsonb));
+end $$;
+
+create or replace function public.admin_errors_clear(p_name text, p_pin text) returns text language plpgsql security definer set search_path = public, extensions as $$
+begin
+ if not public._adm(p_name, p_pin) then return 'no'; end if;
+ delete from public.app_errors; return 'ok';
+end $$;
+grant execute on function public.log_error(text, text, text), public.admin_errors(text, text), public.admin_errors_clear(text, text) to anon, authenticated;

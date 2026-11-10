@@ -2,6 +2,7 @@
 <html lang="de"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>BLITZBRAIN</title>
+<meta name="description" content="BLITZBRAIN – das Party-Spiel: Duelle, Free-for-All, Bots. Wer ist am schnellsten?"><meta property="og:type" content="website"><meta property="og:title" content="BLITZBRAIN – schlag meine Zeit! ⚡"><meta property="og:description" content="Duelle, Free-for-All, Teams und Bots – spiel mit!"><meta property="og:image" content="https://julianjj461-cmd.github.io/Blitzbrain/og.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="https://julianjj461-cmd.github.io/Blitzbrain/og.png">
 <meta name="theme-color" content="#120b2e"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="BLITZBRAIN">
 <link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="icon-192.png">
 <style>
@@ -827,7 +828,8 @@ function duelRandom(name,n,back){back=back||menu;
   if(on){const lg=league(or||1000);app.innerHTML=`<div class="scr"><div class="mid"><div class="c mut">🏆 Ranked · Gegner gefunden</div><div class="big pop" style="font-size:clamp(32px,10vw,46px)">${esc(name)}<br><span style="color:var(--pink)">VS</span><br>${esc(on)}</div><div class="card c" style="font-size:20px">${lg.e} ${lg.n} · ${or||1000} Elo</div></div></div>`;await new Promise(z=>setTimeout(z,2200))}
   duEnter(c,name,{})};
  const mc=r=>typeof r==='string'&&r.startsWith('match:')?r.slice(6):null;
- const fail=m=>{alive=false;clearInterval(tm);app.innerHTML=`<div class="scr"><div class="mid"><div class="big" style="font-size:60px">😕</div><div class="big" style="font-size:26px">${m}</div></div><button class="btn pink" id="ra">🎲 Nochmal suchen</button>${bar('⬅ Zurück')}</div>`;$('#ra').onclick=()=>duelRandom(name,n,back);$('#bt').onclick=back};
+ const fail=m=>{alive=false;clearInterval(tm);app.innerHTML=`<div class="scr"><div class="mid"><div class="big" style="font-size:60px">😕</div><div class="big" style="font-size:26px">${m}</div></div><button class="btn pink" id="ra">🎲 Nochmal suchen</button>${/niemand/.test(m)?'<button class="btn" id="rb">🤖 Gegen Bot spielen (ohne Elo)</button><div class="hint">Der Bot passt sich deiner Liga an. Dieses Duell zählt nicht für Elo oder Rekorde.</div>':''}${bar('⬅ Zurück')}</div>`;$('#ra').onclick=()=>duelRandom(name,n,back);$('#bt').onclick=back;
+  if($('#rb'))$('#rb').onclick=()=>{ac();const r=ELM[skey(name)],lv=r==null?2:r>=1250?4:r>=1100?3:r>=950?2:1;V={names:[name,'🤖Robo'],rounds:n,bots:{1:lv}};duelStart()}};
  let tm=0;
  $('#rc').onclick=async()=>{if(!alive)return;alive=false;clearInterval(tm);let r='';try{r=await rpc('cancel_match',{p_name:DB.acct.name,p_pin:DB.acct.pin})}catch(e){}done(mc(r))};
  (async()=>{let r;try{r=await rpc('find_match',{p_name:DB.acct.name,p_pin:DB.acct.pin,p_rounds:n,p_games:games})}catch(e){return fail('Suche nicht möglich (Internet oder Server pausiert?).')}
@@ -1638,12 +1640,15 @@ async function adReports(){const o=sheet('<b>🚩 Meldungen</b><div id="arl" cla
  const RN={name:'Name',cheat:'Schummeln',mobbing:'Mobbing',other:'Sonstiges'};
  L.outerHTML='<div id="arl">'+(r.list.map(x=>`<div class="rk" style="margin-top:6px;${x.done?'opacity:.55':''}"><span style="flex:1;min-width:0"><b>${esc(x.target)}</b> · ${RN[x.reason]||x.reason}<br><small>von ${esc(x.from||'?')} · ${new Date(x.at).toLocaleDateString('de-DE')}</small></span>${x.done?'✔':`<button class="btn ghost sm" data-d="${x.id}" style="width:auto">Erledigt</button>`}</div>`).join('')||'<div class="mut c">Keine Meldungen.</div>')+'</div>';
  $('#arl').onclick=async e=>{const b=e.target.closest('[data-d]');if(!b)return;await rpc('admin_report_done',{p_name:DB.acct.name,p_pin:DB.acct.pin,p_id:+b.dataset.d});o.remove();adReports()}}catch(e){const L=$('#arl');if(L)L.textContent='⚠️ Fehler.'}}
+async function adErrors(){const o=sheet('<b>🐞 App-Fehler</b><div id="aer" class="hint">Lade …</div>');try{const r=await rpc('admin_errors',{p_name:DB.acct.name,p_pin:DB.acct.pin});const L=$('#aer');if(!r||r.r!=='ok'){L.textContent='Kein Zugriff.';return}
+ L.outerHTML='<div id="aer">'+(r.list.map(x=>`<div class="rk" style="margin-top:6px;flex-wrap:wrap"><span style="flex:1;min-width:0;word-break:break-word"><b>${esc(x.msg)}</b><br><small>v${esc(x.v||'?')} · ${esc(x.src||'')} · ${x.n}× · ${new Date(x.at).toLocaleString('de-DE',{dateStyle:'short',timeStyle:'short'})}</small></span></div>`).join('')||'<div class="mut c">Keine Fehler gemeldet. 🎉</div>')+(r.list.length?'<button class="btn ghost sm" id="aec" style="margin-top:10px">🗑️ Liste leeren</button>':'')+'</div>';
+ if($('#aec'))$('#aec').onclick=async()=>{await rpc('admin_errors_clear',{p_name:DB.acct.name,p_pin:DB.acct.pin});o.remove();adErrors()}}catch(e){const L=$('#aer');if(L)L.textContent='⚠️ Fehler beim Laden.'}}
 async function adExport(){try{const r=await rpc('admin_export',{p_name:DB.acct.name,p_pin:DB.acct.pin});if(!r||r.r!=='ok'){alert('Kein Zugriff');return}
  const b=new Blob([JSON.stringify(r)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='blitzbrain-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.append(a);a.click();a.remove()}catch(e){alert('Export fehlgeschlagen')}}
 async function adminScreen(){if(!DB.acct||skey(DB.acct.name)!=='admin'){menu();return}
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🛠️ Admin</h2><div id="ads" class="c mut" style="font-size:14px">Lade …</div>
- <div class="row"><button class="btn ghost sm" id="arp">🚩 Meldungen</button><button class="btn ghost sm" id="aex">💾 Backup (JSON)</button></div><div class="pl"><input id="adq" placeholder="Spieler suchen …" value="${esc(ADQ)}" autocomplete="off"></div><div id="adl"></div>${bar('⬅ Hauptmenü')}</div>`;
- $('#bt').onclick=menu;$('#arp').onclick=adReports;$('#aex').onclick=adExport;let tm=0;$('#adq').oninput=e=>{ADQ=e.target.value;clearTimeout(tm);tm=setTimeout(adLoad,300)};adLoad()}
+ <div class="row"><button class="btn ghost sm" id="arp">🚩 Meldungen</button><button class="btn ghost sm" id="aex">💾 Backup (JSON)</button><button class="btn ghost sm" id="aer2">🐞 Fehler</button></div><div class="pl"><input id="adq" placeholder="Spieler suchen …" value="${esc(ADQ)}" autocomplete="off"></div><div id="adl"></div>${bar('⬅ Hauptmenü')}</div>`;
+ $('#bt').onclick=menu;$('#arp').onclick=adReports;$('#aex').onclick=adExport;$('#aer2').onclick=adErrors;let tm=0;$('#adq').oninput=e=>{ADQ=e.target.value;clearTimeout(tm);tm=setTimeout(adLoad,300)};adLoad()}
 async function adLoad(){const l=$('#adl');if(!l)return;
  try{const r=await rpc('admin_list',{p_name:DB.acct.name,p_pin:DB.acct.pin,p_q:ADQ});if(!$('#adl'))return;
   if(!r||r.r!=='ok'){$('#ads').textContent='❌ Kein Admin-Zugriff – melde dich mit dem Konto „Admin“ und der richtigen PIN an.';l.innerHTML='';return}
@@ -1897,8 +1902,14 @@ DB.seen?menu():onboard();
 setTimeout(()=>{if(DB.notif&&DB.acct)pushOn()},5000);
 try{const h=decodeURIComponent((location.hash||'').slice(1));if(h&&/^DUELL-[A-Z0-9]{4}$/i.test(h))duelOnline(h.slice(6).toUpperCase());else if(h&&(dec(h)||/^RAUM-[A-Z0-9]{4,8}$/i.test(h)))fern(h);else if(h&&/^FFA-[A-Z0-9]{4,8}$/i.test(h))ffaHub(h)}catch(e){}
 try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&location.hostname.endsWith('github.io'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
+/* ===== Fehlerberichte (anonym: nur Version, Meldung, Stelle – keine Namen/Inhalte; max. 3 pro Seitenaufruf) ===== */
+let ERRN=0;
+function errSend(msg,src){try{if(ERRN>=3||!DB.sb||!DB.sb.url||!/^https?:/.test(location.protocol))return;ERRN++;
+ rpc('log_error',{p_v:BVN,p_msg:String(msg||'').slice(0,200),p_src:String(src||'').replace(/^.*\//,'').slice(0,120)}).catch(()=>{})}catch(e){}}
+addEventListener('error',e=>errSend(e.message,(e.filename||'')+':'+(e.lineno||0)+':'+(e.colno||0)));
+addEventListener('unhandledrejection',e=>{const r=e.reason;if(r&&(r.auth||r.status||r.nf||r.full||r.dup))return;errSend('Promise: '+(r&&r.message||r),'')});
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-10-20';const BVN='2.11.0';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-10-22';const BVN='2.12.0';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;font-weight:800;text-align:center';
