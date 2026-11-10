@@ -4,7 +4,7 @@
 <title>BLITZBRAIN</title>
 <meta name="description" content="BLITZBRAIN – das Party-Spiel: Duelle, Free-for-All, Bots. Wer ist am schnellsten?"><meta property="og:type" content="website"><meta property="og:title" content="BLITZBRAIN – schlag meine Zeit! ⚡"><meta property="og:description" content="Duelle, Free-for-All, Teams und Bots – spiel mit!"><meta property="og:image" content="https://julianjj461-cmd.github.io/Blitzbrain/og.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="https://julianjj461-cmd.github.io/Blitzbrain/og.png">
 <meta name="theme-color" content="#fff4dc"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="BLITZBRAIN">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&display=swap" rel="stylesheet"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&display=swap" rel="stylesheet"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon2-192.png"><link rel="icon" href="icon2-192.png">
 <style>
 :root{--b1:#5a2fe0;--b2:#7a4dff;--c1:#3a2380;--c2:#2a1768;--tb:#1a0f45;--g1:#3b1a8f;--g2:#120b2e;--pink:#ff3d8b;--yel:#ffd23f;--cyan:#27e1ff;--grn:#3dffa0;--red:#ff4d4d;--mut:#b9a9f5;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
@@ -1252,7 +1252,7 @@ async function notifToggle(btn){if(!('Notification' in window)){btn.textContent=
  let r=Notification.permission;if(r!=='granted')r=await Notification.requestPermission();
  if(r==='granted'){DB.notif=true;save();btn.textContent='Richte ein …';const pr=await pushOn();btn.textContent=pr==='ok'?'🔔 An – auch bei geschlossener App (tippen = aus)':'🔔 An – nur bei offener App (tippen = aus)'}else btn.textContent='🚫 Erlaubnis fehlt (in den Browser-Einstellungen freigeben)'}
 function notifyShow(title,body){try{if(DB.dnd||!DB.notif||Notification.permission!=='granted')return;
- (navigator.serviceWorker&&navigator.serviceWorker.getRegistration?navigator.serviceWorker.getRegistration():Promise.resolve(null)).then(r=>{if(r&&r.showNotification)r.showNotification(title,{body,icon:'icon-192.png',tag:'bb-inv'});else new Notification(title,{body,icon:'icon-192.png'})}).catch(()=>{})}catch(e){}}
+ (navigator.serviceWorker&&navigator.serviceWorker.getRegistration?navigator.serviceWorker.getRegistration():Promise.resolve(null)).then(r=>{if(r&&r.showNotification)r.showNotification(title,{body,icon:'icon2-192.png',tag:'bb-inv'});else new Notification(title,{body,icon:'icon2-192.png'})}).catch(()=>{})}catch(e){}}
 /* ===== Farbthemen (nur Hintergrund/Flächen; Grün/Rot der Spiele bleiben unverändert) ===== */
 const THM={std:{a:'#ffd23f',n:'Standard',e:'🟣',u:0,v:['#5a2fe0','#7a4dff','#3a2380','#2a1768','#1a0f45','#3b1a8f','#120b2e']},
  ozean:{a:'#4d8bff',n:'Ozean',e:'🌊',u:3,v:['#1f6fe0','#4d9bff','#164f8a','#0f3868','#08203d','#0d4a8f','#06182e']},
@@ -2049,7 +2049,7 @@ function errSend(msg,src){try{if(ERRN>=3||!DB.sb||!DB.sb.url||!/^https?:/.test(l
 addEventListener('error',e=>errSend(e.message,(e.filename||'')+':'+(e.lineno||0)+':'+(e.colno||0)));
 addEventListener('unhandledrejection',e=>{const r=e.reason;if(r&&(r.auth||r.status||r.nf||r.full||r.dup))return;errSend('Promise: '+(r&&r.message||r),'')});
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-10-33';const BVN='2.15.1';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-10-34';const BVN='2.15.2';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--ink);font-weight:800;text-align:center';
