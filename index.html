@@ -3,7 +3,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>BLITZBRAIN</title>
 <meta name="description" content="BLITZBRAIN – das Party-Spiel: Duelle, Free-for-All, Bots. Wer ist am schnellsten?"><meta property="og:type" content="website"><meta property="og:title" content="BLITZBRAIN – schlag meine Zeit! ⚡"><meta property="og:description" content="Duelle, Free-for-All, Teams und Bots – spiel mit!"><meta property="og:image" content="https://julianjj461-cmd.github.io/Blitzbrain/og.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="https://julianjj461-cmd.github.io/Blitzbrain/og.png">
-<meta name="theme-color" content="#fff4dc"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="BLITZBRAIN">
+<meta name="theme-color" content="#fff4dc"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="BLITZBRAIN">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&display=swap" rel="stylesheet"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="icon-192.png">
 <style>
 :root{--b1:#5a2fe0;--b2:#7a4dff;--c1:#3a2380;--c2:#2a1768;--tb:#1a0f45;--g1:#3b1a8f;--g2:#120b2e;--pink:#ff3d8b;--yel:#ffd23f;--cyan:#27e1ff;--grn:#3dffa0;--red:#ff4d4d;--mut:#b9a9f5;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -416,13 +416,13 @@ numpad:{name:'Ziffern-Blitz',emoji:'⌨️',hint:'Tippe die angezeigte Ziffer au
 filter:{name:'Zahlen-Filter',emoji:'🎯',hint:'Tippe ALLE Zahlen, die zur Regel passen!',
  run(el,r,done,err){const T=[['GERADE Zahlen',x=>x%2==0],['durch 5 teilbare Zahlen',x=>x%5==0],['Zahlen unter 30',x=>x<30]],[lab,f]=T[r()*3|0];let nums,left;
   do{nums=shuffle([...Array(90).keys()].map(i=>i+10),r).slice(0,12);left=nums.filter(f).length}while(left<4||left>6);
-  el.innerHTML=`<div class="c" style="font-weight:900;margin-bottom:10px;color:var(--yel)">Tippe alle: ${lab}</div><div class="grid g3">${nums.map(x=>`<button class="tile txt" data-v="${x}" style="padding:20px 0">${x}</button>`).join('')}</div>`;
+  el.innerHTML=`<div class="c" style="font-weight:900;margin-bottom:10px;color:var(--ink)">Tippe alle: ${lab}</div><div class="grid g3">${nums.map(x=>`<button class="tile txt" data-v="${x}" style="padding:20px 0">${x}</button>`).join('')}</div>`;
   el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b||b.classList.contains('off'))return;
    if(f(+b.dataset.v)){b.classList.add('off');sfx('tap',left);if(--left<=0)done()}else err(b)}}},
 schritt:{name:'Schritt-Jagd',emoji:'🪜',hint:'Tippe die Vielfachen aufsteigend – Ablenker meiden!',
  run(el,r,done,err){const s=[3,4,6,7][r()*4|0],M=[...Array(8)].map((_,i)=>s*(i+1)),D=[];let k=0;
   while(D.length<4){const x=2+(r()*s*8|0);if(x%s&&!D.includes(x))D.push(x)}
-  el.innerHTML=`<div class="c" style="font-weight:900;margin-bottom:10px;color:var(--yel)">Vielfache von ${s}: ${M[0]}, ${M[1]}, ${M[2]} …</div><div class="grid g3">${shuffle([...M,...D],r).map(x=>`<button class="tile txt" data-v="${x}" style="padding:20px 0">${x}</button>`).join('')}</div>`;
+  el.innerHTML=`<div class="c" style="font-weight:900;margin-bottom:10px;color:var(--ink)">Vielfache von ${s}: ${M[0]}, ${M[1]}, ${M[2]} …</div><div class="grid g3">${shuffle([...M,...D],r).map(x=>`<button class="tile txt" data-v="${x}" style="padding:20px 0">${x}</button>`).join('')}</div>`;
   el.onpointerdown=e=>{const b=e.target.closest('.tile');if(!b||b.classList.contains('off'))return;
    if(+b.dataset.v===M[k]){b.classList.add('off');sfx('tap',k);if(++k>=8)done()}else err(b)}}},
 paare:{name:'Memory-Paare',emoji:'🃏',hint:'Finde alle 6 Paare!',
@@ -446,7 +446,7 @@ merke:{name:'Merk-Mich',emoji:'💭',hint:'Merke dir die hellen Felder – dann 
 const live=el=>el.isConnected!==false;
 const EM12=['🐢','🍕','🚲','🎈','🔑','🌙','🍎','🎧','⚓','🦆','🔔','🧲'];
 const tileBox='display:flex;align-items:center;justify-content:center;box-shadow:none';
-const ttl=t=>`<div class="c" style="font-weight:900;margin-bottom:10px;color:var(--yel)">${t}</div>`;
+const ttl=t=>`<div class="c" style="font-weight:900;margin-bottom:10px;color:var(--ink)">${t}</div>`;
 Object.assign(STG,{
 /* --- Logik & Denken --- */
 luecke:{name:'Lücke im Muster',emoji:'🕳️',hint:'In jeder Reihe und Spalte kommt jede Form genau 1× vor. Welche Form fehlt bei „?“',
@@ -529,7 +529,7 @@ rhythmus:{name:'Takt-Tipper',emoji:'🥁',hint:'Schau dir den Takt an – dann t
  run(el,r,done,err){const N=2,Ts=[...Array(N)].map(()=>Math.round(470+r()*280));let k=0,T=0,taps=[],phase=0,tms=[];
   const lit=(p,on)=>{p.textContent=on?'●':'○';p.style.background=on?'#fff':'var(--c1)';p.style.color=on?'#1a0b45':'#fff'};
   const round=()=>{tms.forEach(clearTimeout);tms=[];T=Ts[k];taps=[];phase=0;
-   el.innerHTML=`<div class="c" id="rh" style="font-weight:900;margin-bottom:10px;color:var(--yel)">Schau zu … 👀</div><button class="tile pad" id="rp" style="background:var(--c1);color:var(--ink);font-size:90px">○</button>`;
+   el.innerHTML=`<div class="c" id="rh" style="font-weight:900;margin-bottom:10px;color:var(--ink)">Schau zu … 👀</div><button class="tile pad" id="rp" style="background:var(--c1);color:var(--ink);font-size:90px">○</button>`;
    const p=el.querySelector('#rp'),h=el.querySelector('#rh');
    for(let i=0;i<4;i++)tms.push(setTimeout(()=>{if(!live(el))return;lit(p,1);sfx('tap',i*2);tms.push(setTimeout(()=>lit(p,0),T*.4))},700+i*T));
    tms.push(setTimeout(()=>{if(!live(el))return;phase=1;h.textContent='Jetzt DU! 4× im selben Tempo tippen'},700+3*T+T*.7))};
@@ -549,7 +549,7 @@ fallen:{name:'Zahlenregen',emoji:'🌧️',hint:'Tippe 1 bis 6 der Reihe nach �
    if(+b.dataset.v===nx){b.style.display='none';sfx('tap',nx);if(++nx>N){fin=true;done()}}else err(b)}}},
 balance:{name:'Balance-Akt',emoji:'🤹',hint:'Halte die Kugel 8 s lang in der markierten MITTE – jede Sekunde dort gibt Punkte! ◀ ▶ gedrückt halten neigt das Brett. Der Wind wird stärker, die Mitte schmaler. Runterfallen: Strafzeit. Wenig Punkte = Strafzeit.',
  run(el,r,done,err){const DUR=8000,G=900,gs=[...Array(12)].map(()=>(r()<.5?-1:1)*(.5+r()*.5));let x=0,v=0,th=0,t=0,inz=0,lock=0,acu=0,last=performance.now(),fin=false;const held={};
-  el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:baseline;font-weight:900"><span id="bsc" style="font-size:26px;color:var(--yel)">0 Punkte</span><span id="btm" class="mut">8,0 s</span></div>
+  el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:baseline;font-weight:900"><span id="bsc" style="font-size:26px;color:var(--ink)">0 Punkte</span><span id="btm" class="mut">8,0 s</span></div>
   <div id="stg" style="position:relative;height:176px;margin:6px 0 4px"><div id="pl" style="position:absolute;left:4%;right:4%;top:120px;height:16px;border-radius:8px;background:#fff;box-shadow:0 4px 0 rgba(0,0,0,.35);transform-origin:50% 50%"><div id="zn" style="position:absolute;top:-70px;height:72px;border:3px dashed #fff;border-bottom:0;border-radius:12px 12px 0 0;opacity:.75;text-align:center;font-size:11px;letter-spacing:2px;color:var(--ink);padding-top:2px">MITTE</div><div id="bl" style="position:absolute;bottom:16px;width:44px;height:44px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#ffd23f 45%,#c9890c);box-shadow:0 3px 0 rgba(0,0,0,.35)"></div></div>
   <div style="position:absolute;left:calc(50% - 22px);top:136px;width:0;height:0;border-left:22px solid transparent;border-right:22px solid transparent;border-bottom:36px solid var(--b2)"></div></div>
   <div class="c mut" id="bmsg" style="min-height:20px">Gleich geht's los – halte die Kugel in der Mitte!</div>
@@ -756,7 +756,7 @@ function board(){
  const s=[...S.res].sort((a,b)=>a.t-b.t),w=s[0],med=['🥇','🥈','🥉'];
  sfx('win');confetti(160);
  const roast=s.length>1?`${esc(s[s.length-1].n)}: ${pick(['Revanche ist Pflicht!','trainiert ab sofort Daumenyoga.','gibt dem Handy die Schuld.','zahlt die nächste Runde Kaffee.'])}`:'';
- app.innerHTML=`<div class="scr"><div class="c" style="font-size:54px">👑</div><div class="big" style="font-size:clamp(34px,11vw,52px);color:var(--yel)">${esc(w.n)}</div><div class="c mut">gewinnt mit ${f3(w.t)}</div>
+ app.innerHTML=`<div class="scr"><div class="c" style="font-size:54px">👑</div><div class="big" style="font-size:clamp(34px,11vw,52px);color:var(--ink)">${esc(w.n)}</div><div class="c mut">gewinnt mit ${f3(w.t)}</div>
  <div>${s.map((x,i)=>`<div class="rk ${i==0?'w':''}" style="margin-bottom:6px"><span>${med[i]||i+1+'.'}</span><b>${esc(x.n)}</b><small>${i?'+'+((x.t-w.t)/1000).toFixed(3).replace('.',',')+' s':''}</small><span>${f3(x.t)}</span></div>`).join('')}</div>
  <div class="c mut">${roast}</div>
  <button class="btn pink" id="r1">🔁 Nochmal spielen</button>
@@ -802,11 +802,11 @@ async function eloShow(code,me){const box=()=>document.getElementById('elr');
   await new Promise(z=>setTimeout(z,2000));if(!box())return}
  const b=box();if(b)b.innerHTML='<span class="mut">🏅 Elo-Wertung folgt …</span>'}
 function duForfeitWin(){const D=DU;duStop();const me=D.name,code=D.code;sfx('rec');confetti(220);
- app.innerHTML=`<div class="scr"><div class="mid"><div class="big bounce" style="font-size:70px">🏆</div><div class="big" style="font-size:30px;color:var(--yel)">Sieg!</div><div class="c mut">Dein Gegner hat das Ranked-Duell abgebrochen – es zählt für dich als Sieg.</div><div class="card c" id="elr">🏅 Elo wird berechnet …</div></div><button class="btn pink" id="kb">🏠 Zum Hauptmenü</button></div>`;
+ app.innerHTML=`<div class="scr"><div class="mid"><div class="big bounce" style="font-size:70px">🏆</div><div class="big" style="font-size:30px;color:var(--ink)">Sieg!</div><div class="c mut">Dein Gegner hat das Ranked-Duell abgebrochen – es zählt für dich als Sieg.</div><div class="card c" id="elr">🏅 Elo wird berechnet …</div></div><button class="btn pink" id="kb">🏠 Zum Hauptmenü</button></div>`;
  DB.sess=null;save();h2hAdd(me,(D.rows.find(x=>x.name!==me)||{}).name||'?',me);eloShow(code,me);DU=null;$('#kb').onclick=menu}
 async function rankedSeason(){const e=()=>document.getElementById('rss'),S0=seasonInfo();if(!e())return;
  let h=`🗓️ <b>Saison ${S0.n}</b> · noch ${S0.left} Tag${S0.left>1?'e':''}<div class="mut">Zum Saisonende wird deine Elo halb Richtung 1000 gezogen. Die Top 3 bekommen das Abzeichen 👑.</div>`;e().innerHTML=h;
- try{if(S0.n>1){const pv=await rpc('elo_season_top',{p_season:S0.n-1});if(Array.isArray(pv)&&pv.length)h+=`<div style="margin-top:6px"><b style="color:var(--yel)">Letzte Saison:</b> `+pv.map(x=>['🥇','🥈','🥉'][x.pos-1]+' '+esc(x.n)+' ('+x.r+')').join(' · ')+'</div>'}
+ try{if(S0.n>1){const pv=await rpc('elo_season_top',{p_season:S0.n-1});if(Array.isArray(pv)&&pv.length)h+=`<div style="margin-top:6px"><b style="color:var(--ink)">Letzte Saison:</b> `+pv.map(x=>['🥇','🥈','🥉'][x.pos-1]+' '+esc(x.n)+' ('+x.r+')').join(' · ')+'</div>'}
   const hl=await rpc('elo_hall',{p_name:DB.acct.name});if(Array.isArray(hl)){if((DB.rkc||0)!==hl.length){DB.rkc=hl.length;save()}if(hl.length)h+=`<div style="margin-top:6px">👑 Du warst ${hl.length}× in den Top 3!</div>`}
   if(e())e().innerHTML=h}catch(x){}}
 async function rankedHub(){if(needAcct(rankedHub))return;
@@ -862,7 +862,7 @@ function duelTurn(j){
  <div class="mid">${j==1?`<div class="card c">${esc(N[V.first])} hat <b>${f3(V.t[V.first])}</b> vorgelegt</div>`:''}
  <div class="big" style="font-size:80px">${G.emoji}</div><div class="big" style="font-size:clamp(30px,10vw,44px);color:var(--cyan)">${G.name}</div>
  <div class="card c">${G.hint}<div class="mut" style="margin-top:6px">Fehler: +1,5 s</div></div>
- <div class="c mut">Handy an</div><div class="big" style="font-size:clamp(36px,12vw,54px);color:var(--yel)">${esc(N[p])}</div></div>
+ <div class="c mut">Handy an</div><div class="big" style="font-size:clamp(36px,12vw,54px);color:var(--ink)">${esc(N[p])}</div></div>
  <button class="btn pink" id="rdy">BEREIT! 🔥</button>${bar('⬅ Abbrechen')}</div>`;
  $('#bt').onclick=menu;
  $('#rdy').onclick=()=>{ac();S.names=N;S.seed=V.seed;S.stages=[V.k];S.cur=p;S.code=null;S.room=null;
@@ -885,7 +885,7 @@ function duelEnd(){
  const N=V.names,[x,y]=V.sc,win=x>y?0:y>x?1:V.tot[0]<V.tot[1]?0:V.tot[1]<V.tot[0]?1:-1;
  if(!V.rec){V.rec=1;if(!V.bots)h2hAdd(N[0],N[1],win>=0?N[win]:null)}
  sfx('win');confetti(win>=0?200:60);
- app.innerHTML=`<div class="scr"><div class="c" style="font-size:54px">${win>=0?'👑':'🤝'}</div><div class="big" style="font-size:clamp(34px,11vw,52px);color:var(--yel)">${win>=0?esc(N[win]):'Unentschieden'}</div>
+ app.innerHTML=`<div class="scr"><div class="c" style="font-size:54px">${win>=0?'👑':'🤝'}</div><div class="big" style="font-size:clamp(34px,11vw,52px);color:var(--ink)">${win>=0?esc(N[win]):'Unentschieden'}</div>
  <div class="c mut">${win>=0?'gewinnt das Duell':'Absolut gleichauf!'}${x==y&&win>=0?' (schnellere Gesamtzeit)':''}</div>
  <div class="big" style="font-size:clamp(40px,13vw,60px)">${x} : ${y}</div><div class="c mut">${esc(N[0])} · ${esc(N[1])}<br>Gesamtzeit ${f3(V.tot[0])} · ${f3(V.tot[1])}</div>${h2hLine(N[0],N[1])}
  <div class="card" style="padding:10px">${V.hist.map(h=>`<div style="display:flex;justify-content:space-between;gap:8px;padding:3px 0"><span>${STG[h.k].emoji} ${STG[h.k].name}</span><span>${h.win===0?'🏆 ':''}${f3(h.t[0])} | ${h.win===1?'🏆 ':''}${f3(h.t[1])}</span></div>`).join('')}</div>
@@ -1004,7 +1004,7 @@ function addRx(){try{const ph=DU.phase||'';if(!/^(wait|result|end)/.test(ph))ret
 function duRender(){duRender0();addRx()}
 function duRender0(){const r=DU.room,ph=DU.phase,N=(r.stages.g||[]).length,S2=duStats(),me=DU.name,host=r.host===me,R=r.stages.r,show=DU.code.slice(1),
  tb='<div class="tb"><button class="btn ghost sm" id="bt">⬅ Duell verlassen</button></div>',
- head=`<div class="c mut">${DU.code===RKC?'🏆 Ranked · ':'1v1 · '}Code <b style="color:var(--yel);letter-spacing:2px;font-size:20px">${esc(show)}</b> · ${N} Runde${N>1?'n':''}</div>`,
+ head=`<div class="c mut">${DU.code===RKC?'🏆 Ranked · ':'1v1 · '}Code <b style="color:var(--ink);letter-spacing:2px;font-size:20px">${esc(show)}</b> · ${N} Runde${N>1?'n':''}</div>`,
  score=()=>S2.P.length>1?`<div class="c mut">${nmx(S2.P[0])} <b>${S2.sc[S2.P[0]]} : ${S2.sc[S2.P[1]]}</b> ${nmx(S2.P[1])}</div>`:'';
  if(ph.startsWith('count')){duCount(Date.parse(r.start_at));return}
  if(ph.startsWith('brief')){const meR=ph.endsWith('_1'),G=STG[r.stages.g[R-1]];
@@ -1016,7 +1016,7 @@ function duRender0(){const r=DU.room,ph=DU.phase,N=(r.stages.g||[]).length,S2=du
   clearInterval(duT);duT=setInterval(duTick,700);
   const rb=document.getElementById('rdy2');if(rb)rb.onclick=()=>{ac();rb.disabled=true;duReady(R)};$('#bt').onclick=()=>{leaveSig(DU&&DU.code);duStop();DU=null;DB.sess=null;save();menu()};duUpdate();return}
  if(ph=='lobby'){
-  app.innerHTML=`<div class="scr" id="du">${head}<div class="mid"><div class="big" style="font-size:clamp(30px,10vw,44px)">Warte auf Gegner …</div><div class="c mut">Gib deinem Gegner diesen Code:</div><div class="big" style="font-size:clamp(40px,13vw,60px);color:var(--yel);letter-spacing:4px">${esc(show)}</div><div id="plist"></div><div class="hint" id="rms"></div><button class="btn" id="inv">📤 Code teilen</button><button class="btn ghost" id="inf">👥 Freund einladen</button></div>${tb}</div>`;
+  app.innerHTML=`<div class="scr" id="du">${head}<div class="mid"><div class="big" style="font-size:clamp(30px,10vw,44px)">Warte auf Gegner …</div><div class="c mut">Gib deinem Gegner diesen Code:</div><div class="big" style="font-size:clamp(40px,13vw,60px);color:var(--ink);letter-spacing:4px">${esc(show)}</div><div id="plist"></div><div class="hint" id="rms"></div><button class="btn" id="inv">📤 Code teilen</button><button class="btn ghost" id="inf">👥 Freund einladen</button></div>${tb}</div>`;
   $('#inf').onclick=()=>inviteFriends('DUELL-'+show,'Duell');
   $('#inv').onclick=()=>shareTxt(`🥊 BLITZBRAIN 1v1! Code: ${show}${lnk('DUELL-'+show)}\nUnter „1v1-Duell“ → „Mit Freund / Code“ → „Beitreten“ eingeben.`,$('#inv'))}
  else if(ph.startsWith('late')){
@@ -1038,7 +1038,7 @@ function duRender0(){const r=DU.room,ph=DU.phase,N=(r.stages.g||[]).length,S2=du
   const[x,y]=[S2.sc[S2.P[0]],S2.sc[S2.P[1]]],t0=S2.tot[S2.P[0]],t1=S2.tot[S2.P[1]],w=x>y?S2.P[0]:y>x?S2.P[1]:t0<t1?S2.P[0]:t1<t0?S2.P[1]:null;
   if(!DU.rec){DU.rec=1;h2hAdd(me,S2.P.find(q=>q!==me)||'?',w);const ec=DU.code;sbSend({n:me,t:500+(w===me?1:w?0:2),pen:0},{},ec+'-END').then(()=>{rpc('elo_apply',{p_code:ec}).catch(()=>{});setTimeout(()=>rpc('elo_apply',{p_code:ec}).catch(()=>{}),5000)}).catch(()=>{})}
   sfx(w===me?'rec':w?'lose':'win');confetti(w===me?220:50);
-  app.innerHTML=`<div class="scr" id="du"><div class="c bounce" style="font-size:64px">${w?'👑':'🤝'}</div><div class="big pop" style="font-size:clamp(34px,11vw,52px);color:var(--yel)">${w?nmx(w):'Unentschieden'}</div>
+  app.innerHTML=`<div class="scr" id="du"><div class="c bounce" style="font-size:64px">${w?'👑':'🤝'}</div><div class="big pop" style="font-size:clamp(34px,11vw,52px);color:var(--ink)">${w?nmx(w):'Unentschieden'}</div>
   <div class="c mut">${w?(w===me?'Du gewinnst das Duell!':'gewinnt das Duell'):'Absolut gleichauf!'}${x==y&&w?' (schnellere Gesamtzeit)':''}</div>
   <div class="big" style="font-size:clamp(40px,13vw,60px)">${x} : ${y}</div><div class="c mut">${esc(S2.P[0])} · ${esc(S2.P[1])}<br>Gesamtzeit ${f3(t0)} · ${f3(t1)}</div>${h2hLine(me,S2.P.find(q=>q!==me)||'?')}
   <div class="card" style="padding:10px">${S2.hist.map(h=>`<div style="display:flex;justify-content:space-between;gap:8px;padding:3px 0"><span>${STG[h.k].emoji} ${STG[h.k].name}</span><span>${h.w===S2.P[0]?'🏆 ':''}${f3(h.t[S2.P[0]])} | ${h.w===S2.P[1]?'🏆 ':''}${f3(h.t[S2.P[1]])}</span></div>`).join('')}</div>
@@ -1086,7 +1086,7 @@ const SEAC={};
 async function seasonDraw(){const el=document.getElementById('ssn');if(!el)return;const S0=seasonInfo(),med=['🥇','🥈','🥉'];
  const line=L=>L.slice(0,3).map((x,i)=>`${med[i]} ${esc(x.n)} (${x.c})`).join(' · ');
  const paint=(cur,pv)=>{let h=Array.isArray(cur)&&cur.length?'Aktuell vorn: '+line(cur):'Noch keine Zeiten in dieser Saison.';
-  if(Array.isArray(pv)&&pv.length)h+=`<br><b style="color:var(--yel)">Letzte Saison:</b> `+line(pv);const e=document.getElementById('ssc');if(e)e.innerHTML=h};
+  if(Array.isArray(pv)&&pv.length)h+=`<br><b style="color:var(--ink)">Letzte Saison:</b> `+line(pv);const e=document.getElementById('ssc');if(e)e.innerHTML=h};
  const c=SEAC[S0.n];
  el.innerHTML=`<b>🗓️ Saison ${S0.n}</b> <span class="mut">· noch ${S0.left} Tag${S0.left>1?'e':''} (bis ${S0.fd})</span><div class="mut" id="ssc" style="margin-top:4px">Lade …</div>`;
  if(c)paint(c.cur,c.pv);
@@ -1284,7 +1284,7 @@ function ibBanner(){
  const i=fresh.find(x=>Date.now()-Date.parse(x.c)<120000);if(!i)return;
  const old=document.getElementById('ibn');if(old)old.remove();
  const d=document.createElement('div'),inv=i.k=='invite';d.id='ibn';d.style.cssText='position:fixed;left:10px;right:10px;top:calc(10px + env(safe-area-inset-top,0px));max-width:460px;margin:0 auto;z-index:1000;background:linear-gradient(180deg,var(--c1),var(--c2));border:2px solid var(--yel);border-radius:18px;padding:12px 14px 16px;box-shadow:0 8px 24px #000a;cursor:pointer;animation:in .3s;text-align:left;overflow:hidden';
- d.innerHTML=`<div style="display:flex;gap:10px;align-items:center"><div style="font-size:28px">${inv?'🥊':'🙋'}</div><div style="flex:1;min-width:0"><b>${nmx(i.f)}</b><br><span class="mut">${inv?(/^DUELL-/.test(i.p||'')?'hat dich zum Duell herausgefordert':pyTxt(i.p||'').slice(2)):'möchte dein Freund sein'}</span></div><b style="color:var(--yel)">${inv?'▶ Tippen':'Ansehen'}</b></div><div style="position:absolute;left:0;bottom:0;height:6px;width:100%;background:var(--yel);transition:width 10s linear"></div>`;
+ d.innerHTML=`<div style="display:flex;gap:10px;align-items:center"><div style="font-size:28px">${inv?'🥊':'🙋'}</div><div style="flex:1;min-width:0"><b>${nmx(i.f)}</b><br><span class="mut">${inv?(/^DUELL-/.test(i.p||'')?'hat dich zum Duell herausgefordert':pyTxt(i.p||'').slice(2)):'möchte dein Freund sein'}</span></div><b style="color:var(--ink)">${inv?'▶ Tippen':'Ansehen'}</b></div><div style="position:absolute;left:0;bottom:0;height:6px;width:100%;background:var(--yel);transition:width 10s linear"></div>`;
  document.body.append(d);sfx('ok');vib('tap2');const bar=d.lastChild;setTimeout(()=>{bar.style.width='0'},50);
  const gone=setTimeout(()=>d.remove(),10100);
  d.onclick=async()=>{clearTimeout(gone);d.remove();ac();if(!inv){friendsScreen();return}
@@ -1370,7 +1370,7 @@ async function inviteFriends(payload,what){ac();if(!DB.acct)return;const old=doc
   try{const r=await rpc('send_invite',{p_name:DB.acct.name,p_pin:DB.acct.pin,p_to:x.dataset.n,p_payload:payload});x.textContent=r=='ok'?'✔ gesendet':'❌ '+r;if(r=='ok')qAdd('invite')}catch(e){x.textContent='⚠️ Fehler'}})}
 /* ===== Onboarding (nur beim allerersten Start) ===== */
 function onboard(i=0){const P=[['⚡','Schnell sein!','Mini-Spiele, die du so schnell wie möglich löst. Jeder Fehler kostet +1,5 s – die niedrigste Zeit gewinnt.'],['👥','Gemeinsam spielen','Ranked gegen Zufallsgegner, 1v1-Duelle oder Party mit einem Handy oder online. Mit Freunden: Einladung direkt ins Postfach oder per Code.'],['📅','Jeden Tag dabei','Die Tagesaufgabe gibt jeden Tag 3 neue Spiele. Spiel täglich für eine 🔥 Serie und schalte Farbthemen frei.']],[e,t,x]=P[i];
- app.innerHTML=`<div class="scr"><div class="mid"><div class="big pop" style="font-size:90px">${e}</div><div class="big" style="font-size:clamp(30px,10vw,42px);color:var(--yel)">${t}</div><div class="c mut" style="font-size:17px">${x}</div><div class="dots" style="width:120px;margin-top:8px">${P.map((_,j)=>`<i class="${j==i?'on':j<i?'dn':''}"></i>`).join('')}</div></div><button class="btn pink" id="on">${i<2?'Weiter ➜':'Los geht’s 🚀'}</button><button class="btn ghost sm" id="os">Überspringen</button></div>`;
+ app.innerHTML=`<div class="scr"><div class="mid"><div class="big pop" style="font-size:90px">${e}</div><div class="big" style="font-size:clamp(30px,10vw,42px);color:var(--ink)">${t}</div><div class="c mut" style="font-size:17px">${x}</div><div class="dots" style="width:120px;margin-top:8px">${P.map((_,j)=>`<i class="${j==i?'on':j<i?'dn':''}"></i>`).join('')}</div></div><button class="btn pink" id="on">${i<2?'Weiter ➜':'Los geht’s 🚀'}</button><button class="btn ghost sm" id="os">Überspringen</button></div>`;
  const end=()=>{DB.seen=1;save();menu();setTimeout(loginPop,300)};$('#on').onclick=()=>{ac();i<2?onboard(i+1):end()};$('#os').onclick=end}
 function menu(){NBK=null;S.fi=false;S.bots=null;setTimeout(installNudge,1200);applyTheme();avLoad();ibLoad();S.code=null;S.room=null;S.daily=false;
  const sk=DB.acct?streakNow(DB.acct.name):null,ar=(sv)=>`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1b1b1b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>`;
@@ -1439,13 +1439,17 @@ function arcDone(k,t,pen){const lv=DB.lv==null?1:DB.lv,key=arcKey(k,lv);
 }
 /* ===== Ergebnis als Bild teilen ===== */
 async function shareImg(o){try{const W=1080,H=1350,cv=document.createElement('canvas');cv.width=W;cv.height=H;const x=cv.getContext('2d'),cs=getComputedStyle(document.documentElement);
- const g=x.createRadialGradient(W/2,0,50,W/2,0,H);g.addColorStop(0,cs.getPropertyValue('--g1').trim()||'#3b1a8f');g.addColorStop(.7,cs.getPropertyValue('--g2').trim()||'#120b2e');x.fillStyle=g;x.fillRect(0,0,W,H);
- const F='system-ui,-apple-system,Segoe UI,sans-serif';x.textAlign='center';
- x.save();x.translate(W/2,190);x.rotate(-.05);x.font='900 120px '+F;x.fillStyle='#fff';x.fillText('BLITZ',0,0);x.fillStyle='#ff3d8b';x.fillText('BRAIN',8,128);x.fillStyle='#ffd23f';x.fillText('BRAIN',0,120);x.restore();
- x.fillStyle='#b9a9f5';x.font='700 44px '+F;x.fillText(o.name||'',W/2,430);x.fillStyle='#fff';x.font='800 52px '+F;x.fillText(o.sub||'',W/2,510);
- x.font='900 190px '+F;x.fillStyle='#ff3d8b';x.fillText(o.big,W/2+8,740+8);x.fillStyle='#ffd23f';x.fillText(o.big,W/2,740);
- x.font='700 46px '+F;x.fillStyle='#fff';let y=840;(o.lines||[]).slice(0,7).forEach(l=>{x.fillText(String(l).slice(0,40),W/2,y);y+=70});
- x.fillStyle='#27e1ff';x.font='800 54px '+F;x.fillText('Schlag meine Zeit! 😏',W/2,H-130);x.font='600 34px '+F;x.fillStyle='#b9a9f5';x.fillText('julianjj461-cmd.github.io/Blitzbrain',W/2,H-70);
+ const INK='#1b1b1b',AC=(cs.getPropertyValue('--acc').trim()||'#ffd23f'),F="'Bricolage Grotesque',system-ui,-apple-system,Segoe UI,sans-serif";
+ x.fillStyle='#fff4dc';x.fillRect(0,0,W,H);x.textAlign='center';x.lineJoin='round';
+ const rr=(X,Y,w,h,r,fill)=>{x.beginPath();x.roundRect(X,Y,w,h,r);x.fillStyle=INK;x.save();x.translate(14,14);x.fill();x.restore();x.fillStyle=fill;x.fill();x.lineWidth=9;x.strokeStyle=INK;x.stroke()};
+ x.font='800 130px '+F;const w1=x.measureText('Blitz').width,w2=x.measureText('Brain').width+60,tot=w1+w2+20;
+ x.save();x.translate(W/2,200);x.rotate(-.04);
+ x.fillStyle=INK;x.textAlign='left';x.fillText('Blitz',-tot/2,0);rr(-tot/2+w1+20,-125,w2,170,40,AC);x.fillStyle=INK;x.fillText('Brain',-tot/2+w1+50,0);x.restore();x.textAlign='center';
+ x.fillStyle='#7a6f52';x.font='700 46px '+F;x.fillText(o.name||'',W/2,400);x.fillStyle=INK;x.font='800 56px '+F;x.fillText(o.sub||'',W/2,480);
+ x.save();x.translate(W/2,680);x.rotate(-.05);rr(-420,-150,840,260,56,AC);x.fillStyle=INK;x.font='800 190px '+F;x.fillText(o.big,0,50);x.restore();
+ x.font='700 46px '+F;x.fillStyle=INK;let y=880;(o.lines||[]).slice(0,6).forEach(l=>{x.fillText(String(l).slice(0,40),W/2,y);y+=66});
+ x.save();x.translate(W/2,H-170);x.rotate(.03);rr(-300,-60,600,100,50,'#ff6fa8');x.fillStyle=INK;x.font='800 52px '+F;x.fillText('Schlag meine Zeit!',0,0);x.restore();
+ x.font='700 34px '+F;x.fillStyle='#7a6f52';x.fillText('julianjj461-cmd.github.io/Blitzbrain',W/2,H-50);
  const blob=await new Promise(r=>cv.toBlob(r,'image/png')),f=new File([blob],'blitzbrain.png',{type:'image/png'});
  if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],text:'⚡ BLITZBRAIN – schlag meine Zeit!'});return}
  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='blitzbrain.png';document.body.append(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(a.href)},2000)}catch(e){}}
@@ -1543,7 +1547,7 @@ const bKind=n=>BPK[String(n).replace(/^🤖/,'').replace(/\d+$/,'')]||'n',bLbl=n
 const BLV=['','Leicht','Mittel','Schwer','Profi'],TMS={A:{e:'⚡',n:'Blitz'},B:{e:'🧠',n:'Hirn'}};
 function ffaScr(){const f=FFX,v=f.v,g=FFG[v.g],me=v.host===f.me;
  if(v.ph==='lobby'){
-  app.innerHTML=`<div class="scr" id="ffa"><div class="c mut">Free-for-All · Raum-Code</div><div class="big" style="font-size:clamp(40px,14vw,64px);letter-spacing:8px;color:var(--yel)">${f.code}</div>
+  app.innerHTML=`<div class="scr" id="ffa"><div class="c mut">Free-for-All · Raum-Code</div><div class="big" style="font-size:clamp(40px,14vw,64px);letter-spacing:8px;color:var(--ink)">${f.code}</div>
   <div id="fdyn" style="display:flex;flex-direction:column;gap:10px"></div><div class="hint" id="fst"></div>
   <div class="row"><button class="btn ghost sm" id="inv">📤 Code teilen</button><button class="btn ghost sm" id="inf">👥 Freund einladen</button></div>${ffaBar()}</div>`;
   $('#inv').onclick=()=>shareTxt(`🎪 BLITZBRAIN Free-for-All! Raum-Code: ${f.code}${lnk('FFA-'+f.code)}\nUnter „Party“ → „Free-for-All“ → Code eingeben.`,$('#inv'));
@@ -1676,7 +1680,7 @@ function ffaSprTick(){const f=FFX;if(!f||!document.getElementById('ftap'))return
 function ffaUpd(){const f=FFX,v=f.v;if(!v||!document.getElementById('ffa'))return;
  const sr=$('#fsr');if(sr)sr.innerHTML=ffaStrip(v);
  if(v.ph==='intro'){const el=$('#frd');if(el){const on=v.pl.filter(p=>p.bot||p.on),k=on.filter(p=>p.rd).length,mine=v.pl.find(p=>p.n===f.me),b=$('#frb');
-   if(v.st.cd){const n=Math.max(1,Math.ceil(Math.max(0,v.left-(Date.now()-f.t0))/1000));el.innerHTML=`<div class="big pop" id="fcn" style="font-size:72px;color:var(--yel);line-height:1">${n}</div><div class="c mut" style="font-size:13px">Alle bereit – gleich geht’s los!</div>`;if(b)b.style.display='none'}
+   if(v.st.cd){const n=Math.max(1,Math.ceil(Math.max(0,v.left-(Date.now()-f.t0))/1000));el.innerHTML=`<div class="big pop" id="fcn" style="font-size:72px;color:var(--ink);line-height:1">${n}</div><div class="c mut" style="font-size:13px">Alle bereit – gleich geht’s los!</div>`;if(b)b.style.display='none'}
    else{const s=Math.max(0,Math.ceil(Math.max(0,(v.left||0)-(Date.now()-f.t0))/1000));el.innerHTML=`<b>${k} von ${on.length}</b> bereit<div class="fstrip" style="justify-content:center;margin-top:6px">${on.map(p=>`<span class="fchip"${p.rd?'':' style="opacity:.55"'}>${p.rd?'✔':'⏳'} ${nmx(p.n)}</span>`).join('')}</div><div class="c mut" style="font-size:12px;margin-top:4px">Sobald alle bereit sind, startet ein 3-Sekunden-Countdown · automatisch bereit in ${s} s</div>`;if(b)b.style.display=mine&&mine.rd?'none':''}}}
  if(v.ph==='lobby'){const d=$('#fdyn');if(!d)return;const me=v.host===f.me,vt=v.st.vt||{},mv=v.st.mv,ex=v.st.ex||[],tm=!!v.st.tm,en=Object.keys(FFG).filter(k=>!ex.includes(k));
   const h=`<div class="card" style="padding:10px"><div class="fstrip">${(()=>{const chip=p=>p.bot?`<span class="fchip">${esc(p.n)} <small>${BLV[p.bot]}${bLbl(p.n)?' · '+bLbl(p.n):''}</small></span>`:`<span class="fchip${p.n===f.me?' me':''}${!p.on?' off':''}">${p.n===v.host?'👑 ':''}${nmx(p.n)}${!p.on?' 📴':''}</span>`;
@@ -1699,7 +1703,7 @@ function ffaUpd(){const f=FFX,v=f.v;if(!v||!document.getElementById('ffa'))retur
   const sig=JSON.stringify([st.b,alive]);if(gr&&sig!==f.dyn){f.dyn=sig;gr.innerHTML=st.b.map((b,i)=>{const mine=b.o===f.me;return`<button class="fb${mine?' mine':''}${b.o&&!mine?' held':''}" data-i="${i}" ${alive?'':'disabled'}><span class="fe">🍾</span><small>${mine?'✋ Du':b.o?nmx(b.o)+(b.prot?' 🔒':''):'frei'}</small></button>`}).join('')}}
  else if(v.g==='quiz'){const st=v.st,lk=Date.now()<f.lkUntil,qq=$('#fqq'),qa=$('#fqa');
   if(qq&&qq.dataset.k!==st.q){qq.dataset.k=st.q;qq.textContent=st.q}
-  if(qa){const k=JSON.stringify(st.o)+lk;if(qa.dataset.k!==k){qa.dataset.k=k;qa.innerHTML=(st.o||[]).map((t,i)=>`<button class="btn ghost" data-i="${i}" ${lk?'disabled':''} style="padding:14px 8px;font-size:17px;line-height:1.2"><b style="color:var(--yel)">${'ABCD'[i]}</b> ${esc(t)}</button>`).join('')}}
+  if(qa){const k=JSON.stringify(st.o)+lk;if(qa.dataset.k!==k){qa.dataset.k=k;qa.innerHTML=(st.o||[]).map((t,i)=>`<button class="btn ghost" data-i="${i}" ${lk?'disabled':''} style="padding:14px 8px;font-size:17px;line-height:1.2"><b style="color:var(--ink)">${'ABCD'[i]}</b> ${esc(t)}</button>`).join('')}}
   const hs=$('#fst');if(hs)hs.textContent=lk?'❌ Falsch – kurz gesperrt …':'';
   if(lk){setTimeout(()=>{if(FFX===f)ffaUpd()},Math.max(50,f.lkUntil-Date.now()+30))}}
  else if(v.g==='dobble'){const st=v.st,mid=$('#fmid'),my=$('#fmy'),lk=Date.now()<f.lkUntil;
@@ -1774,7 +1778,7 @@ function adminPlayer(p){if(!p)return adminScreen();
  $('#bt').onclick=adminScreen;
  const say=h=>{const m=$('#am');m.style.display='';m.innerHTML=h},call=async(fn,extra)=>rpc(fn,{p_name:DB.acct.name,p_pin:DB.acct.pin,p_target:p.n,...extra});
  admArm($('#ab'),'',async()=>{try{const r=await call('admin_ban',{p_ban:!p.banned});if(r==='ok'){p.banned=!p.banned;sfx('ok');adminPlayer(p)}else say('❌ Das hat nicht geklappt ('+esc(String(r))+').')}catch(e){say('⚠️ Server nicht erreichbar.')}});
- admArm($('#ar'),'',async()=>{try{const r=String(await call('admin_reset_pin'));if(r.startsWith('ok:')){sfx('win');say(`Neue PIN für <b>${esc(p.n)}</b>:<div class="big" style="font-size:44px;letter-spacing:6px;color:var(--yel)">${esc(r.slice(3))}</div><div class="mut" style="font-size:13px">Wird nur jetzt angezeigt. Gib sie dem Spieler weiter – die alte PIN gilt nicht mehr.</div>`)}else say('❌ Das hat nicht geklappt ('+esc(r)+').')}catch(e){say('⚠️ Server nicht erreichbar.')}});
+ admArm($('#ar'),'',async()=>{try{const r=String(await call('admin_reset_pin'));if(r.startsWith('ok:')){sfx('win');say(`Neue PIN für <b>${esc(p.n)}</b>:<div class="big" style="font-size:44px;letter-spacing:6px;color:var(--ink)">${esc(r.slice(3))}</div><div class="mut" style="font-size:13px">Wird nur jetzt angezeigt. Gib sie dem Spieler weiter – die alte PIN gilt nicht mehr.</div>`)}else say('❌ Das hat nicht geklappt ('+esc(r)+').')}catch(e){say('⚠️ Server nicht erreichbar.')}});
  admArm($('#aw'),'',async()=>{try{const r=String(await call('admin_wipe'));if(r.startsWith('ok:')){sfx('ok');say('🧹 '+esc(r.slice(3))+' Ergebnisse und die Elo-Wertung von '+esc(p.n)+' gelöscht.');p.res=0;p.elo=null}else say('❌ Das hat nicht geklappt ('+esc(r)+').')}catch(e){say('⚠️ Server nicht erreichbar.')}})}
 
 function partyHub(){S.code=null;S.room=null;S.fi=false;
@@ -1839,7 +1843,7 @@ async function fdDraw(){const el=document.getElementById('fr');if(!el)return;con
 function fernIntro(name,code,create,seed){
  const d=dec(code),K=Object.keys(STG);S.names=[name];S.daily=seed!=null;S.seed=seed!=null?seed:d.seed;S.stages=d.idx.map(i=>K[i]);S.cur=0;S.res=[];S.code=enc(d.seed,d.idx);
  if(!create){pass();return}
- app.innerHTML=`<div class="scr"><div class="mid"><div class="c mut">${FDW?'⏳ Fernduell gegen '+esc(FDW):'Deine Challenge'}</div><div class="big" style="font-size:clamp(28px,9vw,40px);color:var(--yel);letter-spacing:2px">${S.code}</div>
+ app.innerHTML=`<div class="scr"><div class="mid"><div class="c mut">${FDW?'⏳ Fernduell gegen '+esc(FDW):'Deine Challenge'}</div><div class="big" style="font-size:clamp(28px,9vw,40px);color:var(--ink);letter-spacing:2px">${S.code}</div>
  <div class="c mut">${FDW?esc(FDW)+' hat die Einladung im Postfach (24 Stunden gültig) und spielt dieselben 3 Spiele, sobald es passt.':'Schick den Code (oder Link) an deine Freunde. Wer ihn eingibt, spielt exakt dieselben Aufgaben.'}</div>
  <div class="card">${S.stages.map(k=>`${STG[k].emoji} ${STG[k].name}`).join('<br>')}</div></div>
  ${FDW?'':'<button class="btn" id="sc">📤 Code teilen</button><button class="btn ghost" id="sf">👥 An Freunde senden</button>'}<button class="btn pink" id="go2">Ich spiele jetzt ➜</button>${bar()}</div>`;
@@ -1980,7 +1984,7 @@ function rmCount(startMs){rmStop();RM_CNT=(RM&&RM.rows&&RM.rows.length)||RM_CNT;
 function rmRender(){const r=RM.room,host=r.host===RM.name,ph=RM.phase;
  if(ph=='count'){rmCount(Date.parse(r.start_at));return}
  const tb='<div class="tb"><button class="btn ghost sm" id="bt">⬅ Raum verlassen</button></div>',
-  head=`<div class="c mut">Raum <b style="color:var(--yel);letter-spacing:2px;font-size:20px">${RM.code}</b> </div>`,
+  head=`<div class="c mut">Raum <b style="color:var(--ink);letter-spacing:2px;font-size:20px">${RM.code}</b> </div>`,
   inv=`<button class="btn ghost sm" id="inv">📤 Raum-Code teilen</button><button class="btn ghost sm" id="inf">👥 Freund einladen</button>`;
  if(ph=='lobby'){
   app.innerHTML=`<div class="scr" id="rm">${head}<div class="mid"><div class="big" style="font-size:clamp(30px,10vw,44px)">🔁 Revanche</div><div class="c mut">Warte kurz auf die Mitspieler …<br>Nach 30 Sekunden geht es mit allen weiter, die da sind.</div><div id="plist"></div><div class="hint" id="rms"></div>
@@ -2045,7 +2049,7 @@ function errSend(msg,src){try{if(ERRN>=3||!DB.sb||!DB.sb.url||!/^https?:/.test(l
 addEventListener('error',e=>errSend(e.message,(e.filename||'')+':'+(e.lineno||0)+':'+(e.colno||0)));
 addEventListener('unhandledrejection',e=>{const r=e.reason;if(r&&(r.auth||r.status||r.nf||r.full||r.dup))return;errSend('Promise: '+(r&&r.message||r),'')});
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-10-32';const BVN='2.15.0';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-10-33';const BVN='2.15.1';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--ink);font-weight:800;text-align:center';
