@@ -67,8 +67,15 @@ body{background:radial-gradient(120% 80% at 50% 0,var(--g1),var(--g2) 70%) fixed
 .fstrip{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}.fchip{background:rgba(255,255,255,.12);border-radius:12px;padding:4px 9px;font-weight:800;font-size:13px}.fchip b{color:var(--yel);margin-left:3px}.fchip.me{outline:2px solid var(--yel)}.fchip.off{opacity:.45}.fchip.out{text-decoration:line-through;opacity:.55}
 .fcard{width:100%;border-radius:20px;padding:10px;background:linear-gradient(180deg,var(--c1),var(--c2));border:2px solid #5a3fb0}.fcard.mine{border-color:var(--yel)}.fsyms{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}.fsyms>span,.fsyms>button{font-size:clamp(34px,11vw,52px);background:rgba(255,255,255,.1);border:0;border-radius:14px;padding:8px 0;text-align:center;line-height:1.1;touch-action:manipulation}.fsyms>button:disabled{opacity:.4}.fsyms>button:active{background:rgba(255,255,255,.3)}
 .fbar{height:6px;border-radius:3px;background:#ffffff22;overflow:hidden;width:100%}.fbar i{display:block;height:100%;width:100%;background:var(--yel)}
-.fb{border:0;border-radius:18px;padding:14px 4px;background:linear-gradient(180deg,var(--b2),var(--b1));color:#fff;box-shadow:0 5px 0 rgba(0,0,0,.3);font:800 13px system-ui;touch-action:manipulation;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:140px;justify-content:center}.fb .fe{font-size:60px}.fb.held{opacity:.55}.fb.mine{outline:4px solid var(--yel);background:linear-gradient(180deg,#8a63ff,#5a2fe0)}.fb:active{transform:translateY(3px)}.fb:disabled{opacity:.4}
-.fo{border:0;border-radius:22px;padding:22px 4px;font-size:54px;background:linear-gradient(180deg,var(--b2),var(--b1));color:#fff;box-shadow:0 6px 0 rgba(0,0,0,.3);touch-action:manipulation;display:flex;flex-direction:column;align-items:center}.fo small{font:800 13px system-ui}.fo.mine{outline:4px solid var(--yel)}.fo:disabled:not(.mine){opacity:.5}
+.fb{border:0;border-radius:18px;padding:14px 4px;background:linear-gradient(180deg,var(--b2),var(--b1));color:#fff;box-shadow:0 5px 0 rgba(0,0,0,.3);font:800 13px system-ui;touch-action:manipulation;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:min(30vh,190px);justify-content:center}.fb .fe{font-size:clamp(64px,22vw,92px)}.fb.held{opacity:.55}.fb.mine{outline:4px solid var(--yel);background:linear-gradient(180deg,#8a63ff,#5a2fe0)}.fb:active{transform:translateY(3px)}.fb:disabled{opacity:.4}
+.fo{border:0;border-radius:22px;padding:clamp(26px,8vh,56px) 4px;font-size:clamp(56px,18vw,76px);background:linear-gradient(180deg,var(--b2),var(--b1));color:#fff;box-shadow:0 6px 0 rgba(0,0,0,.3);touch-action:manipulation;display:flex;flex-direction:column;align-items:center}.fo small{font:800 13px system-ui}.fo.mine{outline:4px solid var(--yel)}.fo:disabled:not(.mine){opacity:.5}
+.ar{padding-left:12px;border-left:6px solid var(--ac,#fff);border-radius:3px}
+.mt{display:flex;flex-direction:column;align-items:center;gap:2px;padding:14px 4px;font-size:15px}.mt span{font-size:34px;line-height:1.1}.mt b{font-size:16px}.mt small{font-weight:700;opacity:.8;font-size:12px}
+#fl{position:fixed;inset:0;pointer-events:none;z-index:9998;opacity:0}#fl.bad{box-shadow:inset 0 0 70px 10px rgba(255,77,77,.75);animation:flo .38s ease-out}#fl.ok{box-shadow:inset 0 0 60px 6px rgba(61,255,160,.5);animation:flo .35s ease-out}@keyframes flo{0%{opacity:1}100%{opacity:0}}
+@keyframes shk{0%,100%{transform:none}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(4px)}}#app.shk{animation:shk .3s}
+.cdr{position:relative;width:min(70vw,300px);aspect-ratio:1;margin:0 auto;display:flex;align-items:center;justify-content:center}.cdr svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}.cdr circle{fill:none;stroke:var(--yel);stroke-width:5;stroke-linecap:round;stroke-dasharray:289;animation:cdring 1s linear both}.cdr.last circle{stroke:var(--pink)}.cdr .cd{font-size:clamp(90px,34vw,150px);text-shadow:5px 5px 0 var(--pink)}@keyframes cdring{from{stroke-dashoffset:0}to{stroke-dashoffset:289}}
+@media (prefers-reduced-motion:reduce){#fl,#app.shk,.cdr circle{animation:none!important}}
+.fcard{flex:1;display:flex;flex-direction:column;min-height:0}.fsyms{flex:1;align-content:stretch;grid-auto-rows:1fr}.fsyms>span,.fsyms>button{font-size:clamp(44px,15vw,68px);display:flex;align-items:center;justify-content:center}
 .banner{font:900 26px system-ui;text-align:center;color:var(--yel);animation:pop .5s}
 .rk{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.1);font-weight:800}
 .rk.w{background:linear-gradient(90deg,#ffd23f,#ff9f1c);color:#2a1166}
@@ -77,7 +84,7 @@ body{background:radial-gradient(120% 80% at 50% 0,var(--g1),var(--g2) 70%) fixed
 h3{margin:8px 0 6px;color:var(--cyan)}
 canvas{position:fixed;inset:0;pointer-events:none;z-index:9}
 </style></head><body>
-<div id="app"></div><canvas id="fx"></canvas>
+<div id="app"></div><div id="fl"></div><canvas id="fx"></canvas>
 <script>
 /* ===== Hilfsfunktionen ===== */
 ['gesturestart','gesturechange','gestureend'].forEach(e=>document.addEventListener(e,x=>x.preventDefault&&x.preventDefault()));
@@ -104,7 +111,8 @@ let AC;
 function ac(){if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();return AC}
 function tone(f,d,type='square',v=.07,t=0,sl){try{const c=ac(),o=c.createOscillator(),g=c.createGain(),s=c.currentTime+t;o.type=type;o.frequency.setValueAtTime(f,s);if(sl)o.frequency.exponentialRampToValueAtTime(sl,s+d);g.gain.setValueAtTime(v,s);g.gain.exponentialRampToValueAtTime(.001,s+d);o.connect(g).connect(c.destination);o.start(s);o.stop(s+d+.02)}catch(e){}}
 function vib(k){try{if(DB.vib===false||!navigator.vibrate)return;const m={bad:[70],go:[30],win:[40,50,90],rec:[60,40,60,40,140],lose:[140],tap2:[25]}[k];if(m)navigator.vibrate(m)}catch(e){}}
-function sfx(k,n=0){vib(k);if(!DB.snd)return;
+function flash(k){try{if(k!=='bad'&&k!=='ok')return;const f=document.getElementById('fl'),a=document.getElementById('app');if(!f)return;f.className='';void f.offsetWidth;f.className=k;if(k==='bad'&&a){a.classList.remove('shk');void a.offsetWidth;a.classList.add('shk')}}catch(e){}}
+function sfx(k,n=0){vib(k);flash(k);if(!DB.snd)return;
  if(k=='tap')tone(420+n*45,.09,'square',.06);
  if(k=='bad')tone(220,.3,'sawtooth',.1,0,50);
  if(k=='ok'){tone(660,.1,'triangle',.1);tone(990,.15,'triangle',.1,.08)}
@@ -119,6 +127,7 @@ let st=0;setInterval(()=>{if(!DB.mus||!AC||document.hidden)return;
 
 /* ===== Konfetti ===== */
 const cv=$('#fx'),cx=cv.getContext('2d');let ps=[],run=false;
+const cdr=n=>`<div class="cdr${n<=3?' last':''}"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46"/></svg><div class="cd">${n}</div></div>`;
 function confetti(n=120){cv.width=innerWidth;cv.height=innerHeight;for(let i=0;i<n;i++)ps.push({x:innerWidth/2,y:innerHeight*.4,vx:(Math.random()-.5)*16,vy:-Math.random()*16-4,c:`hsl(${Math.random()*360},90%,60%)`,s:5+Math.random()*7,r:Math.random()*6});
  if(!run){run=true;(function l(){cx.clearRect(0,0,cv.width,cv.height);ps=ps.filter(p=>p.y<cv.height+20);ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.4;p.r+=.2;cx.fillStyle=p.c;cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.6);cx.restore()});if(ps.length)requestAnimationFrame(l);else run=false})()}}
 
@@ -584,7 +593,7 @@ function pass(){
 }
 function countdown(cb){
  let n=3;const t=()=>{if(n==0){sfx('go');play(cb);return}
-  app.innerHTML=`<div class="scr"><div class="mid"><div class="cd">${n}</div><div class="cdb"><i style="width:${(3-n)/3*100}%"></i></div></div></div>`;const bi=app.querySelector('.cdb i');setTimeout(()=>{if(bi)bi.style.width=(4-n)/3*100+'%'},30);sfx('cd');n--;setTimeout(t,800)};t();
+  app.innerHTML=`<div class="scr"><div class="mid">${cdr(n)}<div class="cdb"><i style="width:${(3-n)/3*100}%"></i></div></div></div>`;const bi=app.querySelector('.cdb i');setTimeout(()=>{if(bi)bi.style.width=(4-n)/3*100+'%'},30);sfx('cd');n--;setTimeout(t,800)};t();
 }
 function play(cb){
  app.innerHTML=`<div class="scr play"><div class="hud"><span>${esc(S.names[S.cur])}</span><span id="tm">0,000 s</span></div><div class="dots">${S.stages.map(()=>'<i></i>').join('')}</div><div class="hint" id="hint"></div><div id="stg"></div></div>`;
@@ -675,10 +684,11 @@ let RKC='',ELM={},eloT=0;
 async function eloLoad(){if(Date.now()-eloT<120000)return;eloT=Date.now();try{const r=await rpc('elo_map',{});if(Array.isArray(r)){ELM={};r.forEach(x=>ELM[skey(x.n)]=x.r)}}catch(e){}}
 const ring=n=>{const r=ELM[skey(n)];if(r==null)return'';const c=r>=1250?'#5ce1ff':r>=1100?'#ffd23f':r>=950?'#cfd6e0':'#cd7f32';return`;box-shadow:0 0 0 3px ${c}`};
 function connMsg(el,n,retry){if(!el)return;el.innerHTML=(n>=8?'📡 Keine Verbindung – prüfe dein Internet. ':'⚠️ Verbindung wackelt … ')+'<button class="btn ghost sm" id="rtb" style="width:auto;display:inline-block;padding:4px 12px;margin-left:6px">🔄 Erneut versuchen</button>';const b=el.querySelector('#rtb');if(b)b.onclick=()=>{el.textContent='Verbinde …';retry()}}
+function eloCount(a,z){try{const el=document.getElementById('elv');if(!el||(typeof matchMedia!=='undefined'&&matchMedia('(prefers-reduced-motion: reduce)').matches))return;const t0=performance.now();const f=t=>{const k=Math.min(1,(t-t0)/1000),e=1-Math.pow(1-k,3);if(!el.isConnected)return;el.textContent=Math.round(a+(z-a)*e);if(k<1)requestAnimationFrame(f)};requestAnimationFrame(f)}catch(e){}}
 async function eloShow(code,me){const box=()=>document.getElementById('elr');
  for(let i=0;i<6;i++){try{await rpc('elo_apply',{p_code:code});const L=await rpc('elo_result',{p_code:code,p_name:me});
    if(Array.isArray(L)&&L[0]){const x=L[0],b=box();if(!b)return;if(x.lim){b.innerHTML='<span class="mut">🏅 Gleicher Gegner zu oft in 24 h – diesmal keine Elo-Wertung.</span>';return}
-    const lg=league(x.r);b.innerHTML=`🏅 <b style="color:${x.d>=0?'var(--grn)':'var(--pink)'}">${x.d>0?'+':''}${x.d} Elo</b> → <b>${x.r}</b> · ${lg.e} ${lg.n}${x.ws>=3?`<br>🔥 ${x.ws}er-Serie${x.b?` · +${x.b} Bonus-Elo`:''}`:''}`;return}}catch(e){}
+    const lg=league(x.r);b.innerHTML=`🏅 <b style="color:${x.d>=0?'var(--grn)':'var(--pink)'}">${x.d>0?'+':''}${x.d} Elo</b> → <b id="elv">${x.r}</b> · ${lg.e} ${lg.n}${x.ws>=3?`<br>🔥 ${x.ws}er-Serie${x.b?` · +${x.b} Bonus-Elo`:''}`:''}`;eloCount(x.r-x.d,x.r);return}}catch(e){}
   await new Promise(z=>setTimeout(z,2000));if(!box())return}
  const b=box();if(b)b.innerHTML='<span class="mut">🏅 Elo-Wertung folgt …</span>'}
 function duForfeitWin(){const D=DU;duStop();const me=D.name,code=D.code;sfx('rec');confetti(220);
@@ -690,7 +700,7 @@ async function rankedSeason(){const e=()=>document.getElementById('rss'),S0=seas
   const hl=await rpc('elo_hall',{p_name:DB.acct.name});if(Array.isArray(hl)){if((DB.rkc||0)!==hl.length){DB.rkc=hl.length;save()}if(hl.length)h+=`<div style="margin-top:6px">👑 Du warst ${hl.length}× in den Top 3!</div>`}
   if(e())e().innerHTML=h}catch(x){}}
 async function rankedHub(){if(needAcct(rankedHub))return;
- app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🏆 Ranked</h2><div class="mut">Zufälliger Gegner · 3 Spiele · wer schneller ist, gewinnt Elo.</div>
+ app.innerHTML=`<div class="scr"><h2 class="ar" style="margin:6px 0 0;--ac:#ff9a3d">🏆 Ranked</h2><div class="mut">Zufälliger Gegner · 3 Spiele · wer schneller ist, gewinnt Elo.</div>
  <div class="card c" id="rme" style="padding:14px"><span class="mut">Lade deinen Rang …</span></div>
  <div class="card c" id="rss" style="padding:10px;font-size:14px"></div>
  <button class="btn pink glow" id="rgo" style="padding:22px">🔍 MATCH SUCHEN<br><small style="font-weight:700;opacity:.9">Du wirst jemandem mit ähnlicher Elo zugelost</small></button>
@@ -706,14 +716,14 @@ async function rankedHub(){if(needAcct(rankedHub))return;
 }
 function randGo(back){back=typeof back=='function'?back:menu;ac();if(needAcct(()=>randGo(back)))return;duelRandom(DB.acct.name,3,back)}
 function duelHub(){
- app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🥊 1v1-Duell</h2><div class="mut">Zwei Spieler, jede Runde ein anderes Spiel – wer schneller ist, holt den Punkt.</div>
+ app.innerHTML=`<div class="scr"><h2 class="ar" style="margin:6px 0 0;--ac:#8be02e">🥊 1v1-Duell</h2><div class="mut">Zwei Spieler, jede Runde ein anderes Spiel – wer schneller ist, holt den Punkt.</div>
  <div class="mid" style="justify-content:flex-start;padding-top:6px">${hubBtn('h2','🌍','Mit Freund / Code','Duell eröffnen oder per Code beitreten','')}${hubBtn('h1','📱','Ein Handy','Reihum am selben Gerät','background:linear-gradient(180deg,#b9ff6b,#8be02e);box-shadow:0 6px 0 #4c8a0e')}<button class="btn ghost sm" id="h3">📊 Duell-Bilanz</button></div>${bar('⬅ Hauptmenü')}</div>`;
  $('#h1').onclick=duelSetup;$('#h2').onclick=()=>duelOnline();$('#h3').onclick=()=>duelStats();$('#bt').onclick=menu;
 
 }
 function duelSetup(){
  let n=DB.vr||5;const nm=DB.vn||[DB.names[0]||'',DB.names[1]||''];
- app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🥊 1v1-Duell</h2><div class="mut">Zwei Spieler, ein Handy. Jede Runde ein anderes Spiel – wer schneller ist, holt den Punkt.</div>
+ app.innerHTML=`<div class="scr"><h2 class="ar" style="margin:6px 0 0;--ac:#8be02e">🥊 1v1-Duell</h2><div class="mut">Zwei Spieler, ein Handy. Jede Runde ein anderes Spiel – wer schneller ist, holt den Punkt.</div>
  <div class="pl"><input id="v1" maxlength="14" placeholder="Spieler 1" value="${esc(nm[0])}" autocomplete="off"></div>
  <div class="pl"><input id="v2" maxlength="14" placeholder="Spieler 2" value="${esc(nm[1])}" autocomplete="off"></div>
  <div class="c mut">Wie viele Runden?</div>
@@ -791,7 +801,7 @@ const duStop=()=>{clearInterval(duT);duT=0};
 const duCode=c=>{c=String(c).trim().toUpperCase().replace(/^DUELL-/,'');return c.length==4?'1'+c:c};
 function duelOnline(pre=''){duStop();DU=null;if(needAcct(duelOnline,pre))return;
  let n=DB.vr||5;
- app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🌍 1v1 Online</h2><div class="mut">Jeder spielt am eigenen Handy. Der Start ist für beide gleichzeitig.</div>
+ app.innerHTML=`<div class="scr"><h2 class="ar" style="margin:6px 0 0;--ac:#8be02e">🌍 1v1 Online</h2><div class="mut">Jeder spielt am eigenen Handy. Der Start ist für beide gleichzeitig.</div>
  ${nameField()}
  <h3 style="margin:4px 0 0">Neues Duell eröffnen</h3>
  <div class="c mut">Wie viele Runden?</div>
@@ -863,7 +873,7 @@ function duCount(startMs){duStop();let last=-1,iv=0;const D=DU,r=D.room,R=r.stag
     app.innerHTML=`<div class="scr" id="du"><div class="mid"><div class="c mut">Runde ${R}/${r.stages.g.length}</div><div class="big">${f3(t)}</div><div class="c mut">Sende Zeit …</div></div></div>`;
     for(let i=0;i<4;i++){try{await sbSend({n:D.name,t:Math.max(500,t),pen},D.code===RKC?{[g]:Math.max(700,Math.round(t))}:{},`${D.code}-R${R}`);break}catch(e){await new Promise(z=>setTimeout(z,1200))}}
     if(DU===D){D.phase='';duT=setInterval(duTick,1200);duTick()}});return}
-  const n=Math.ceil(rem/1000);if(n!==last){last=n;app.innerHTML=`<div class="scr" id="du"><div class="mid"><div class="c mut">Runde ${R}/${r.stages.g.length} · ${STG[g].emoji} ${STG[g].name}</div><div class="c mut">Gemeinsamer Start in …</div><div class="cd">${n}</div></div></div>`;sfx('cd')}};
+  const n=Math.ceil(rem/1000);if(n!==last){last=n;app.innerHTML=`<div class="scr" id="du"><div class="mid"><div class="c mut">Runde ${R}/${r.stages.g.length} · ${STG[g].emoji} ${STG[g].name}</div><div class="c mut">Gemeinsamer Start in …</div>${cdr(n)}</div></div>`;sfx('cd')}};
  tk();iv=setInterval(tk,100)}
 function showReact(who,emoji){try{const d=document.createElement('div');d.className='rx';d.style.left=(20+Math.random()*55)+'%';d.innerHTML=emoji+'<small>'+esc(who)+'</small>';document.body.appendChild(d);setTimeout(()=>{try{d.remove()}catch(e){}},2100);vib('tap2')}catch(e){}}
 function addRx(){try{const ph=DU.phase||'';if(!/^(wait|result|end)/.test(ph))return;const sc=document.getElementById('du');if(!sc||sc.querySelector('#rxb'))return;
@@ -1206,11 +1216,13 @@ function onboard(i=0){const P=[['⚡','Schnell sein!','Mini-Spiele, die du so sc
  const end=()=>{DB.seen=1;save();menu()};$('#on').onclick=()=>{ac();i<2?onboard(i+1):end()};$('#os').onclick=end}
 function menu(){NBK=null;S.fi=false;setTimeout(installNudge,1200);applyTheme();avLoad();ibLoad();S.code=null;S.room=null;S.daily=false;
  app.innerHTML=`<div class="scr"><h1 class="logo">BLITZ<span>BRAIN</span></h1><div class="sub" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="white-space:nowrap">${POOL().length} Mini-Games</span><button class="btn ghost sm" id="ac" style="flex:none;width:auto;padding:6px 12px;font-size:13px"></button></div>
- <div class="mid" style="gap:10px"><button class="btn glow" id="mr" style="padding:13px;background:linear-gradient(180deg,#ffb347,#ff7a18);box-shadow:0 6px 0 #a24a00;color:#fff">🏆 RANKED<br><small style="font-weight:700;opacity:.9">Zufälliger Gegner · 3 Spiele · Elo</small></button><button class="btn" id="m4" style="padding:13px;background:linear-gradient(180deg,#b9ff6b,#8be02e);box-shadow:0 6px 0 #4c8a0e">🥊 1v1-DUELL<br><small style="font-weight:700;opacity:.8">Mit Freund (online) oder an einem Handy</small></button>
- <button class="btn pink" id="m1" style="padding:13px">👥 PARTY<br><small style="font-weight:700;opacity:.9">Ein Handy, Online-Raum oder Challenge</small></button>
- <button class="btn" id="m2" style="padding:13px">🕹️ ARCADE<br><small style="font-weight:700;opacity:.8">Solo – jedes Spiel einzeln üben</small></button></div>
+ <div class="mid" style="gap:12px"><button class="btn glow" id="mr" style="padding:20px 16px;background:linear-gradient(180deg,#ffb347,#ff7a18);box-shadow:0 7px 0 #a24a00;color:#fff;display:flex;align-items:center;gap:14px;text-align:left"><span style="font-size:52px;flex:none;line-height:1">🏆</span><span style="flex:1;min-width:0"><b style="display:block;font-size:28px;letter-spacing:1px">RANKED</b><small id="mrs" style="font-weight:800;opacity:.92;font-size:14px">Zufälliger Gegner · 3 Spiele · Elo</small></span><span style="font-size:30px;opacity:.6;flex:none">›</span></button>
+ <div class="grid g3" style="gap:10px"><button class="btn mt" id="m4" style="background:linear-gradient(180deg,#b9ff6b,#8be02e);box-shadow:0 6px 0 #4c8a0e"><span>🥊</span><b>1v1-Duell</b><small>Mit Freund</small></button>
+ <button class="btn mt pink" id="m1"><span>👥</span><b>Party</b><small>Gruppe &amp; Online</small></button>
+ <button class="btn mt" id="m2"><span>🕹️</span><b>Arcade</b><small>Solo üben</small></button></div></div>
  <div class="tb"><button class="btn ghost sm" id="rec">🏆 Bestenlisten</button><button class="btn ghost sm" id="mus" style="flex:0 0 64px" aria-label="Musik"></button><button class="btn ghost sm" id="snd" style="flex:0 0 64px" aria-label="Sound"></button><button class="btn ghost sm" id="hp" style="flex:0 0 64px" aria-label="So geht's">❔</button></div></div>`;
  if(DB.acct&&skey(DB.acct.name)==='admin'){const sb=app.querySelector('.sub'),ac=$('#ac');if(sb&&ac){const b=document.createElement('button');b.className='btn ghost sm';b.id='adm';b.style.cssText='flex:none;width:auto;padding:6px 12px;font-size:13px';b.textContent='🛠️ Admin';sb.insertBefore(b,ac);b.onclick=adminScreen}}
+ if(DB.acct){eloLoad().then(()=>{const r=ELM[skey(DB.acct.name)],e=document.getElementById('mrs');if(r!=null&&e){const lg=league(r);e.textContent=lg.e+' '+lg.n+' · '+r+' Elo'}})}
  const lab=()=>{$('#mus').textContent=DB.mus?'🎵':'🔕';$('#snd').textContent=DB.snd?'🔊':DB.vib===false?'🔇':'📳'};lab();
  const sv=DB.acct&&DB.sess&&Date.now()-DB.sess.ts<90*60*1000?DB.sess:null;
  if(sv){const mid=app.querySelector('.mid');if(mid){const b=document.createElement('button');b.className='btn ghost';b.id='rs';b.textContent='↩️ Zurück ins '+(sv.t=='du'?'Duell':'Raum')+' ('+sv.code.replace(/^1/,'')+')';mid.append(b);
@@ -1230,7 +1242,7 @@ function menu(){NBK=null;S.fi=false;setTimeout(installNudge,1200);applyTheme();a
 }
 function arcade(){
  if(!DB.arc)DB.arc={};
- app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🕹️ Arcade</h2><div class="mut">Tippe ein Spiel an und teste es solo. Die Bestzeit pro Spiel wird gespeichert.</div>
+ app.innerHTML=`<div class="scr"><h2 class="ar" style="margin:6px 0 0;--ac:#ffd23f">🕹️ Arcade</h2><div class="mut">Tippe ein Spiel an und teste es solo. Die Bestzeit pro Spiel wird gespeichert.</div>
  <div class="grid g2" style="gap:10px;padding-bottom:12px">${POOL().map(k=>`<button class="card ar" data-k="${k}" style="border:0;color:#fff;text-align:center;padding:12px 6px;font:inherit;background:linear-gradient(180deg,var(--b2),var(--b1));box-shadow:0 4px 0 rgba(0,0,0,.3)"><div style="font-size:34px">${STG[k].emoji}</div><b>${STG[k].name}</b><div class="mut" style="font-size:12px;margin-top:2px">${DB.arc[k]?'🏅 '+f3(DB.arc[k]):'noch nicht gespielt'}</div></button>`).join('')}</div>
  <div class="tb"><button class="btn ghost sm" id="bt">⬅ Zurück</button></div></div>`;
  const t0=performance.now();app.querySelectorAll('.ar').forEach(b=>b.onclick=e=>{const r=$('.tb').getBoundingClientRect();if(performance.now()-t0<400||(e.clientY&&e.clientY>=r.top-6))return;sfx('ok');arcIntro(b.dataset.k)});
@@ -1245,7 +1257,7 @@ function arcIntro(k){const lv=DB.lv==null?1:DB.lv,L=LVS[lv],bk=DB.arc&&DB.arc[ar
  <button class="btn pink" id="rdy">BEREIT! 🔥</button>${bar('⬅ Andere Spiele')}</div>`;
  $('#bt').onclick=arcade;$('#lvr').onclick=e=>{const l=e.target.dataset.l;if(l!=null){DB.lv=+l;save();sfx('ok');arcIntro(k)}};
  $('#rdy').onclick=()=>{ac();const seed=(Math.random()*1e9)|0;let n=3;
-  const t=()=>{if(n==0){sfx('go');arcRun(k,seed);return}app.innerHTML=`<div class="scr"><div class="mid"><div class="cd">${n}</div></div></div>`;sfx('cd');n--;setTimeout(t,800)};t()};
+  const t=()=>{if(n==0){sfx('go');arcRun(k,seed);return}app.innerHTML=`<div class="scr"><div class="mid">${cdr(n)}</div></div>`;sfx('cd');n--;setTimeout(t,800)};t()};
 }
 function arcRun(k,seed,i=0,acc){acc=acc||{t:0,pen:0};const lv=DB.lv==null?1:DB.lv,L=LVS[lv];
  app.innerHTML=`<div class="scr play"><div class="hud"><span>${STG[k].emoji} ${STG[k].name}${L.runs>1?' · '+(i+1)+'/'+L.runs:''}</span><span id="tm">0,000 s</span></div><div class="hint">${STG[k].hint}</div><div id="stg"></div></div>`;
@@ -1306,7 +1318,7 @@ const FFO=['⭐','🌙','🔥','🍀'];
 let FFX=null;
 function ffaStop(){if(FFX){clearInterval(FFX.iv)}FFX=null}
 function ffaHub(pre=''){S.code=null;S.room=null;S.fi=false;if(needAcct(ffaHub,pre))return;ffaStop();
- app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🎪 Free-for-All</h2><div class="mut">Alle gegen alle, live am eigenen Handy – 2 bis 10 Spieler. Wer am schnellsten oder cleversten ist, gewinnt.</div>
+ app.innerHTML=`<div class="scr"><h2 class="ar" style="margin:6px 0 0;--ac:#3dffa0">🎪 Free-for-All</h2><div class="mut">Alle gegen alle, live am eigenen Handy – 2 bis 10 Spieler. Wer am schnellsten oder cleversten ist, gewinnt.</div>
  <div class="mid" style="justify-content:flex-start;padding-top:6px"><h3 style="margin:0">Raum eröffnen mit …</h3>${Object.keys(FFG).map(k=>hubBtn('fg_'+k,FFG[k].e,FFG[k].n,FFG[k].h,FFG[k].st)).join('')}
  <h3 style="margin:10px 0 0">… oder beitreten</h3><div class="pl"><input id="fcd" maxlength="8" placeholder="Raum-Code, z. B. K7P2" value="${esc(String(pre).replace(/^FFA-/i,''))}" autocomplete="off" autocapitalize="characters" style="text-transform:uppercase;letter-spacing:2px"></div>
  <button class="btn ghost" id="fjn">▶ Raum beitreten</button><div class="hint" id="er"></div></div>${bar('⬅ Party')}</div>`;
@@ -1365,7 +1377,7 @@ function ffaScr(){const f=FFX,v=f.v,g=FFG[v.g],me=v.host===f.me;
   <div class="banner" style="font-size:22px">${win.length>1?'Unentschieden: ':'Sieger: '}${win.map(nmx).join(', ')}</div>
   <div class="card" style="width:100%">${ord.map((p,i)=>`<div class="rk" style="margin:4px 0${p.n===f.me?';outline:2px solid var(--yel)':''}"><span style="width:30px;text-align:center">${med[i]||(i+1)+'.'}</span><b style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">${nmx(p.n)}</b><span>${p.s} ${v.g==='flask'?'Pkt':v.g==='dobble'?'🔎':'🎯'}</span></div>`).join('')}</div>
   ${me?'<button class="btn pink" id="fag">🔁 Nochmal (Lobby)</button>':'<div class="hint">Der Host kann direkt eine neue Runde starten.</div>'}<div class="hint" id="fst"></div></div>${ffaBar()}</div>`;
-  if(me)$('#fag').onclick=()=>{$('#fag').disabled=true;ffaCall('again')};ffaBindLeave();sfx(iw?'win':'ok');return}
+  if(me)$('#fag').onclick=()=>{$('#fag').disabled=true;ffaCall('again')};ffaBindLeave();sfx(iw?'win':'ok');if(iw)confetti(160);return}
  if(v.ph==='between'){ffaBetween();return}
  /* play */
  if(v.g==='flask'){
@@ -1448,18 +1460,18 @@ function adminPlayer(p){if(!p)return adminScreen();
  admArm($('#aw'),'',async()=>{try{const r=String(await call('admin_wipe'));if(r.startsWith('ok:')){sfx('ok');say('🧹 '+esc(r.slice(3))+' Ergebnisse und die Elo-Wertung von '+esc(p.n)+' gelöscht.');p.res=0;p.elo=null}else say('❌ Das hat nicht geklappt ('+esc(r)+').')}catch(e){say('⚠️ Server nicht erreichbar.')}})}
 
 function partyHub(){S.code=null;S.room=null;S.fi=false;
- app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">👥 Party</h2><div class="mut">Für Gruppen – jede Runde wird anders.</div>
+ app.innerHTML=`<div class="scr"><h2 class="ar" style="margin:6px 0 0;--ac:#ff5aa5">👥 Party</h2><div class="mut">Für Gruppen – jede Runde wird anders.</div>
  <div class="mid" style="justify-content:flex-start;padding-top:6px">${hubBtn('p1','⚔️','Ein Handy','Party-Runde, Handy wandert reihum – auch offline','background:linear-gradient(180deg,#ff7ab8,#ff3d96);box-shadow:0 6px 0 #a1155c;color:#fff')}${hubBtn('p2','🏠','Online-Raum','Jeder am eigenen Handy, gemeinsamer Countdown','background:linear-gradient(180deg,#6ff0ff,#27e1ff);box-shadow:0 6px 0 #0a7f94')}${hubBtn('p4','🎪','Free-for-All','Alle gegen alle, live: Flaschen-Grab, Symbol-Jagd …','background:linear-gradient(180deg,#8dffc4,#3dffa0);box-shadow:0 6px 0 #0f8a55')}${hubBtn('p3','⚡','Schnell-Challenge','Gleicher Code, jeder spielt, wann er will','')}</div>${bar('⬅ Hauptmenü')}</div>`;
  $('#p1').onclick=()=>{ac();home()};$('#p2').onclick=()=>{ac();fernRoom()};$('#p3').onclick=()=>{ac();fernChallenge()};$('#p4').onclick=()=>{ac();ffaHub()};$('#bt').onclick=menu}
 function fern(pre=''){S.code=null;S.room=null;if(!pre)return partyHub();if(needAcct(fern,pre))return;
  if(/^RAUM-/i.test(pre))return fernRoom(pre.slice(5));if(pre)return fernChallenge(pre);
- app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🌍 Party online</h2><div class="mut">Jeder spielt am eigenen Handy – mit denselben Aufgaben.</div>
+ app.innerHTML=`<div class="scr"><h2 class="ar" style="margin:6px 0 0;--ac:#ff5aa5">🌍 Party online</h2><div class="mut">Jeder spielt am eigenen Handy – mit denselben Aufgaben.</div>
  <div class="mid"><button class="btn pink" id="a1" style="padding:24px">🏠 RAUM<br><small style="font-weight:700;opacity:.9">Geheime Spiele-Wahl, gemeinsamer Countdown</small></button>
  <button class="btn" id="a2" style="padding:24px">⚡ SCHNELL-CHALLENGE<br><small style="font-weight:700;opacity:.8">Gleicher Code, jeder spielt wann er will</small></button></div>${bar('⬅ Hauptmenü')}</div>`;
  $('#a1').onclick=()=>fernRoom();$('#a2').onclick=()=>fernChallenge();$('#bt').onclick=menu;
 }
 function fernRoom(pre=''){S.code=null;S.room=null;if(needAcct(fernRoom,pre))return;
- app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">🏠 Raum</h2><div class="mut">Alle treten mit dem Code bei und wählen heimlich 1 von 4 Spielen. Wenn alle bereit sind, startet der Host den gemeinsamen Countdown (bis zu 10 Spieler; werden mehr als 5 Spiele gewählt, werden 5 ausgelost).</div>
+ app.innerHTML=`<div class="scr"><h2 class="ar" style="margin:6px 0 0;--ac:#ff5aa5">🏠 Raum</h2><div class="mut">Alle treten mit dem Code bei und wählen heimlich 1 von 4 Spielen. Wenn alle bereit sind, startet der Host den gemeinsamen Countdown (bis zu 10 Spieler; werden mehr als 5 Spiele gewählt, werden 5 ausgelost).</div>
  ${nameField()}
  <h3 style="margin:4px 0 0">Neuen Raum eröffnen</h3>
  <button class="btn pink" id="rmk">✨ Raum eröffnen</button>
@@ -1471,7 +1483,7 @@ function fernRoom(pre=''){S.code=null;S.room=null;if(needAcct(fernRoom,pre))retu
  $('#bt').onclick=()=>(NBK||fern)();
 }
 function fernChallenge(pre=''){S.code=null;S.room=null;S.fi=false;if(needAcct(fernChallenge,pre))return;
- app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0">⚡ Schnell-Challenge</h2><div class="mut">Gleicher Code, jeder spielt wann er will. Die Zeiten kommen ins gemeinsame Scoreboard.</div>
+ app.innerHTML=`<div class="scr"><h2 class="ar" style="margin:6px 0 0;--ac:#ff5aa5">⚡ Schnell-Challenge</h2><div class="mut">Gleicher Code, jeder spielt wann er will. Die Zeiten kommen ins gemeinsame Scoreboard.</div>
  ${nameField()}
  <button class="btn pink" id="mk">✨ Neue Challenge erstellen</button>
  <div class="c mut">oder Code von einem Freund eingeben</div>
@@ -1612,7 +1624,7 @@ let RM_CNT=2;
 function rmCount(startMs){rmStop();RM_CNT=(RM&&RM.rows&&RM.rows.length)||RM_CNT;let last=-1,iv=0;const r=RM.room,nm=RM.name,code=RM.code,bs=RM.base||code,nn=RM.n||1;
  const tk=()=>{const rem=startMs-Date.now();
   if(rem<=0){clearInterval(iv);RM=null;S.rm={base:bs,n:nn,size:r.size,name:nm,cnt:RM_CNT};S.names=[nm];S.seed=r.seed;S.stages=r.stages;S.cur=0;S.res=[];S.code='RAUM-'+code;S.room=true;sfx('go');play();return}
-  const n=Math.ceil(rem/1000);if(n!==last){last=n;app.innerHTML=`<div class="scr" id="rm"><div class="mid"><div class="c mut">Gemeinsamer Start in …</div><div class="cd">${n}</div></div></div>`;sfx('cd')}};
+  const n=Math.ceil(rem/1000);if(n!==last){last=n;app.innerHTML=`<div class="scr" id="rm"><div class="mid"><div class="c mut">Gemeinsamer Start in …</div>${cdr(n)}</div></div>`;sfx('cd')}};
  tk();iv=setInterval(tk,100)}
 function rmRender(){const r=RM.room,host=r.host===RM.name,ph=RM.phase;
  if(ph=='count'){rmCount(Date.parse(r.start_at));return}
@@ -1669,7 +1681,7 @@ setTimeout(()=>{if(DB.notif&&DB.acct)pushOn()},5000);
 try{const h=decodeURIComponent((location.hash||'').slice(1));if(h&&/^DUELL-[A-Z0-9]{4}$/i.test(h))duelOnline(h.slice(6).toUpperCase());else if(h&&(dec(h)||/^RAUM-[A-Z0-9]{4,8}$/i.test(h)))fern(h);else if(h&&/^FFA-[A-Z0-9]{4,8}$/i.test(h))ffaHub(h)}catch(e){}
 try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&location.hostname.endsWith('github.io'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-10-6';let updPend=null,updT=0;
+const BBV='2026-11-10-7';let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;font-weight:800;text-align:center';
