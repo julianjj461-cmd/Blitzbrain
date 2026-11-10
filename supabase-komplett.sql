@@ -230,3 +230,189 @@ alter table public.rooms drop constraint if exists rooms_size_check;
 alter table public.rooms add constraint rooms_size_check check (size between 2 and 10);
 create or replace function public.create_room(p_name text, p_pin text, p_code text, p_seed integer, p_size integer, p_stages jsonb) returns text language plpgsql security definer set search_path = public, extensions as $$ declare s text; begin s := public._auth(p_name, p_pin, false); if s not like 'ok:%' then return s; end if; if char_length(coalesce(p_code, '')) not between 4 and 8 or p_size not between 2 and 10 then return 'invalid'; end if; insert into public.rooms(code, seed, size, host, stages) values (p_code, p_seed, p_size, substr(s, 4), p_stages); return 'ok'; exception when unique_violation then return 'exists'; end $$;
 grant execute on function public.create_room(text, text, text, integer, integer, jsonb) to anon, authenticated;
+
+-- 15) Free-for-All-Modus (Flaschen-Grab, Symbol-Jagd, Minderheit gewinnt)
+create table if not exists public.ffa (code text primary key check (char_length(code) between 4 and 8), host text not null, game text not null check (game in ('flask','dobble','minor')), rounds integer not null default 8, phase text not null default 'lobby', rnd integer not null default 0, tp bigint not null default 0, st jsonb not null default '{}', pl jsonb not null default '{}', created_at timestamptz not null default now());
+alter table public.ffa enable row level security;
+create or replace function public._fnow() returns bigint language sql as $$ select (extract(epoch from clock_timestamp()) * 1000)::bigint $$;
+
+create or replace function public._ffa_round(r public.ffa) returns public.ffa language plpgsql set search_path = public as $$
+declare t bigint := public._fnow(); n text; i integer; al text[]; nb integer; bs jsonb := '[]'; c text[]; rest text[]; card text[]; k jsonb := '{}';
+ pool text[] := array['🐶','🐱','🦊','🐸','🐵','🦁','🐼','🐙','🦄','🐢','🍎','🍕','🍩','🚗','⚽','🎸','🌵','🔥','💎','🎈','🚀','🌈','🍀','👻','🤖','🎃','🍔','🐝','🦋','🍉'];
+begin
+ r.rnd := r.rnd + 1; r.phase := 'play'; r.tp := t;
+ if r.game = 'flask' then
+  select coalesce(array_agg(key order by key), '{}') into al from jsonb_each(r.pl) where (value->>'out') is null;
+  nb := greatest(coalesce(array_length(al, 1), 0) - 1, 1);
+  for i in 1..nb loop bs := bs || jsonb_build_object('o', null, 't', 0); end loop;
+  r.st := jsonb_build_object('al', to_jsonb(al), 'b', bs, 'end', t + 5000 + (random() * 6000)::integer, 'last', '[]'::jsonb);
+ elsif r.game = 'dobble' then
+  select array_agg(x) into c from (select x from unnest(pool) x order by random() limit 6) q;
+  select array_agg(x) into rest from unnest(pool) x where x <> all(c);
+  for n in select key from jsonb_each(r.pl) loop
+   select array_agg(x order by random()) into card from (select x from (select x from unnest(rest) x order by random() limit 5) a union all select c[1 + floor(random() * 6)::integer]) b;
+   k := k || jsonb_build_object(n, to_jsonb(card));
+  end loop;
+  r.st := jsonb_build_object('c', to_jsonb(c), 'k', k, 'w', null, 'lk', '{}'::jsonb);
+ else
+  r.st := jsonb_build_object('p', '{}'::jsonb);
+ end if;
+ return r;
+end $$;
+
+create or replace function public._ffa_tick(r public.ffa) returns public.ffa language plpgsql set search_path = public as $$
+declare t bigint := public._fnow(); i integer := 0; hold text[]; al text[]; outs text[]; cnt integer; x text; onl text[]; picked text[]; minc integer; nopt integer; wins text[]; counts jsonb; dur bigint;
+begin
+ loop
+  i := i + 1; exit when i > 4;
+  exit when r.phase in ('lobby', 'done');
+  if r.phase = 'play' then
+   if r.game = 'flask' then
+    exit when t < (r.st->>'end')::bigint;
+    select coalesce(array_agg(distinct b->>'o') filter (where b->>'o' is not null), '{}') into hold from jsonb_array_elements(r.st->'b') b;
+    if cardinality(hold) = 0 then r := public._ffa_round(r); continue; end if;
+    al := array(select jsonb_array_elements_text(r.st->'al'));
+    outs := array(select y from unnest(al) y where y <> all(hold));
+    select count(*) into cnt from jsonb_each(r.pl) where (value->>'out') is not null;
+    foreach x in array outs loop r.pl := jsonb_set(r.pl, array[x], (r.pl->x) || jsonb_build_object('out', cnt + 1, 's', cnt)); end loop;
+    if cardinality(al) - cardinality(outs) <= 1 then
+     foreach x in array hold loop r.pl := jsonb_set(r.pl, array[x], (r.pl->x) || jsonb_build_object('s', cnt + cardinality(outs), 'w', true)); end loop;
+     r.phase := 'done'; r.tp := t; r.st := r.st || jsonb_build_object('last', to_jsonb(outs));
+    else
+     r.phase := 'between'; r.tp := t; r.st := r.st || jsonb_build_object('last', to_jsonb(outs), 'al', to_jsonb(array(select y from unnest(al) y where y = any(hold))));
+    end if;
+   elsif r.game = 'dobble' then
+    exit when t - r.tp <= 12000;
+    r.phase := 'between'; r.tp := t;
+   else
+    onl := array(select key from jsonb_each(r.pl) where (value->>'seen')::bigint > t - 15000);
+    picked := array(select jsonb_object_keys(r.st->'p'));
+    exit when t - r.tp <= 10000 and not (cardinality(picked) > 0 and not exists (select 1 from unnest(onl) y where y <> all(picked)));
+    select jsonb_object_agg(o, c), min(c), count(*) into counts, minc, nopt from (select value as o, count(*) as c from jsonb_each_text(r.st->'p') group by value) q;
+    wins := '{}';
+    if nopt > 1 then
+     wins := array(select key from jsonb_each_text(r.st->'p') where value in (select value from jsonb_each_text(r.st->'p') group by value having count(*) = minc));
+     foreach x in array wins loop r.pl := jsonb_set(r.pl, array[x, 's'], to_jsonb((r.pl->x->>'s')::integer + 1)); end loop;
+    end if;
+    r.st := r.st || jsonb_build_object('res', jsonb_build_object('counts', coalesce(counts, '{}'::jsonb), 'win', to_jsonb(wins)));
+    r.phase := 'between'; r.tp := t;
+   end if;
+  elsif r.phase = 'between' then
+   dur := case r.game when 'flask' then 2800 when 'dobble' then 2400 else 4200 end;
+   exit when t - r.tp < dur;
+   if r.game <> 'flask' and r.rnd >= r.rounds then r.phase := 'done'; r.tp := t; exit; end if;
+   r := public._ffa_round(r);
+  end if;
+ end loop;
+ return r;
+end $$;
+
+create or replace function public._ffa_view(r public.ffa, me text) returns jsonb language plpgsql set search_path = public as $$
+declare t bigint := public._fnow(); pl jsonb; st jsonb := '{}'; lft bigint;
+begin
+ select coalesce(jsonb_agg(jsonb_build_object('n', key, 's', coalesce((value->>'s')::integer, 0), 'on', (value->>'seen')::bigint > t - 15000, 'out', value->'out', 'w', coalesce((value->>'w')::boolean, false)) order by coalesce((value->>'s')::integer, 0) desc, key), '[]') into pl from jsonb_each(r.pl);
+ if r.game = 'flask' and r.phase <> 'lobby' then
+  st := jsonb_build_object('al', r.st->'al', 'last', r.st->'last', 'b', (select coalesce(jsonb_agg(jsonb_build_object('o', b->>'o', 'prot', (b->>'o') is not null and t - (b->>'t')::bigint < 700) order by ord), '[]') from jsonb_array_elements(r.st->'b') with ordinality as q(b, ord)));
+ elsif r.game = 'dobble' and r.phase <> 'lobby' then
+  st := jsonb_build_object('c', r.st->'c', 'w', r.st->'w', 'my', r.st->'k'->me, 'lk', greatest(0, coalesce((r.st->'lk'->>me)::bigint, 0) - t));
+ elsif r.game = 'minor' and r.phase <> 'lobby' then
+  st := jsonb_build_object('picked', (select coalesce(jsonb_agg(k), '[]') from jsonb_object_keys(r.st->'p') k), 'my', r.st->'p'->me);
+  if r.phase in ('between', 'done') then st := st || jsonb_build_object('res', r.st->'res', 'picks', r.st->'p'); end if;
+ end if;
+ lft := case when r.phase = 'play' and r.game = 'dobble' then 12000 - (t - r.tp) when r.phase = 'play' and r.game = 'minor' then 10000 - (t - r.tp) when r.phase = 'between' then (case r.game when 'flask' then 2800 when 'dobble' then 2400 else 4200 end) - (t - r.tp) else null end;
+ return jsonb_build_object('r', 'ok', 'ph', r.phase, 'g', r.game, 'rnd', r.rnd, 'rounds', r.rounds, 'host', r.host, 'left', lft, 'pl', pl, 'st', st);
+end $$;
+
+create or replace function public.ffa_create(p_name text, p_pin text, p_code text, p_game text, p_rounds integer) returns jsonb language plpgsql security definer set search_path = public, extensions as $$
+declare s text; tk text; nm text;
+begin
+ s := public._auth(p_name, p_pin, false); if s not like 'ok:%' then return jsonb_build_object('r', 'auth'); end if; nm := substr(s, 4);
+ if p_game not in ('flask', 'dobble', 'minor') then return jsonb_build_object('r', 'bad'); end if;
+ delete from public.ffa where created_at < now() - interval '1 day';
+ if exists (select 1 from public.ffa where code = p_code) then return jsonb_build_object('r', 'exists'); end if;
+ tk := md5(random()::text || clock_timestamp()::text || nm);
+ insert into public.ffa(code, host, game, rounds, tp, pl) values (p_code, nm, p_game, least(15, greatest(3, coalesce(p_rounds, 8))), public._fnow(), jsonb_build_object(nm, jsonb_build_object('s', 0, 'seen', public._fnow(), 'tk', tk)));
+ return jsonb_build_object('r', 'ok', 'tk', tk, 'me', nm);
+end $$;
+
+create or replace function public.ffa_join(p_name text, p_pin text, p_code text) returns jsonb language plpgsql security definer set search_path = public, extensions as $$
+declare s text; tk text; nm text; r public.ffa;
+begin
+ s := public._auth(p_name, p_pin, false); if s not like 'ok:%' then return jsonb_build_object('r', 'auth'); end if; nm := substr(s, 4);
+ select * into r from public.ffa where code = p_code for update;
+ if not found then return jsonb_build_object('r', 'none'); end if;
+ tk := md5(random()::text || clock_timestamp()::text || nm);
+ if r.pl ? nm then
+  r.pl := jsonb_set(r.pl, array[nm], (r.pl->nm) || jsonb_build_object('tk', tk, 'seen', public._fnow()));
+ else
+  if r.phase <> 'lobby' then return jsonb_build_object('r', 'started'); end if;
+  if (select count(*) from jsonb_object_keys(r.pl)) >= 10 then return jsonb_build_object('r', 'full'); end if;
+  r.pl := r.pl || jsonb_build_object(nm, jsonb_build_object('s', 0, 'seen', public._fnow(), 'tk', tk));
+ end if;
+ update public.ffa set pl = r.pl where code = r.code;
+ return jsonb_build_object('r', 'ok', 'tk', tk, 'me', nm, 'g', r.game);
+end $$;
+
+create or replace function public.ffa_do(p_code text, p_name text, p_tk text, p_op text, p_arg text, p_n integer) returns jsonb language plpgsql security definer set search_path = public, extensions as $$
+declare r public.ffa; r0 public.ffa; t bigint := public._fnow(); nb jsonb; cur jsonb; idx integer; stale text[];
+begin
+ select * into r from public.ffa where code = p_code for update;
+ if not found then return jsonb_build_object('r', 'none'); end if;
+ if not (r.pl ? p_name) or r.pl->p_name->>'tk' is distinct from p_tk then return jsonb_build_object('r', 'kicked'); end if;
+ r0 := r;
+ if t - coalesce((r.pl->p_name->>'seen')::bigint, 0) > 3000 then r.pl := jsonb_set(r.pl, array[p_name, 'seen'], to_jsonb(t)); end if;
+ if r.phase = 'lobby' then
+  stale := array(select key from jsonb_each(r.pl) where (value->>'seen')::bigint < t - 20000 and key <> p_name);
+  if cardinality(stale) > 0 then r.pl := r.pl - stale; end if;
+  if not (r.pl ? r.host) then r.host := p_name; end if;
+ end if;
+ if p_op = 'start' and r.host = p_name and r.phase = 'lobby' then
+  if (select count(*) from jsonb_each(r.pl) where (value->>'seen')::bigint > t - 15000) < 2 then return jsonb_build_object('r', 'few'); end if;
+  select jsonb_object_agg(key, jsonb_build_object('s', 0, 'seen', (value->>'seen')::bigint, 'tk', value->>'tk')) into r.pl from jsonb_each(r.pl) where (value->>'seen')::bigint > t - 15000;
+  r.rnd := 0; r := public._ffa_round(r);
+ elsif p_op = 'cfg' and r.host = p_name and r.phase = 'lobby' then
+  if p_arg in ('flask', 'dobble', 'minor') then r.game := p_arg; end if;
+  if p_n is not null then r.rounds := least(15, greatest(3, p_n)); end if;
+ elsif p_op = 'again' and r.host = p_name and r.phase = 'done' then
+  select jsonb_object_agg(key, jsonb_build_object('s', 0, 'seen', (value->>'seen')::bigint, 'tk', value->>'tk')) into r.pl from jsonb_each(r.pl) where (value->>'seen')::bigint > t - 30000;
+  r.phase := 'lobby'; r.rnd := 0; r.st := '{}'; r.tp := t;
+ elsif p_op = 'grab' and r.phase = 'play' and r.game = 'flask' and r.st->'al' ? p_name then
+  idx := p_n;
+  if idx >= 0 and idx < jsonb_array_length(r.st->'b') then
+   cur := r.st->'b'->idx;
+   if cur->>'o' is distinct from p_name and not (cur->>'o' is not null and t - (cur->>'t')::bigint < 700) then
+    select jsonb_agg(case when ord - 1 = idx then jsonb_build_object('o', p_name, 't', t) when b->>'o' = p_name then jsonb_build_object('o', null, 't', 0) else b end order by ord) into nb from jsonb_array_elements(r.st->'b') with ordinality as q(b, ord);
+    r.st := r.st || jsonb_build_object('b', nb);
+   end if;
+  end if;
+ elsif p_op = 'tap' and r.phase = 'play' and r.game = 'dobble' and r.st->>'w' is null and r.st->'k' ? p_name then
+  if coalesce((r.st->'lk'->>p_name)::bigint, 0) <= t then
+   if r.st->'c' ? p_arg and r.st->'k'->p_name ? p_arg then
+    r.st := r.st || jsonb_build_object('w', p_name);
+    r.pl := jsonb_set(r.pl, array[p_name, 's'], to_jsonb((r.pl->p_name->>'s')::integer + 1));
+    r.phase := 'between'; r.tp := t;
+   else
+    r.st := jsonb_set(r.st, array['lk', p_name], to_jsonb(t + 1500));
+   end if;
+  end if;
+ elsif p_op = 'pick' and r.phase = 'play' and r.game = 'minor' and p_n between 0 and 3 and r.st->'p' ? p_name is not true then
+  r.st := jsonb_set(r.st, array['p', p_name], to_jsonb(p_n));
+ elsif p_op = 'leave' then
+  if r.phase in ('lobby', 'done') then
+   r.pl := r.pl - p_name;
+   if r.pl = '{}'::jsonb then delete from public.ffa where code = r.code; return jsonb_build_object('r', 'none'); end if;
+   if r.host = p_name then select key into r.host from jsonb_each(r.pl) limit 1; end if;
+  else
+   r.pl := jsonb_set(r.pl, array[p_name, 'seen'], to_jsonb(0::bigint));
+  end if;
+  update public.ffa set host = r.host, pl = r.pl where code = r.code;
+  return jsonb_build_object('r', 'left');
+ end if;
+ r := public._ffa_tick(r);
+ if r.phase is distinct from r0.phase or r.st is distinct from r0.st or r.pl is distinct from r0.pl or r.game is distinct from r0.game or r.rounds is distinct from r0.rounds or r.host is distinct from r0.host then
+  update public.ffa set host = r.host, game = r.game, rounds = r.rounds, phase = r.phase, rnd = r.rnd, tp = r.tp, st = r.st, pl = r.pl where code = r.code;
+ end if;
+ return public._ffa_view(r, p_name);
+end $$;
+revoke all on function public._fnow(), public._ffa_round(public.ffa), public._ffa_tick(public.ffa), public._ffa_view(public.ffa, text) from public, anon, authenticated;
+grant execute on function public.ffa_create(text, text, text, text, integer), public.ffa_join(text, text, text), public.ffa_do(text, text, text, text, text, integer) to anon, authenticated;
