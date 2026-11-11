@@ -327,6 +327,8 @@ html[data-d=term] .hud #tm{font-size:46px}html[data-d=term] .hud>span:first-chil
 .hint{margin-top:14px;min-height:0}
 .rk[data-fd] b{flex:none;max-width:45%}.rk[data-fd]{gap:10px}
 #bdg+.hint{margin-top:16px}
+.eq,.word{line-height:1.4}
+#stg .grid:has(>:nth-child(4):last-child){grid-template-columns:repeat(2,minmax(0,1fr))}
 </style></head><body>
 <div id="bgf" aria-hidden="true"><span style="left:6%;top:12%;animation-delay:-0s;font-size:38px">🧠</span><span style="left:82%;top:8%;animation-delay:-4s;font-size:34px">⚡</span><span style="left:14%;top:48%;animation-delay:-8s;font-size:30px">🎯</span><span style="left:88%;top:42%;animation-delay:-2s;font-size:40px">🍾</span><span style="left:46%;top:6%;animation-delay:-11s;font-size:28px">🔎</span><span style="left:72%;top:70%;animation-delay:-6s;font-size:36px">🎲</span><span style="left:10%;top:82%;animation-delay:-13s;font-size:32px">⭐</span><span style="left:52%;top:88%;animation-delay:-9s;font-size:34px">🧩</span><span style="left:90%;top:90%;animation-delay:-5s;font-size:28px">🔥</span></div><div id="app"></div><div id="fl"></div><canvas id="fx"></canvas>
 <script>
@@ -2227,7 +2229,7 @@ function errSend(msg,src){try{if(ERRN>=3||!DB.sb||!DB.sb.url||!/^https?:/.test(l
 addEventListener('error',e=>errSend(e.message,(e.filename||'')+':'+(e.lineno||0)+':'+(e.colno||0)));
 addEventListener('unhandledrejection',e=>{const r=e.reason;if(r&&(r.auth||r.status||r.nf||r.full||r.dup))return;errSend('Promise: '+(r&&r.message||r),'')});
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-11-52';const BVN='2.20.0';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-11-53';const BVN='2.20.1';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--ink);font-weight:800;text-align:center';
