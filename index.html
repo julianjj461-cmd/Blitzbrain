@@ -314,10 +314,10 @@ html[data-d=term] .fb,html[data-d=term] .fo{box-shadow:none;border-color:var(--a
 html[data-d=term] .pod>div{border-color:var(--acc);background:transparent}
 html[data-d=term] #ovl{background:rgba(7,4,0,.88)!important}
 html[data-d=term] #ovl .card{border:2px solid var(--acc)!important;background:#120b00!important;box-shadow:0 0 18px #ffb00055}
-#dsg .btn{font-size:9px;white-space:nowrap;padding-left:4px;padding-right:4px}
+#dsg{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))}#dsg .btn{min-width:0!important;width:auto!important;font-size:8px;line-height:1.6;white-space:normal;overflow-wrap:anywhere;padding:10px 2px!important;display:flex;flex-direction:column;align-items:center;gap:6px}
 #dsg .btn.sel{background:var(--acc);color:var(--bg)}
 html[data-d=synth] #dsg .btn.sel{background:linear-gradient(135deg,#ff4fd8,#7a3cff);color:#fff}
-html[data-d=term] #dsg .btn,html[data-d=term] #thg .btn{font-size:20px}
+html[data-d=term] #dsg .btn{font-size:18px}
 html[data-d=term] #dsg .btn.sel{background:var(--acc);color:#120b00}
 html[data-d=term] [style*="font-size:7px"],html[data-d=term] [style*="font-size:8px"],html[data-d=term] [style*="font-size:9px"],html[data-d=term] [style*="font-size:10px"],html[data-d=term] [style*="font-size:11px"],html[data-d=term] [style*="font-size:12px"],html[data-d=term] [style*="font-size:13px"],html[data-d=term] [style*="font-size:14px"]{font-size:19px!important}
 html[data-d=term] [style*="font-size:15px"],html[data-d=term] [style*="font-size:16px"],html[data-d=term] [style*="font-size:17px"]{font-size:21px!important}
@@ -1334,7 +1334,7 @@ function settings(){
  const adm=DB.acct&&skey(DB.acct.name)==='admin',nm0=DB.acct?DB.acct.name:'',sk=nm0?streakNow(nm0):{n:0},best=nm0?((DB.streak&&DB.streak[skey(nm0)]||{}).best||sk.n):0;
  app.innerHTML=`<div class="scr"><h2 class="ar" style="margin:6px 0 0;--ac:#b9a9f5">⚙️ Einstellungen</h2>
  <div class="card" style="padding:12px"><b>🔊 Ton & Musik</b><div class="row" style="margin-top:8px"><button class="btn ghost sm" id="smu"></button><button class="btn ghost sm" id="ssd"></button></div></div>
- <div class="card" style="padding:12px"><b>🎨 Design</b><div id="dsg" style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">${Object.entries(DSG).map(([k,t])=>`<button class="btn ghost sm${dsgNow()==k?' sel':''}" data-d="${k}" style="flex:1;width:auto;padding:8px 6px;min-width:100px">${dsgOk(k)?t.e+' '+t.n:'🔒 '+t.u+' Tage'}</button>`).join('')}</div><div class="hint" id="dsh" style="margin-top:8px">Neue Designs schaltest du mit deiner Tagesserie frei (Rekord: ${best} Tage).</div></div>
+ <div class="card" style="padding:12px"><b>🎨 Design</b><div id="dsg" style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">${Object.entries(DSG).map(([k,t])=>`<button class="btn ghost sm${dsgNow()==k?' sel':''}" data-d="${k}" style="flex:1;width:auto;padding:8px 6px;min-width:100px">${dsgOk(k)?'<span style="font-size:20px">'+t.e+'</span><span>'+t.n+'</span>':'<span style="font-size:20px">🔒</span><span>'+t.u+' Tage</span>'}</button>`).join('')}</div><div class="hint" id="dsh" style="margin-top:8px">Neue Designs schaltest du mit deiner Tagesserie frei (Rekord: ${best} Tage).</div></div>
  <div class="card" style="padding:12px"><b>📲 App & Mitteilungen</b><button class="btn ghost sm" id="pin" style="margin-top:8px">📲 Als App installieren</button><button class="btn ghost sm" id="dnd" style="margin-top:8px">${DB.dnd?'🌙 Ruhe-Modus an – tippen zum Ausschalten':'🌙 Ruhe-Modus (keine Einladungs-Banner)'}</button><button class="btn ghost sm" id="pnf" style="margin-top:8px">${DB.notif?'🔔 Mitteilungen an – tippen zum Ausschalten':'🔕 Mitteilungen bei Einladungen einschalten'}</button><div class="hint">Mitteilungen kommen nur an, solange die App im Hintergrund noch läuft – echte Push-Nachrichten bei geschlossener App gibt es (noch) nicht.</div></div>
  <button class="btn ghost" id="shp">❔ So geht's</button>${adm?'<button class="btn ghost" id="sad">🛠️ Admin-Bereich</button>':''}${DB.acct?'<button class="btn ghost" id="rpb">🚩 Spieler melden</button><button class="btn ghost" id="po">🚪 Abmelden</button>':'<button class="btn" id="sln">👤 Anmelden</button>'}
  ${DB.acct&&skey(DB.acct.name)!=='admin'?'<button class="btn ghost sm" id="dla" style="opacity:.8">🗑️ Konto löschen</button>':''}<div class="c mut" style="font-size:12px">BLITZBRAIN v${BVN}</div>${tabBar('st')}</div>`;
@@ -2213,7 +2213,7 @@ function errSend(msg,src){try{if(ERRN>=3||!DB.sb||!DB.sb.url||!/^https?:/.test(l
 addEventListener('error',e=>errSend(e.message,(e.filename||'')+':'+(e.lineno||0)+':'+(e.colno||0)));
 addEventListener('unhandledrejection',e=>{const r=e.reason;if(r&&(r.auth||r.status||r.nf||r.full||r.dup))return;errSend('Promise: '+(r&&r.message||r),'')});
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-11-48';const BVN='2.19.2';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-11-49';const BVN='2.19.3';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--ink);font-weight:800;text-align:center';
