@@ -208,6 +208,101 @@ input,select,textarea{font-family:var(--bd)}
 #m2 b{font:400 12px var(--px)!important;color:var(--tx)}#m2 small{font:700 14px var(--bd)!important;color:var(--soft);display:block;margin-top:8px}
 #m2 svg,.btn.mt span{color:var(--cy)}#mr svg{color:var(--sh)}
 .sub{margin:2px 0}
+/* ===== Design D „Synthwave“ ===== */
+html[data-d=synth]{--bg:#12002b;--pan:#1a0638;--pan2:#2a0a52;--tx:#fff;--soft:#e3d4ff;--dim:#3a2266;--mut:#a98be0;--ink:#fff;--cy:#8fe9ff;--ye:#ffb02e;--yel:#ffb02e;--cyan:#8fe9ff;--pk:#ff4fd8;--pink:#ff4fd8;--acc:#ff4fd8;--sh:#ff4fd8;--red:#ff5a7a;--grn:#7cffb0;--b1:#1a0638;--b2:#2a0a52;--c1:#1a0638;--c2:#1a0638;--tb:#12002b;--g1:#12002b;--g2:#12002b}
+html[data-d=synth] body{background-image:linear-gradient(180deg,#12002b 0%,#2d0a57 55%,#5a1475 100%)!important;background-size:auto!important}
+html[data-d=synth] body::before{content:'';position:fixed;left:0;right:0;bottom:0;height:42vh;background:repeating-linear-gradient(90deg,#ff4fd844 0 2px,transparent 2px 48px),repeating-linear-gradient(0deg,#ff4fd844 0 2px,transparent 2px 36px);transform:perspective(300px) rotateX(55deg);transform-origin:50% 100%;pointer-events:none;z-index:0}
+html[data-d=synth] .logo,html[data-d=synth] .logo span{background:linear-gradient(180deg,#fff 20%,#ff4fd8 60%,#ffb02e);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;filter:drop-shadow(0 0 8px #ff4fd8)}
+html[data-d=synth] .hud #tm,html[data-d=synth] .cd{background:linear-gradient(180deg,#fff 15%,#ff4fd8 60%,#ffb02e);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;filter:drop-shadow(0 0 10px #ff4fd8)}
+html[data-d=synth] .btn{border:0;border-radius:14px;background:linear-gradient(135deg,#ff4fd8,#7a3cff);color:#fff;box-shadow:0 0 22px #ff4fd88c}
+html[data-d=synth] .btn:active{transform:scale(.98);box-shadow:0 0 10px #ff4fd88c}
+html[data-d=synth] .btn.pink{background:linear-gradient(135deg,#ffb02e,#ff4fd8)}
+html[data-d=synth] .btn.ghost{background:#12003099;border:2px solid var(--cy);box-shadow:0 0 12px #8fe9ff55;color:var(--tx)}
+html[data-d=synth] #thg .btn.sel,html[data-d=synth] .btn.ghost[style*=outline]{background:linear-gradient(135deg,#ff4fd8,#7a3cff);color:#fff}
+html[data-d=synth] .card,html[data-d=synth] .rk,html[data-d=synth] .fcard,html[data-d=synth] .pl input,html[data-d=synth] .bk,html[data-d=synth] .chip,html[data-d=synth] .pen{border-radius:14px}
+html[data-d=synth] .card,html[data-d=synth] .fcard{background:#1a063899;border:2px solid #7a3cff!important;box-shadow:0 0 14px #7a3cff66}
+html[data-d=synth] .rk.w{background:linear-gradient(135deg,#ff4fd8,#ffb02e);border-color:transparent;color:#12002b}
+html[data-d=synth] .dp,html[data-d=synth] .ar{background:#1a063899!important;border-radius:14px!important;box-shadow:0 0 16px var(--c)!important}
+html[data-d=synth] .tile{border-radius:14px;border:2px solid var(--pk);background:linear-gradient(180deg,#2a0a52,#1a0638);box-shadow:0 0 14px #ff4fd8aa,inset 0 0 12px #ff4fd855;text-shadow:0 0 8px #ff4fd8}
+html[data-d=synth] .tile:active{transform:scale(.96)}
+html[data-d=synth] .tile.sq{border-radius:6px;box-shadow:none;text-shadow:none}
+html[data-d=synth] .tile.txt,html[data-d=synth] .emo{text-shadow:none}
+html[data-d=synth] .hole{background:#150530;border-color:#3a2266;box-shadow:none}
+html[data-d=synth] .fb,html[data-d=synth] .fo,html[data-d=synth] .frk,html[data-d=synth] .ftap,html[data-d=synth] .pod>div{border-radius:14px;border-color:var(--cy);box-shadow:0 0 14px #8fe9ff77}
+html[data-d=synth] #dly{background:linear-gradient(135deg,#ff4fd8,#7a3cff)!important;border:0!important;border-radius:18px!important;box-shadow:0 0 26px #ff4fd888!important}
+html[data-d=synth] #dly b,html[data-d=synth] #dly>span:not(.pill):not(.go){color:#fff}
+html[data-d=synth] .pill{color:#fff;opacity:.85}
+html[data-d=synth] .go{background:#fff;color:#4b1a9e;border-radius:12px}
+html[data-d=synth] #mr{border-color:var(--cy)!important;box-shadow:0 0 18px #8fe9ff77!important;border-radius:18px!important}
+html[data-d=synth] #mr b{color:var(--cy);text-shadow:0 0 8px #8fe9ff}
+html[data-d=synth] #m1,html[data-d=synth] #m3,html[data-d=synth] #m4{border-color:var(--ye)!important;box-shadow:0 0 14px #ffb02e88!important;border-radius:14px!important}
+html[data-d=synth] #m1 b,html[data-d=synth] #m3 b,html[data-d=synth] #m4 b,html[data-d=synth] .btn.mt span{color:var(--ye)}
+html[data-d=synth] #m2{border-radius:18px!important}
+html[data-d=synth] .tb.tabs{border-top:2px solid #ff4fd8;box-shadow:0 -6px 20px #ff4fd855;background:#12003099}
+html[data-d=synth] .tabs button.on{background:linear-gradient(180deg,#ff4fd8,#ffb02e)!important;color:#12002b!important}
+html[data-d=synth] .hb{border-radius:14px!important;border-color:#7a3cff!important;box-shadow:0 0 14px #7a3cff88!important}
+html[data-d=synth] .hb:nth-of-type(even){border-color:var(--cy)!important;box-shadow:0 0 14px #8fe9ff66!important}html[data-d=synth] .hb:nth-of-type(3n){border-color:var(--pk)!important}
+html[data-d=synth] #ovl .card{border:2px solid var(--pk)!important;box-shadow:0 0 24px #ff4fd899;border-radius:18px}
+html[data-d=synth] h3,html[data-d=synth] .hd h2.ar{color:var(--cy);text-decoration-color:var(--pk)}
+/* ===== Design F „Terminal“ ===== */
+html[data-d=term]{--bg:#070400;--pan:#120b00;--pan2:#241600;--tx:#ffb000;--soft:#d79a00;--dim:#5a3c00;--mut:#a87400;--ink:#ffb000;--cy:#ffb000;--ye:#ffb000;--yel:#ffb000;--cyan:#ffb000;--pk:#ff6a1f;--pink:#ff6a1f;--acc:#ffb000;--sh:#5a3c00;--red:#ff6a1f;--grn:#ffd060;--px:'VT323',ui-monospace,Menlo,Consolas,monospace;--bd:'VT323',ui-monospace,Menlo,Consolas,monospace;--b1:#120b00;--b2:#241600;--c1:#120b00;--c2:#120b00;--tb:#070400;--g1:#070400;--g2:#070400}
+html[data-d=term] body{background-image:radial-gradient(120% 90% at 50% 40%,#1c1100,#070400)!important;background-size:auto!important;font:400 22px/1.15 var(--bd);text-shadow:0 0 6px #ffb00088}
+html[data-d=term] body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9997;background:repeating-linear-gradient(0deg,#0000 0 2px,#00000055 2px 3px)}
+html[data-d=term] *{font-weight:400!important;letter-spacing:0!important}
+html[data-d=term] .btn{background:var(--acc);color:#120b00;border:2px solid var(--acc);box-shadow:0 0 12px #ffb00066;text-shadow:none;font-size:26px;padding:8px 8px 5px}
+html[data-d=term] .btn:active{transform:none;background:#ffd060}
+html[data-d=term] .btn.sm{font-size:22px;padding:6px 6px 3px}
+html[data-d=term] .btn.ghost,html[data-d=term] .btn.pink{background:transparent;color:var(--acc);border:2px solid var(--acc);box-shadow:none;text-shadow:0 0 6px #ffb00088}
+html[data-d=term] .btn.ghost:active{background:#241600}
+html[data-d=term] #thg .btn.sel,html[data-d=term] .btn.ghost[style*=outline]{background:var(--acc);color:#120b00;text-shadow:none}
+html[data-d=term] .card,html[data-d=term] .fcard,html[data-d=term] .rk,html[data-d=term] .chip,html[data-d=term] .pl input,html[data-d=term] .bk{border:2px solid var(--acc)!important;box-shadow:none;background:transparent}
+html[data-d=term] .dp,html[data-d=term] .ar{background:transparent!important;border-color:var(--acc)!important;box-shadow:none!important}
+html[data-d=term] .rk.w{background:var(--acc);color:#120b00;text-shadow:none}
+html[data-d=term] .pl input{font:400 22px var(--bd)}
+html[data-d=term] .pl button{background:var(--acc);color:#120b00;border-color:var(--acc)}
+html[data-d=term] .logo{font-size:44px;line-height:.95;text-shadow:0 0 10px #ffb000}html[data-d=term] .logo.sm{font-size:34px}
+html[data-d=term] .logo span{text-shadow:0 0 10px #ffb000}
+html[data-d=term] .logo.sm{font-size:34px}
+html[data-d=term] h2{font-size:30px}html[data-d=term] h3{font-size:26px;color:var(--acc)}html[data-d=term] .hd h2.ar{font-size:30px;color:var(--acc);text-decoration-color:var(--dim)}
+html[data-d=term] .hud{font-size:22px}html[data-d=term] .hud>span:first-child{font-size:22px}
+html[data-d=term] .hud #tm{font-size:54px;line-height:.9;text-shadow:0 0 10px #ffb000}
+html[data-d=term] .tile{font-size:58px;border:2px solid var(--acc);background:transparent;box-shadow:none;color:var(--acc);text-shadow:0 0 8px #ffb000}
+html[data-d=term] .tile:active{background:var(--acc);color:#120b00}
+html[data-d=term] .tile.txt{font-size:30px}html[data-d=term] .emo{font-family:system-ui}
+html[data-d=term] .hole{background:transparent;border-color:var(--dim);opacity:.4}
+html[data-d=term] .big{font-size:56px}html[data-d=term] .eq{font-size:56px}html[data-d=term] .word{font-size:64px}html[data-d=term] .banner{font-size:30px}html[data-d=term] .pen{font-size:32px;border-color:var(--acc);color:var(--acc);background:#070400}
+html[data-d=term] .cd{font-size:clamp(150px,55vw,240px);text-shadow:0 0 18px #ffb000}
+html[data-d=term] .cdr circle{stroke:var(--acc)}
+html[data-d=term] .chip{font-size:20px;padding:2px 10px}
+html[data-d=term] .rk b{font-size:22px}
+html[data-d=term] .mut,html[data-d=term] .sub,html[data-d=term] .hint{font-size:20px}
+html[data-d=term] #ver{font-size:16px}
+html[data-d=term] .tb.tabs{border-top:2px solid var(--acc);background:#070400}
+html[data-d=term] .tabs button{font-size:18px!important;color:var(--acc);padding:8px 0 4px}
+html[data-d=term] .tabs button.on{background:var(--acc)!important;color:#120b00!important;text-shadow:none}
+html[data-d=term] .tabs button span{filter:none;opacity:1;font-size:20px}
+html[data-d=term] .hb{border:2px solid var(--acc)!important;box-shadow:none!important;background:transparent!important}
+html[data-d=term] .hb b{font-size:26px!important}html[data-d=term] .hb small{font-size:20px;color:var(--soft)}
+html[data-d=term] #dly{background:transparent!important;border:2px solid var(--acc)!important;box-shadow:0 0 14px #ffb00055!important}
+html[data-d=term] #dly b{font:400 34px/1 var(--px)!important;color:var(--acc)}
+html[data-d=term] #dly>span:not(.pill):not(.go){font:400 22px/1.1 var(--bd)!important;color:var(--soft)}
+html[data-d=term] .pill{font-size:20px;color:var(--acc)}
+html[data-d=term] .go{background:var(--acc);color:#120b00;font-size:28px;padding:6px 0 2px;text-shadow:none}
+html[data-d=term] #mr{border:2px solid var(--acc)!important;box-shadow:none!important}
+html[data-d=term] #mr b,html[data-d=term] #m2 b{font:400 30px/1 var(--px)!important;color:var(--acc)}
+html[data-d=term] #mr small,html[data-d=term] #m2 small{font:400 22px var(--bd)!important;color:var(--soft)}
+html[data-d=term] .eloB b{font-size:32px;color:var(--acc)}html[data-d=term] .eloB small{font-size:18px}
+html[data-d=term] .btn.mt b{font-size:26px}
+html[data-d=term] .frk,html[data-d=term] .ftap{font-size:34px;box-shadow:none;border-color:var(--acc);color:var(--acc);background:transparent}
+html[data-d=term] .fb,html[data-d=term] .fo{box-shadow:none;border-color:var(--acc);background:transparent}
+html[data-d=term] .pod>div{border-color:var(--acc);background:transparent}
+html[data-d=term] #ovl{background:rgba(7,4,0,.88)!important}
+html[data-d=term] #ovl .card{border:2px solid var(--acc)!important;background:#120b00!important;box-shadow:0 0 18px #ffb00055}
+#dsg .btn{font-size:9px;white-space:nowrap;padding-left:4px;padding-right:4px}
+#dsg .btn.sel{background:var(--acc);color:var(--bg)}
+html[data-d=synth] #dsg .btn.sel{background:linear-gradient(135deg,#ff4fd8,#7a3cff);color:#fff}
+html[data-d=term] #dsg .btn,html[data-d=term] #thg .btn{font-size:20px}
+html[data-d=term] #dsg .btn.sel{background:var(--acc);color:#120b00}
 </style></head><body>
 <div id="bgf" aria-hidden="true"><span style="left:6%;top:12%;animation-delay:-0s;font-size:38px">🧠</span><span style="left:82%;top:8%;animation-delay:-4s;font-size:34px">⚡</span><span style="left:14%;top:48%;animation-delay:-8s;font-size:30px">🎯</span><span style="left:88%;top:42%;animation-delay:-2s;font-size:40px">🍾</span><span style="left:46%;top:6%;animation-delay:-11s;font-size:28px">🔎</span><span style="left:72%;top:70%;animation-delay:-6s;font-size:36px">🎲</span><span style="left:10%;top:82%;animation-delay:-13s;font-size:32px">⭐</span><span style="left:52%;top:88%;animation-delay:-9s;font-size:34px">🧩</span><span style="left:90%;top:90%;animation-delay:-5s;font-size:28px">🔥</span></div><div id="app"></div><div id="fl"></div><canvas id="fx"></canvas>
 <script>
@@ -1219,6 +1314,7 @@ function settings(){
  const adm=DB.acct&&skey(DB.acct.name)==='admin',nm0=DB.acct?DB.acct.name:'',sk=nm0?streakNow(nm0):{n:0},best=nm0?((DB.streak&&DB.streak[skey(nm0)]||{}).best||sk.n):0;
  app.innerHTML=`<div class="scr"><h2 class="ar" style="margin:6px 0 0;--ac:#b9a9f5">⚙️ Einstellungen</h2>
  <div class="card" style="padding:12px"><b>🔊 Ton & Musik</b><div class="row" style="margin-top:8px"><button class="btn ghost sm" id="smu"></button><button class="btn ghost sm" id="ssd"></button></div></div>
+ <div class="card" style="padding:12px"><b>🖼️ Design</b><div id="dsg" style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">${Object.entries(DSG).map(([k,t])=>`<button class="btn ghost sm${dsgNow()==k?' sel':''}" data-d="${k}" style="flex:1;width:auto;padding:8px 6px;min-width:90px">${dsgOk(k)?t.e+' '+t.n:'🔒 '+t.u+' Tage'}</button>`).join('')}</div><div class="hint" id="dsh" style="margin-top:8px">Neue Designs schaltest du mit deiner Tagesserie frei (Rekord: ${best} Tage). Farbthemen gelten nur im Design Automat.</div></div>
  <div class="card" style="padding:12px"><b>🎨 Farbthema</b><div id="thg" style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">${Object.entries(THM).map(([k,t])=>`<button class="btn ghost sm vb${(THM[DB.thm]&&thmOk(DB.thm)?DB.thm:'std')==k?' sel':''}" data-t="${k}" style="flex:1;width:auto;padding:8px 6px;min-width:70px">${thmOk(k)?t.e+' '+t.n:'🔒 '+t.u+' Tage'}</button>`).join('')}</div><div class="hint" id="thh" style="margin-top:8px">Themen schaltest du mit deiner Tagesserie frei (Rekord: ${best} Tage).</div></div>
  <div class="card" style="padding:12px"><b>📲 App & Mitteilungen</b><button class="btn ghost sm" id="pin" style="margin-top:8px">📲 Als App installieren</button><button class="btn ghost sm" id="dnd" style="margin-top:8px">${DB.dnd?'🌙 Ruhe-Modus an – tippen zum Ausschalten':'🌙 Ruhe-Modus (keine Einladungs-Banner)'}</button><button class="btn ghost sm" id="pnf" style="margin-top:8px">${DB.notif?'🔔 Mitteilungen an – tippen zum Ausschalten':'🔕 Mitteilungen bei Einladungen einschalten'}</button><div class="hint">Mitteilungen kommen nur an, solange die App im Hintergrund noch läuft – echte Push-Nachrichten bei geschlossener App gibt es (noch) nicht.</div></div>
  <button class="btn ghost" id="shp">❔ So geht's</button>${adm?'<button class="btn ghost" id="sad">🛠️ Admin-Bereich</button>':''}${DB.acct?'<button class="btn ghost" id="rpb">🚩 Spieler melden</button><button class="btn ghost" id="po">🚪 Abmelden</button>':'<button class="btn" id="sln">👤 Anmelden</button>'}
@@ -1229,6 +1325,8 @@ function settings(){
  $('#shp').onclick=()=>help(settings);if($('#sad'))$('#sad').onclick=adminScreen;if($('#sln'))$('#sln').onclick=()=>loginScreen(settings);
  if($('#po'))$('#po').onclick=()=>{DB.acct=null;DB.sess=null;save();menu()};
  if($('#rpb'))$('#rpb').onclick=()=>reportDlg('');if($('#dla'))$('#dla').onclick=delAcct;
+  document.querySelectorAll('#dsg button').forEach(b=>b.onclick=()=>{const k=b.dataset.d;if(!dsgOk(k)){$('#dsh').textContent='🔒 Noch gesperrt – spiel die Tagesaufgabe '+DSG[k].u+' Tage in Folge.';return}
+   DB.dsg=k;save();applyTheme();document.querySelectorAll('#dsg button').forEach(x=>x.classList.toggle('sel',x.dataset.d==k))});
   document.querySelectorAll('#thg button').forEach(b=>b.onclick=()=>{const k=b.dataset.t;if(!thmOk(k)){$('#thh').textContent='🔒 Noch gesperrt – spiel die Tagesaufgabe '+THM[k].u+' Tage in Folge.';return}
   DB.thm=k;save();applyTheme();document.querySelectorAll('#thg button').forEach(x=>x.classList.toggle('sel',x.dataset.t==k))});
 $('#pin').onclick=installHelp;$('#pnf').onclick=()=>notifToggle($('#pnf'));$('#dnd').onclick=()=>{DB.dnd=!DB.dnd;save();$('#dnd').textContent=DB.dnd?'🌙 Ruhe-Modus an – tippen zum Ausschalten':'🌙 Ruhe-Modus (keine Einladungs-Banner)'};
@@ -1309,9 +1407,15 @@ function badgesCard(extra){const me=skey(DB.acct.name),ru=DB.runs||[],c={runs:ru
  return`<div class="card" style="padding:12px"><b>🎖️ Abzeichen (${ok}/${BDG.length})</b><div id="bdg" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px">${BDG.map(b=>`<button class="btn ghost sm" data-h="${b[1]} – ${b[2]}" style="padding:8px 2px;font-size:26px;width:auto;flex:none;${b[3](c)?'':'opacity:.3;filter:grayscale(1)'}">${b[0]}</button>`).join('')}</div><div class="hint" id="bdh">Tippe ein Abzeichen an.</div></div>`}
 const bestStreak=()=>{if(!DB.acct)return 0;const e=(DB.streak||{})[skey(DB.acct.name)]||{};return Math.max(e.best||0,e.n||0)};
 const thmOk=k=>(DB.acct&&skey(DB.acct.name)==='admin')||THM[k].u<=bestStreak();
-function applyTheme(){const k=THM[DB.thm]&&thmOk(DB.thm)?DB.thm:'std',t=THM[k],st=document.documentElement.style;
- st.setProperty('--acc',t.a);st.setProperty('--cy',t.a);[['--sh',t.s],['--ye',t.y],['--yel',t.y],['--bg',t.bg],['--pan',t.pn],['--pan2',t.p2],['--dim',t.dm],['--mut',t.mu],['--tb',t.bg],['--g1',t.bg],['--g2',t.bg],['--b1',t.pn],['--b2',t.p2],['--c1',t.pn],['--c2',t.pn]].forEach(([n,v])=>st.setProperty(n,v));
- const m=document.querySelector('meta[name=theme-color]');if(m)m.content=t.bg}
+const DSG={automat:{n:'Automat',e:'🕹️',u:0,bg:null},synth:{n:'Synthwave',e:'🌆',u:5,bg:'#12002b'},term:{n:'Terminal',e:'📟',u:14,bg:'#070400'}};
+const dsgOk=k=>(DB.acct&&skey(DB.acct.name)==='admin')||DSG[k].u<=bestStreak();
+const dsgNow=()=>DSG[DB.dsg]&&dsgOk(DB.dsg)?DB.dsg:'automat';
+function applyTheme(){const k=THM[DB.thm]&&thmOk(DB.thm)?DB.thm:'std',t=THM[k],st=document.documentElement.style,d=dsgNow();
+ const P=['--acc','--cy','--sh','--ye','--yel','--bg','--pan','--pan2','--dim','--mut','--tb','--g1','--g2','--b1','--b2','--c1','--c2'];
+ if(d==='automat'){document.documentElement.removeAttribute('data-d');
+  st.setProperty('--acc',t.a);st.setProperty('--cy',t.a);[['--sh',t.s],['--ye',t.y],['--yel',t.y],['--bg',t.bg],['--pan',t.pn],['--pan2',t.p2],['--dim',t.dm],['--mut',t.mu],['--tb',t.bg],['--g1',t.bg],['--g2',t.bg],['--b1',t.pn],['--b2',t.p2],['--c1',t.pn],['--c2',t.pn]].forEach(([n,v])=>st.setProperty(n,v))}
+ else{document.documentElement.setAttribute('data-d',d);P.forEach(n=>st.removeProperty(n))}
+ const m=document.querySelector('meta[name=theme-color]');if(m)m.content=DSG[d].bg||t.bg}
 /* ===== Freunde & Postfach ===== */
 let FRG='',NBK=null,FR=[],IB=[],FF=false,FRD='',FSEL=null;const isOn=f=>f.s!=null&&f.s<120;const IBSEEN=new Set();
 async function frLoad(){if(!DB.acct){FR=[];return}try{const r=await rpc('friends_list',{p_name:DB.acct.name,p_pin:DB.acct.pin});FR=Array.isArray(r)?r:[];DB.frN=FR.length}catch(e){}}
@@ -2093,7 +2197,7 @@ function errSend(msg,src){try{if(ERRN>=3||!DB.sb||!DB.sb.url||!/^https?:/.test(l
 addEventListener('error',e=>errSend(e.message,(e.filename||'')+':'+(e.lineno||0)+':'+(e.colno||0)));
 addEventListener('unhandledrejection',e=>{const r=e.reason;if(r&&(r.auth||r.status||r.nf||r.full||r.dup))return;errSend('Promise: '+(r&&r.message||r),'')});
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-11-44';const BVN='2.17.4';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-11-45';const BVN='2.18.0';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--ink);font-weight:800;text-align:center';
