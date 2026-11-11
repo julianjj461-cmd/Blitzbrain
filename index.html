@@ -251,8 +251,8 @@ html[data-d=synth] #mr{border-color:var(--cy)!important;box-shadow:0 0 18px #8fe
 html[data-d=synth] #mr b{color:var(--cy);text-shadow:0 0 8px #8fe9ff}
 html[data-d=synth] #m1,html[data-d=synth] #m3,html[data-d=synth] #m4{border-color:var(--ye)!important;box-shadow:0 0 14px #ffb02e88!important;border-radius:14px!important}
 html[data-d=synth] #m1 b,html[data-d=synth] #m3 b,html[data-d=synth] #m4 b,html[data-d=synth] .btn.mt span{color:var(--ye)}
-html[data-d=synth] #m2{border-radius:18px!important}
-html[data-d=synth] .tb.tabs{border-top:2px solid #ff4fd8;box-shadow:0 -6px 20px #ff4fd855;background:#12003099}
+html[data-d=synth] #m2{border-radius:18px!important;border-color:#c9b8ff!important;box-shadow:0 0 14px #c9b8ff66!important}
+html[data-d=synth] .tb.tabs{border-top:2px solid #ff4fd8;box-shadow:0 -6px 20px #ff4fd855;background:#12002b}
 html[data-d=synth] .tabs button.on{background:linear-gradient(180deg,#ff4fd8,#ffb02e)!important;color:#12002b!important}
 html[data-d=synth] .hb{border-radius:14px!important;border-color:#7a3cff!important;box-shadow:0 0 14px #7a3cff88!important}
 html[data-d=synth] .hb:nth-of-type(even){border-color:var(--cy)!important;box-shadow:0 0 14px #8fe9ff66!important}html[data-d=synth] .hb:nth-of-type(3n){border-color:var(--pk)!important}
@@ -303,6 +303,7 @@ html[data-d=term] #dly{background:transparent!important;border:2px solid var(--a
 html[data-d=term] #dly b{font:400 34px/1 var(--px)!important;color:var(--acc)}
 html[data-d=term] #dly>span:not(.pill):not(.go){font:400 22px/1.1 var(--bd)!important;color:var(--soft)}
 html[data-d=term] .pill{font-size:20px;color:var(--acc)}
+html[data-d=term] .scr>.mid>div[style*="letter-spacing:.06em"]{font-size:20px!important}
 html[data-d=term] .go{background:var(--acc);color:#120b00;font-size:28px;padding:6px 0 2px;text-shadow:none}
 html[data-d=term] #mr{border:2px solid var(--acc)!important;box-shadow:none!important}
 html[data-d=term] #mr b,html[data-d=term] #m2 b{font:400 30px/1 var(--px)!important;color:var(--acc)}
@@ -2216,7 +2217,7 @@ function errSend(msg,src){try{if(ERRN>=3||!DB.sb||!DB.sb.url||!/^https?:/.test(l
 addEventListener('error',e=>errSend(e.message,(e.filename||'')+':'+(e.lineno||0)+':'+(e.colno||0)));
 addEventListener('unhandledrejection',e=>{const r=e.reason;if(r&&(r.auth||r.status||r.nf||r.full||r.dup))return;errSend('Promise: '+(r&&r.message||r),'')});
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-11-50';const BVN='2.19.4';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-11-51';const BVN='2.19.5';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--ink);font-weight:800;text-align:center';
