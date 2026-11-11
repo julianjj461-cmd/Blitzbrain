@@ -4,7 +4,7 @@
 <title>BLITZBRAIN</title>
 <meta name="description" content="BLITZBRAIN – das Party-Spiel: Duelle, Free-for-All, Bots. Wer ist am schnellsten?"><meta property="og:type" content="website"><meta property="og:title" content="BLITZBRAIN – schlag meine Zeit! ⚡"><meta property="og:description" content="Duelle, Free-for-All, Teams und Bots – spiel mit!"><meta property="og:image" content="https://julianjj461-cmd.github.io/Blitzbrain/og.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="https://julianjj461-cmd.github.io/Blitzbrain/og.png">
 <meta name="theme-color" content="#0e0b1a"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="BLITZBRAIN">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon3-192.png"><link rel="icon" href="icon3-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon4-192.png"><link rel="icon" href="icon4-192.png">
 <style>
 :root{--b1:#5a2fe0;--b2:#7a4dff;--c1:#3a2380;--c2:#2a1768;--tb:#1a0f45;--g1:#3b1a8f;--g2:#120b2e;--pink:#ff3d8b;--yel:#ffd23f;--cyan:#27e1ff;--grn:#3dffa0;--red:#ff4d4d;--mut:#b9a9f5;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
@@ -1295,7 +1295,7 @@ async function notifToggle(btn){if(!('Notification' in window)){btn.textContent=
  let r=Notification.permission;if(r!=='granted')r=await Notification.requestPermission();
  if(r==='granted'){DB.notif=true;save();btn.textContent='Richte ein …';const pr=await pushOn();btn.textContent=pr==='ok'?'🔔 An – auch bei geschlossener App (tippen = aus)':'🔔 An – nur bei offener App (tippen = aus)'}else btn.textContent='🚫 Erlaubnis fehlt (in den Browser-Einstellungen freigeben)'}
 function notifyShow(title,body){try{if(DB.dnd||!DB.notif||Notification.permission!=='granted')return;
- (navigator.serviceWorker&&navigator.serviceWorker.getRegistration?navigator.serviceWorker.getRegistration():Promise.resolve(null)).then(r=>{if(r&&r.showNotification)r.showNotification(title,{body,icon:'icon3-192.png',tag:'bb-inv'});else new Notification(title,{body,icon:'icon3-192.png'})}).catch(()=>{})}catch(e){}}
+ (navigator.serviceWorker&&navigator.serviceWorker.getRegistration?navigator.serviceWorker.getRegistration():Promise.resolve(null)).then(r=>{if(r&&r.showNotification)r.showNotification(title,{body,icon:'icon4-192.png',tag:'bb-inv'});else new Notification(title,{body,icon:'icon4-192.png'})}).catch(()=>{})}catch(e){}}
 /* ===== Farbthemen (nur Hintergrund/Flächen; Grün/Rot der Spiele bleiben unverändert) ===== */
 const THM={std:{a:'#19f0ff',n:'Standard',e:'🟣',u:0,v:['#5a2fe0','#7a4dff','#3a2380','#2a1768','#1a0f45','#3b1a8f','#120b2e']},
  ozean:{a:'#ffe53b',n:'Ozean',e:'🌊',u:3,v:['#1f6fe0','#4d9bff','#164f8a','#0f3868','#08203d','#0d4a8f','#06182e']},
