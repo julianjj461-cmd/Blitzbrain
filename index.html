@@ -98,7 +98,7 @@ canvas{position:fixed;inset:0;pointer-events:none;z-index:9}
 :root{--bg:#0e0b1a;--pan:#1a1530;--pan2:#241d47;--tx:#f4f1ff;--soft:#c9c2ea;--dim:#3a3463;--mut:#8c84b8;--ink:#f4f1ff;--cy:#19f0ff;--ye:#ffe53b;--pk:#ff2e93;--gr:#7cff6b;--acc:#19f0ff;--sh:#ff2e93;--yel:#ffe53b;--cyan:#19f0ff;--grn:#7cff6b;--red:#ff2e93;--pink:#ff2e93;
 --px:'Press Start 2P',ui-monospace,Menlo,Consolas,monospace;--vt:'VT323',ui-monospace,Menlo,Consolas,monospace;--ff:var(--px);--bd:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
 --b1:#1a1530;--b2:#241d47;--c1:#1a1530;--c2:#1a1530;--tb:#0e0b1a;--g1:#0e0b1a;--g2:#0e0b1a;color-scheme:dark}
-body{background:var(--bg)!important;color:var(--tx);font:700 15px/1.35 var(--bd)}
+body{background-color:var(--bg)!important;background-image:linear-gradient(color-mix(in srgb,var(--acc) 9%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--acc) 9%,transparent) 1px,transparent 1px)!important;background-size:28px 28px!important;background-attachment:fixed!important;color:var(--tx);font:700 15px/1.35 var(--bd)}
 #bgf{display:none}
 #ver{color:var(--mut)!important;font:400 7px var(--px)}
 .mut,.sub,.hint{color:var(--mut)}
@@ -200,8 +200,8 @@ input,select,textarea{font-family:var(--bd)}
 #dly{border-color:var(--ye)!important;box-shadow:6px 6px 0 var(--ye)!important;padding:16px 16px 18px!important}
 #dly b{font:400 13px/1.4 var(--px)!important;letter-spacing:0!important;margin-top:10px!important;color:var(--tx)}
 #dly>span:not(.pill):not(.go){font:700 15px/1.35 var(--bd)!important;color:var(--soft);font-weight:700}
-#mr{border-color:var(--pk)!important;box-shadow:6px 6px 0 var(--pk)!important}
-#mr b{font:400 12px var(--px)!important;color:var(--pk)}#mr small{font:700 14px var(--bd)!important;color:var(--soft);display:block;margin-top:8px}
+#mr{border-color:var(--sh)!important;box-shadow:6px 6px 0 var(--sh)!important}
+#mr b{font:400 12px var(--px)!important;color:var(--sh)}#mr small{font:700 14px var(--bd)!important;color:var(--soft);display:block;margin-top:8px}
 #m1,#m3,#m4{border-color:var(--cy)!important;box-shadow:none!important}#m1 b,#m3 b,#m4 b{color:var(--cy)}
 #m1:active,#m3:active,#m4:active{background:var(--pan2)!important;transform:none}
 #m2{border-color:var(--tx)!important;box-shadow:none!important}
@@ -1297,10 +1297,10 @@ async function notifToggle(btn){if(!('Notification' in window)){btn.textContent=
 function notifyShow(title,body){try{if(DB.dnd||!DB.notif||Notification.permission!=='granted')return;
  (navigator.serviceWorker&&navigator.serviceWorker.getRegistration?navigator.serviceWorker.getRegistration():Promise.resolve(null)).then(r=>{if(r&&r.showNotification)r.showNotification(title,{body,icon:'icon4-192.png',tag:'bb-inv'});else new Notification(title,{body,icon:'icon4-192.png'})}).catch(()=>{})}catch(e){}}
 /* ===== Farbthemen (nur Hintergrund/Flächen; Grün/Rot der Spiele bleiben unverändert) ===== */
-const THM={std:{a:'#19f0ff',s:'#ff2e93',n:'Standard',e:'🟣',u:0,v:['#5a2fe0','#7a4dff','#3a2380','#2a1768','#1a0f45','#3b1a8f','#120b2e']},
- ozean:{a:'#ffe53b',s:'#19f0ff',n:'Ozean',e:'🌊',u:3,v:['#1f6fe0','#4d9bff','#164f8a','#0f3868','#08203d','#0d4a8f','#06182e']},
- glut:{a:'#ff8a1f',s:'#ffe53b',n:'Glut',e:'🔥',u:7,v:['#c25a14','#ff9b4d','#8a3a16','#682a0f','#3d1a08','#8f3a12','#2e1006']},
- nacht:{a:'#7cff6b',s:'#19f0ff',n:'Nacht',e:'🌑',u:30,v:['#55556a','#7a7a95','#3a3a4a','#22222d','#14141b','#2a2a35','#0b0b10']}};
+const THM={std:{a:'#19f0ff',s:'#ff2e93',y:'#ffe53b',bg:'#0e0b1a',pn:'#1a1530',p2:'#241d47',dm:'#3a2380',mu:'#8c84b8',n:'Standard',e:'🟣',u:0,v:['#5a2fe0','#7a4dff','#3a2380','#2a1768','#1a0f45','#3b1a8f','#120b2e']},
+ ozean:{a:'#4d9bff',s:'#19f0ff',y:'#ffe53b',bg:'#06142e',pn:'#0d2550',p2:'#143470',dm:'#1d3f86',mu:'#7f9fd6',n:'Ozean',e:'🌊',u:3,v:['#1f6fe0','#4d9bff','#164f8a','#0f3868','#08203d','#0d4a8f','#06182e']},
+ glut:{a:'#ff8a1f',s:'#ff2e93',y:'#ffe53b',bg:'#1c0a06',pn:'#34150b',p2:'#4a1f10',dm:'#6b2f18',mu:'#c98f78',n:'Glut',e:'🔥',u:7,v:['#c25a14','#ff9b4d','#8a3a16','#682a0f','#3d1a08','#8f3a12','#2e1006']},
+ nacht:{a:'#7cff6b',s:'#19f0ff',y:'#ffe53b',bg:'#040a05',pn:'#0c1a0e',p2:'#13291a',dm:'#1f4a2a',mu:'#7fb585',n:'Nacht',e:'🌑',u:30,v:['#55556a','#7a7a95','#3a3a4a','#22222d','#14141b','#2a2a35','#0b0b10']}};
 const BDG=[['🎮','Neuling','Das erste Spiel gespielt',c=>c.runs>=1],['🔟','Stammspieler','25 Runden gespielt',c=>c.runs>=25],['💯','Dauerbrenner','100 Runden gespielt',c=>c.runs>=100],['✨','Makellos','Eine Runde ohne Fehler',c=>c.clean],
  ['🔥','3 Tage Serie','Tagesaufgabe 3 Tage in Folge',c=>c.streak>=3],['🌟','7 Tage Serie','Tagesaufgabe 7 Tage in Folge',c=>c.streak>=7],['👑','30 Tage Serie','Tagesaufgabe 30 Tage in Folge',c=>c.streak>=30],
  ['🥊','Duellant','Ein Duell gewonnen',c=>c.dw>=1],['🏅','Duell-Held','10 Duelle gewonnen',c=>c.dw>=10],['👥','Beliebt','3 Freunde hinzugefügt',c=>c.fr>=3],['🏆','Rekordhalter','Platz 1 in einem Spiel',c=>c.firsts>=1],['🎯','Quest-Held','5 Tages-Quests geschafft',c=>c.q>=5],['🌍','Weltenbummler','20 Spiele online gespielt',c=>c.online>=20],['🏅','Saisonsieger','Eine Saison auf Platz 1 beendet',c=>c.ssw>=1],['👑','Ranked-Champion','In einer Ranked-Saison unter den Top 3',c=>c.rkc>=1]];
@@ -1310,8 +1310,8 @@ function badgesCard(extra){const me=skey(DB.acct.name),ru=DB.runs||[],c={runs:ru
 const bestStreak=()=>{if(!DB.acct)return 0;const e=(DB.streak||{})[skey(DB.acct.name)]||{};return Math.max(e.best||0,e.n||0)};
 const thmOk=k=>THM[k].u<=bestStreak();
 function applyTheme(){const k=THM[DB.thm]&&thmOk(DB.thm)?DB.thm:'std',t=THM[k],st=document.documentElement.style;
- st.setProperty('--acc',t.a);st.setProperty('--cy',t.a);st.setProperty('--sh',t.s||'#ff2e93');
- const m=document.querySelector('meta[name=theme-color]');if(m)m.content='#0e0b1a'}
+ st.setProperty('--acc',t.a);st.setProperty('--cy',t.a);[['--sh',t.s],['--ye',t.y],['--yel',t.y],['--bg',t.bg],['--pan',t.pn],['--pan2',t.p2],['--dim',t.dm],['--mut',t.mu],['--tb',t.bg],['--g1',t.bg],['--g2',t.bg],['--b1',t.pn],['--b2',t.p2],['--c1',t.pn],['--c2',t.pn]].forEach(([n,v])=>st.setProperty(n,v));
+ const m=document.querySelector('meta[name=theme-color]');if(m)m.content=t.bg}
 /* ===== Freunde & Postfach ===== */
 let FRG='',NBK=null,FR=[],IB=[],FF=false,FRD='',FSEL=null;const isOn=f=>f.s!=null&&f.s<120;const IBSEEN=new Set();
 async function frLoad(){if(!DB.acct){FR=[];return}try{const r=await rpc('friends_list',{p_name:DB.acct.name,p_pin:DB.acct.pin});FR=Array.isArray(r)?r:[];DB.frN=FR.length}catch(e){}}
@@ -2093,7 +2093,7 @@ function errSend(msg,src){try{if(ERRN>=3||!DB.sb||!DB.sb.url||!/^https?:/.test(l
 addEventListener('error',e=>errSend(e.message,(e.filename||'')+':'+(e.lineno||0)+':'+(e.colno||0)));
 addEventListener('unhandledrejection',e=>{const r=e.reason;if(r&&(r.auth||r.status||r.nf||r.full||r.dup))return;errSend('Promise: '+(r&&r.message||r),'')});
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-11-40';const BVN='2.17.1';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-11-41';const BVN='2.17.2';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--ink);font-weight:800;text-align:center';
