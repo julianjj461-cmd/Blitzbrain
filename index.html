@@ -1344,12 +1344,12 @@ function settings(){
  <div class="card" style="padding:12px"><b>🔊 Ton & Musik</b><div class="row" style="margin-top:8px"><button class="btn ghost sm" id="smu"></button><button class="btn ghost sm" id="ssd"></button></div></div>
  <div class="card" style="padding:12px"><b>🎨 Design</b><div id="dsg" style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">${Object.entries(DSG).map(([k,t])=>`<button class="btn ghost sm${dsgNow()==k?' sel':''}" data-d="${k}" style="flex:1;width:auto;padding:8px 6px;min-width:100px">${dsgOk(k)?'<span style="font-size:20px">'+t.e+'</span><span>'+t.n+'</span>':'<span style="font-size:20px">🔒</span><span>'+t.u+' Tage</span>'}</button>`).join('')}</div><div class="hint" id="dsh" style="margin-top:8px">Neue Designs schaltest du mit deiner Tagesserie frei (Rekord: ${best} Tage).</div></div>
  <div class="card" style="padding:12px"><b>📲 App & Mitteilungen</b><button class="btn ghost sm" id="pin" style="margin-top:8px">📲 Als App installieren</button><button class="btn ghost sm" id="dnd" style="margin-top:8px">${DB.dnd?'🌙 Ruhe-Modus an – tippen zum Ausschalten':'🌙 Ruhe-Modus (keine Einladungs-Banner)'}</button><button class="btn ghost sm" id="pnf" style="margin-top:8px">${DB.notif?'🔔 Mitteilungen an – tippen zum Ausschalten':'🔕 Mitteilungen bei Einladungen einschalten'}</button><div class="hint">Mitteilungen kommen nur an, solange die App im Hintergrund noch läuft – echte Push-Nachrichten bei geschlossener App gibt es (noch) nicht.</div></div>
- <button class="btn ghost" id="shp">❔ So geht's</button>${adm?'<button class="btn ghost" id="sad">🛠️ Admin-Bereich</button><button class="btn ghost" id="ssc">🎞️ Spiele-Showcase (alle zeigen)</button>':''}${DB.acct?'<button class="btn ghost" id="rpb">🚩 Spieler melden</button><button class="btn ghost" id="po">🚪 Abmelden</button>':'<button class="btn" id="sln">👤 Anmelden</button>'}
+ <button class="btn ghost" id="shp">❔ So geht's</button>${adm?'<button class="btn ghost" id="sad">🛠️ Admin-Bereich</button><button class="btn ghost" id="ssc">🎞️ Showcase: alle Spiele</button><button class="btn ghost" id="ssa">🎞️ Showcase: alles in allen Designs (~6 Min)</button>':''}${DB.acct?'<button class="btn ghost" id="rpb">🚩 Spieler melden</button><button class="btn ghost" id="po">🚪 Abmelden</button>':'<button class="btn" id="sln">👤 Anmelden</button>'}
  ${DB.acct&&skey(DB.acct.name)!=='admin'?'<button class="btn ghost sm" id="dla" style="opacity:.8">🗑️ Konto löschen</button>':''}<div class="c mut" style="font-size:12px">BLITZBRAIN v${BVN}</div>${tabBar('st')}</div>`;
  const lab=()=>{$('#smu').textContent=DB.mus?'🎵 Musik an':'🔕 Musik aus';$('#ssd').textContent=DB.snd?'🔊 Ton an':DB.vib===false?'🔇 Stumm':'📳 Nur Vibration'};lab();
  $('#smu').onclick=()=>{ac();DB.mus=!DB.mus;save();lab()};
  $('#ssd').onclick=()=>{ac();if(DB.snd){DB.snd=false;DB.vib=true}else if(DB.vib!==false){DB.vib=false}else{DB.snd=true;DB.vib=true}save();lab();sfx('ok')};
- $('#shp').onclick=()=>help(settings);if($('#sad'))$('#sad').onclick=adminScreen;if($('#ssc'))$('#ssc').onclick=()=>showcase(1.3);if($('#sln'))$('#sln').onclick=()=>loginScreen(settings);
+ $('#shp').onclick=()=>help(settings);if($('#sad'))$('#sad').onclick=adminScreen;if($('#ssc'))$('#ssc').onclick=()=>showcase(1.3);if($('#ssa'))$('#ssa').onclick=()=>showcase(1.3,1);if($('#sln'))$('#sln').onclick=()=>loginScreen(settings);
  if($('#po'))$('#po').onclick=()=>{DB.acct=null;DB.sess=null;save();menu()};
  if($('#rpb'))$('#rpb').onclick=()=>reportDlg('');if($('#dla'))$('#dla').onclick=delAcct;
   document.querySelectorAll('#dsg button').forEach(b=>b.onclick=()=>{const k=b.dataset.d;if(!dsgOk(k)){$('#dsh').textContent='🔒 Noch gesperrt – spiel die Tagesaufgabe '+DSG[k].u+' Tage in Folge.';return}
@@ -1585,20 +1585,28 @@ function arcIntro(k){const lv=DB.lv==null?1:DB.lv,L=LVS[lv],bk=DB.arc&&DB.arc[ar
  $('#rdy').onclick=()=>{ac();const seed=(Math.random()*1e9)|0;let n=3;
   const t=()=>{if(n==0){sfx('go');arcRun(k,seed);return}app.innerHTML=`<div class="scr"><div class="mid">${cdr(n)}</div></div>`;sfx('cd');n--;setTimeout(t,800)};t()};
 }
-/* Admin: zeigt nacheinander die Oberfläche aller Spiele (zum Aufnehmen/Prüfen) */
-function showcase(sec){let keys=POOL(),n=0,stop=0,tmr;const old=document.getElementById('scb');if(old)old.remove();
+/* Admin: Showcase – zeigt Spiele + wichtige Bildschirme, optional in allen Designs nacheinander */
+const SCR_LIST=[['Start',()=>menu()],['Rekorde',()=>bestenlisten()],['Freunde',()=>friendsScreen()],['Profil',()=>profile()],['Optionen',()=>settings()],['Arcade-Liste',()=>arcade()],['Spiel-Intro',()=>arcIntro(POOL()[0])],['Ergebnis',()=>arcDone(POOL()[0],9200,3000)],['Tagesaufgabe',()=>daily()],['Party',()=>partyHub()],['Duell',()=>duelHub()],['Duell-Aufbau',()=>duelSetup()],['Ranked',()=>rankedHub()],['Challenge',()=>fernChallenge()],['Free-for-All',()=>ffaHub()],['So geht\'s',()=>help()],['Onboarding',()=>onboard(0)],['Anmelden',()=>loginScreen(menu)],['Admin',()=>adminScreen()],['Freundes-Profil',()=>friendProfile('Finn',menu)],['Duell-Bilanz',()=>duelStats(menu)]];
+function showcase(sec,all){const orig=DB.dsg;const designs=all?['automat','synth','term']:[null];let steps=[];
+ designs.forEach(d=>{if(d)steps.push({d,t:'d'});POOL().forEach(k=>steps.push({d,t:'g',k}));if(all)SCR_LIST.forEach(([n,f])=>steps.push({d,t:'s',n,f}))});
+ let n=0,stop=0,tmr;const old=document.getElementById('scb');if(old)old.remove();
  const bar=document.createElement('div');bar.id='scb';bar.style.cssText='position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:2000;display:flex;gap:8px;align-items:center;justify-content:space-between;pointer-events:none';
  bar.innerHTML='<span id="scl" style="background:#000c;color:#fff;font:700 13px system-ui;padding:6px 10px;border-radius:8px"></span><button id="scx" style="pointer-events:auto;background:#000c;color:#fff;border:2px solid #fff;font:800 13px system-ui;padding:6px 12px;border-radius:8px">✖ Ende</button>';
  document.body.append(bar);
- const end=()=>{stop=1;clearTimeout(tmr);bar.remove();settings()};$('#scx').onclick=end;
- const step=()=>{if(stop)return;if(n>=keys.length){end();return}const k=keys[n++];$('#scl').textContent=n+'/'+keys.length+' · '+STG[k].name;
-  try{arcRun(k,4242+n)}catch(e){app.innerHTML='<div class="scr"><div class="mid"><div class="big">❌</div><div class="c">'+esc(k)+': '+esc(e.message)+'</div></div></div>'}
-  tmr=setTimeout(step,sec*1000)};
+ const end=()=>{stop=1;clearTimeout(tmr);bar.remove();const o=document.getElementById('ovl');if(o)o.remove();DB.dsg=orig;applyTheme();settings()};$('#scx').onclick=end;
+ let cur=null;
+ const step=()=>{if(stop)return;if(n>=steps.length){end();return}const st=steps[n++],o=document.getElementById('ovl');if(o)o.remove();
+  if(st.d&&st.d!==cur){cur=st.d;DB.dsg=cur;applyTheme()}
+  const dn=cur?DSG[cur].n+' · ':'',pos=n+'/'+steps.length+' · ';let dur=sec;
+  if(st.t=='d'){$('#scl').textContent=pos+'Design '+DSG[cur].n;app.innerHTML='<div class="scr"><div class="mid"><div class="big pop" style="font-size:64px">'+DSG[cur].e+'</div><div class="big" style="font-size:30px">'+DSG[cur].n+'</div></div></div>';dur=sec*1.25}
+  else if(st.t=='g'){$('#scl').textContent=pos+dn+STG[st.k].name;try{arcRun(st.k,4242+n)}catch(e){app.innerHTML='<div class="scr"><div class="mid"><div class="big">❌</div><div class="c">'+esc(st.k)+': '+esc(e.message)+'</div></div></div>'}}
+  else{$('#scl').textContent=pos+dn+st.n;try{st.f()}catch(e){app.innerHTML='<div class="scr"><div class="mid"><div class="big">❌</div><div class="c">'+esc(st.n)+': '+esc(e.message)+'</div></div></div>'}dur=sec*1.7}
+  tmr=setTimeout(step,dur*1000)};
  step()}
 function arcRun(k,seed,i=0,acc){acc=acc||{t:0,pen:0};const lv=DB.lv==null?1:DB.lv,L=LVS[lv];
  app.innerHTML=`<div class="scr play"><div class="hud"><span>${STG[k].emoji} ${STG[k].name}${L.runs>1?' · '+(i+1)+'/'+L.runs:''}</span><span id="tm">0,000 s</span></div><div class="hint">${STG[k].hint}</div><div id="stg"></div></div>`;
  const el=$('#stg'),tm=$('#tm');let pen=0,live=true;const t0=performance.now();
- (function tick(){if(!live)return;tm.textContent=f3(acc.t+performance.now()-t0+pen);requestAnimationFrame(tick)})();
+ (function tick(){if(!live||!tm.isConnected)return;tm.textContent=f3(acc.t+performance.now()-t0+pen);requestAnimationFrame(tick)})();
  const err=(b,ms=1500)=>{if(ms==1500)ms=L.pen;pen+=ms;sfx('bad');if(b){b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake')}
   const p=document.createElement('div');p.className='pen';p.textContent=fmtPen(ms);document.body.append(p);setTimeout(()=>p.remove(),800);
   app.firstChild.classList.remove('flash');void app.firstChild.offsetWidth;app.firstChild.classList.add('flash')};
@@ -2231,7 +2239,7 @@ function errSend(msg,src){try{if(ERRN>=3||!DB.sb||!DB.sb.url||!/^https?:/.test(l
 addEventListener('error',e=>errSend(e.message,(e.filename||'')+':'+(e.lineno||0)+':'+(e.colno||0)));
 addEventListener('unhandledrejection',e=>{const r=e.reason;if(r&&(r.auth||r.status||r.nf||r.full||r.dup))return;errSend('Promise: '+(r&&r.message||r),'')});
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-11-55';const BVN='2.20.3';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-11-56';const BVN='2.21.0';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--ink);font-weight:800;text-align:center';
