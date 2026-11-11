@@ -4,6 +4,7 @@ Mobile-first Party-Spiel (deutsche Oberfläche) als **eine Datei**: `index.html`
 
 ## Dateien
 - `index.html` – die komplette App (Version am Dateiende: `BBV` = Update-Kennung, `BVN` = Anzeige-Version; bei jedem Update beide erhöhen)
+- `CHANGELOG.md` – Änderungen pro Version
 - `sw.js`, `manifest.webmanifest`, `icon-*.png` – Offline/Installation (PWA)
 - `supabase-komplett.sql` – komplette Datenbank (Tabellen, Funktionen). Abschnitte 19–23 entsprechen exakt dem Live-Stand (per `md5(prosrc)` geprüft)
 - `supabase-admin.sql` – Admin-Abfragen für den Supabase SQL Editor (nicht im Spiel)
