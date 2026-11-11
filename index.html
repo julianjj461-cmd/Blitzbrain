@@ -95,7 +95,7 @@ body{background:radial-gradient(120% 80% at 50% 0,var(--g1),var(--g2) 70%) fixed
 h3{margin:8px 0 6px;color:var(--cyan)}
 canvas{position:fixed;inset:0;pointer-events:none;z-index:9}
 /* ===== Design „Automat“ ===== */
-:root{--bg:#0e0b1a;--pan:#1a1530;--pan2:#241d47;--tx:#f4f1ff;--soft:#c9c2ea;--dim:#3a3463;--mut:#8c84b8;--ink:#f4f1ff;--cy:#19f0ff;--ye:#ffe53b;--pk:#ff2e93;--gr:#7cff6b;--acc:#19f0ff;--yel:#ffe53b;--cyan:#19f0ff;--grn:#7cff6b;--red:#ff2e93;--pink:#ff2e93;
+:root{--bg:#0e0b1a;--pan:#1a1530;--pan2:#241d47;--tx:#f4f1ff;--soft:#c9c2ea;--dim:#3a3463;--mut:#8c84b8;--ink:#f4f1ff;--cy:#19f0ff;--ye:#ffe53b;--pk:#ff2e93;--gr:#7cff6b;--acc:#19f0ff;--sh:#ff2e93;--yel:#ffe53b;--cyan:#19f0ff;--grn:#7cff6b;--red:#ff2e93;--pink:#ff2e93;
 --px:'Press Start 2P',ui-monospace,Menlo,Consolas,monospace;--vt:'VT323',ui-monospace,Menlo,Consolas,monospace;--ff:var(--px);--bd:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
 --b1:#1a1530;--b2:#241d47;--c1:#1a1530;--c2:#1a1530;--tb:#0e0b1a;--g1:#0e0b1a;--g2:#0e0b1a;color-scheme:dark}
 body{background:var(--bg)!important;color:var(--tx);font:700 15px/1.35 var(--bd)}
@@ -108,8 +108,8 @@ body{background:var(--bg)!important;color:var(--tx);font:700 15px/1.35 var(--bd)
 h2,h3{font-weight:400;line-height:1.5}
 h3{font-size:11px;margin:10px 0 6px;color:var(--ye)}
 h2{font-size:13px}
-.btn{background:var(--acc);color:var(--bg);border:4px solid var(--acc);border-radius:0;box-shadow:5px 5px 0 var(--pk);padding:15px 10px 13px;font-size:12px;font-weight:400;line-height:1.5;letter-spacing:0;transition:none}
-.btn:active{transform:translate(4px,4px);box-shadow:1px 1px 0 var(--pk)}
+.btn{background:var(--acc);color:var(--bg);border:4px solid var(--acc);border-radius:0;box-shadow:5px 5px 0 var(--sh);padding:15px 10px 13px;font-size:12px;font-weight:400;line-height:1.5;letter-spacing:0;transition:none}
+.btn:active{transform:translate(4px,4px);box-shadow:1px 1px 0 var(--sh)}
 .btn::after{display:none}
 .btn.pink{background:var(--pk);border-color:var(--pk);color:var(--tx);box-shadow:5px 5px 0 var(--ye)}
 .btn.ghost{background:var(--pan);color:var(--tx);border:3px solid var(--mut);box-shadow:none}
@@ -128,13 +128,13 @@ h2{font-size:13px}
 .chip{padding:6px 10px 4px;font-size:9px;font-weight:400}
 .fchip b{color:var(--ye)}.fchip.me{outline:3px solid var(--ye);outline-offset:1px;background:var(--pan2)}
 /* Logo */
-.logo{font-weight:400;letter-spacing:0;text-transform:none;transform:none;color:var(--acc);text-shadow:3px 3px 0 var(--pk);font-size:clamp(24px,8vw,32px);line-height:1.35;margin:10px 0 0}
+.logo{font-weight:400;letter-spacing:0;text-transform:none;transform:none;color:var(--acc);text-shadow:3px 3px 0 var(--sh);font-size:clamp(24px,8vw,32px);line-height:1.35;margin:10px 0 0}
 .logo.sm{font-size:19px;margin:2px 0 0}
-.logo span{display:block;color:var(--acc);text-shadow:3px 3px 0 var(--pk);background:none;border:0;border-radius:0;padding:0;margin:0;transform:none}
+.logo span{display:block;color:var(--acc);text-shadow:3px 3px 0 var(--sh);background:none;border:0;border-radius:0;padding:0;margin:0;transform:none}
 .logo.sm span{border-width:0}
 /* Spiel-HUD */
 .hud{color:var(--mut);font:400 9px var(--px)}
-.hud #tm{color:var(--acc);background:none;border:0;border-radius:0;box-shadow:none;padding:0;transform:none;text-shadow:3px 3px 0 var(--pk);font-size:26px;white-space:nowrap;flex:none}
+.hud #tm{color:var(--acc);background:none;border:0;border-radius:0;box-shadow:none;padding:0;transform:none;text-shadow:3px 3px 0 var(--sh);font-size:26px;white-space:nowrap;flex:none}
 .hud>span:first-child{min-width:0;font-size:9px;line-height:1.6;padding-right:8px}
 .dots i{background:var(--dim);border:0;border-radius:0}.dots i.on{background:var(--cy);height:12px}.dots i.dn{background:var(--ye)}
 .tile{border:4px solid var(--cy);border-radius:0;color:var(--tx);background:var(--pan);box-shadow:4px 4px 0 var(--cy);text-shadow:none;font-weight:400;font-size:clamp(18px,6.5vw,28px)}
@@ -149,7 +149,7 @@ h2{font-size:13px}
 .eq{font-weight:400;font-size:clamp(24px,8vw,34px)}
 .big{font-weight:400;font-size:clamp(20px,6vw,26px);line-height:1.4;overflow-wrap:anywhere}
 .pen{color:var(--pk);background:var(--bg);border:3px solid var(--pk);border-radius:0;padding:6px 12px 4px;text-shadow:none;font-size:18px;font-weight:400}
-.cd{color:var(--acc);text-shadow:8px 8px 0 var(--pk);font-weight:400;font-size:clamp(110px,40vw,170px)}
+.cd{color:var(--acc);text-shadow:8px 8px 0 var(--sh);font-weight:400;font-size:clamp(110px,40vw,170px)}
 .cdr circle{stroke:var(--acc);stroke-width:7}.cdr.last circle{stroke:var(--pk)}
 .banner{color:var(--ye);font-weight:400;font-size:16px;line-height:1.5}
 .rk{background:var(--pan);border:3px solid var(--mut);border-radius:0;box-shadow:none;color:var(--tx);font-weight:700}
@@ -1297,10 +1297,10 @@ async function notifToggle(btn){if(!('Notification' in window)){btn.textContent=
 function notifyShow(title,body){try{if(DB.dnd||!DB.notif||Notification.permission!=='granted')return;
  (navigator.serviceWorker&&navigator.serviceWorker.getRegistration?navigator.serviceWorker.getRegistration():Promise.resolve(null)).then(r=>{if(r&&r.showNotification)r.showNotification(title,{body,icon:'icon4-192.png',tag:'bb-inv'});else new Notification(title,{body,icon:'icon4-192.png'})}).catch(()=>{})}catch(e){}}
 /* ===== Farbthemen (nur Hintergrund/Flächen; Grün/Rot der Spiele bleiben unverändert) ===== */
-const THM={std:{a:'#19f0ff',n:'Standard',e:'🟣',u:0,v:['#5a2fe0','#7a4dff','#3a2380','#2a1768','#1a0f45','#3b1a8f','#120b2e']},
- ozean:{a:'#ffe53b',n:'Ozean',e:'🌊',u:3,v:['#1f6fe0','#4d9bff','#164f8a','#0f3868','#08203d','#0d4a8f','#06182e']},
- glut:{a:'#ff8a1f',n:'Glut',e:'🔥',u:7,v:['#c25a14','#ff9b4d','#8a3a16','#682a0f','#3d1a08','#8f3a12','#2e1006']},
- nacht:{a:'#7cff6b',n:'Nacht',e:'🌑',u:30,v:['#55556a','#7a7a95','#3a3a4a','#22222d','#14141b','#2a2a35','#0b0b10']}};
+const THM={std:{a:'#19f0ff',s:'#ff2e93',n:'Standard',e:'🟣',u:0,v:['#5a2fe0','#7a4dff','#3a2380','#2a1768','#1a0f45','#3b1a8f','#120b2e']},
+ ozean:{a:'#ffe53b',s:'#19f0ff',n:'Ozean',e:'🌊',u:3,v:['#1f6fe0','#4d9bff','#164f8a','#0f3868','#08203d','#0d4a8f','#06182e']},
+ glut:{a:'#ff8a1f',s:'#ffe53b',n:'Glut',e:'🔥',u:7,v:['#c25a14','#ff9b4d','#8a3a16','#682a0f','#3d1a08','#8f3a12','#2e1006']},
+ nacht:{a:'#7cff6b',s:'#19f0ff',n:'Nacht',e:'🌑',u:30,v:['#55556a','#7a7a95','#3a3a4a','#22222d','#14141b','#2a2a35','#0b0b10']}};
 const BDG=[['🎮','Neuling','Das erste Spiel gespielt',c=>c.runs>=1],['🔟','Stammspieler','25 Runden gespielt',c=>c.runs>=25],['💯','Dauerbrenner','100 Runden gespielt',c=>c.runs>=100],['✨','Makellos','Eine Runde ohne Fehler',c=>c.clean],
  ['🔥','3 Tage Serie','Tagesaufgabe 3 Tage in Folge',c=>c.streak>=3],['🌟','7 Tage Serie','Tagesaufgabe 7 Tage in Folge',c=>c.streak>=7],['👑','30 Tage Serie','Tagesaufgabe 30 Tage in Folge',c=>c.streak>=30],
  ['🥊','Duellant','Ein Duell gewonnen',c=>c.dw>=1],['🏅','Duell-Held','10 Duelle gewonnen',c=>c.dw>=10],['👥','Beliebt','3 Freunde hinzugefügt',c=>c.fr>=3],['🏆','Rekordhalter','Platz 1 in einem Spiel',c=>c.firsts>=1],['🎯','Quest-Held','5 Tages-Quests geschafft',c=>c.q>=5],['🌍','Weltenbummler','20 Spiele online gespielt',c=>c.online>=20],['🏅','Saisonsieger','Eine Saison auf Platz 1 beendet',c=>c.ssw>=1],['👑','Ranked-Champion','In einer Ranked-Saison unter den Top 3',c=>c.rkc>=1]];
@@ -1310,7 +1310,7 @@ function badgesCard(extra){const me=skey(DB.acct.name),ru=DB.runs||[],c={runs:ru
 const bestStreak=()=>{if(!DB.acct)return 0;const e=(DB.streak||{})[skey(DB.acct.name)]||{};return Math.max(e.best||0,e.n||0)};
 const thmOk=k=>THM[k].u<=bestStreak();
 function applyTheme(){const k=THM[DB.thm]&&thmOk(DB.thm)?DB.thm:'std',t=THM[k],st=document.documentElement.style;
- st.setProperty('--acc',t.a);
+ st.setProperty('--acc',t.a);st.setProperty('--cy',t.a);st.setProperty('--sh',t.s||'#ff2e93');
  const m=document.querySelector('meta[name=theme-color]');if(m)m.content='#0e0b1a'}
 /* ===== Freunde & Postfach ===== */
 let FRG='',NBK=null,FR=[],IB=[],FF=false,FRD='',FSEL=null;const isOn=f=>f.s!=null&&f.s<120;const IBSEEN=new Set();
@@ -2093,7 +2093,7 @@ function errSend(msg,src){try{if(ERRN>=3||!DB.sb||!DB.sb.url||!/^https?:/.test(l
 addEventListener('error',e=>errSend(e.message,(e.filename||'')+':'+(e.lineno||0)+':'+(e.colno||0)));
 addEventListener('unhandledrejection',e=>{const r=e.reason;if(r&&(r.auth||r.status||r.nf||r.full||r.dup))return;errSend('Promise: '+(r&&r.message||r),'')});
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-11-39';const BVN='2.17.0';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-11-40';const BVN='2.17.1';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--ink);font-weight:800;text-align:center';
