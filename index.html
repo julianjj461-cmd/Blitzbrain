@@ -208,6 +208,16 @@ input,select,textarea{font-family:var(--bd)}
 #m2 b{font:400 12px var(--px)!important;color:var(--tx)}#m2 small{font:700 14px var(--bd)!important;color:var(--soft);display:block;margin-top:8px}
 #m2 svg,.btn.mt span{color:var(--cy)}#mr svg{color:var(--sh)}
 .sub{margin:2px 0}
+/* Antippbares hervorheben (alle Designs) */
+.card,.rk{border:2px solid var(--dim)!important;box-shadow:none;background:var(--pan)}
+.btn.ghost{border:3px solid var(--tx);color:var(--tx);box-shadow:4px 4px 0 var(--acc);background:var(--pan2)}
+.btn.ghost:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--acc)}
+.chip,.fchip{border:2px solid var(--tx);box-shadow:3px 3px 0 var(--dim);background:var(--pan2)}
+.fcard{border:3px solid var(--tx);box-shadow:4px 4px 0 var(--dim)}
+#m1,#m3,#m4{box-shadow:5px 5px 0 var(--cy)!important}
+#m2{box-shadow:5px 5px 0 var(--tx)!important}
+#m1:active,#m2:active,#m3:active,#m4:active,#mr:active,#dly:active,.hb:active,.dp:active,.ar:active,.fcard:active{transform:translate(4px,4px)!important;box-shadow:1px 1px 0 var(--c,var(--cy))!important}
+.tile:not(.sq):not(.hole){cursor:pointer}
 /* ===== Design D „Synthwave“ ===== */
 html[data-d=synth]{--bg:#12002b;--pan:#1a0638;--pan2:#2a0a52;--tx:#fff;--soft:#e3d4ff;--dim:#3a2266;--mut:#a98be0;--ink:#fff;--cy:#8fe9ff;--ye:#ffb02e;--yel:#ffb02e;--cyan:#8fe9ff;--pk:#ff4fd8;--pink:#ff4fd8;--acc:#ff4fd8;--sh:#ff4fd8;--red:#ff5a7a;--grn:#7cffb0;--b1:#1a0638;--b2:#2a0a52;--c1:#1a0638;--c2:#1a0638;--tb:#12002b;--g1:#12002b;--g2:#12002b}
 html[data-d=synth] body{background-image:linear-gradient(180deg,#12002b 0%,#2d0a57 55%,#5a1475 100%)!important;background-size:auto!important}
@@ -220,7 +230,11 @@ html[data-d=synth] .btn.pink{background:linear-gradient(135deg,#ffb02e,#ff4fd8)}
 html[data-d=synth] .btn.ghost{background:#12003099;border:2px solid var(--cy);box-shadow:0 0 12px #8fe9ff55;color:var(--tx)}
 html[data-d=synth] #thg .btn.sel,html[data-d=synth] .btn.ghost[style*=outline]{background:linear-gradient(135deg,#ff4fd8,#7a3cff);color:#fff}
 html[data-d=synth] .card,html[data-d=synth] .rk,html[data-d=synth] .fcard,html[data-d=synth] .pl input,html[data-d=synth] .bk,html[data-d=synth] .chip,html[data-d=synth] .pen{border-radius:14px}
-html[data-d=synth] .card,html[data-d=synth] .fcard{background:#1a063899;border:2px solid #7a3cff!important;box-shadow:0 0 14px #7a3cff66}
+html[data-d=synth] .card,html[data-d=synth] .rk{background:#1a063866;border:2px solid #3a2266!important;box-shadow:none}
+html[data-d=synth] .fcard{background:#1a063899;border:2px solid #ff4fd8!important;box-shadow:0 0 14px #ff4fd877}
+html[data-d=synth] .chip,html[data-d=synth] .fchip{border:2px solid var(--cy);box-shadow:0 0 10px #8fe9ff55;background:#2a0a52}
+html[data-d=synth] .btn.ghost{background:#2a0a52;border:2px solid var(--cy);box-shadow:0 0 14px #8fe9ff77;color:#fff}
+html[data-d=synth] .btn.ghost:active{transform:scale(.97);box-shadow:0 0 6px #8fe9ff77}
 html[data-d=synth] .rk.w{background:linear-gradient(135deg,#ff4fd8,#ffb02e);border-color:transparent;color:#12002b}
 html[data-d=synth] .dp,html[data-d=synth] .ar{background:#1a063899!important;border-radius:14px!important;box-shadow:0 0 16px var(--c)!important}
 html[data-d=synth] .tile{border-radius:14px;border:2px solid var(--pk);background:linear-gradient(180deg,#2a0a52,#1a0638);box-shadow:0 0 14px #ff4fd8aa,inset 0 0 12px #ff4fd855;text-shadow:0 0 8px #ff4fd8}
@@ -252,10 +266,12 @@ html[data-d=term] *{font-weight:400!important;letter-spacing:0!important}
 html[data-d=term] .btn{background:var(--acc);color:#120b00;border:2px solid var(--acc);box-shadow:0 0 12px #ffb00066;text-shadow:none;font-size:26px;padding:8px 8px 5px}
 html[data-d=term] .btn:active{transform:none;background:#ffd060}
 html[data-d=term] .btn.sm{font-size:22px;padding:6px 6px 3px}
-html[data-d=term] .btn.ghost,html[data-d=term] .btn.pink{background:transparent;color:var(--acc);border:2px solid var(--acc);box-shadow:none;text-shadow:0 0 6px #ffb00088}
-html[data-d=term] .btn.ghost:active{background:#241600}
+html[data-d=term] .btn.ghost,html[data-d=term] .btn.pink{background:#241600;color:var(--acc);border:2px solid var(--acc);box-shadow:0 0 10px #ffb00077;text-shadow:0 0 6px #ffb00088}
+html[data-d=term] .btn.ghost:active{background:var(--acc);color:#120b00;text-shadow:none}
 html[data-d=term] #thg .btn.sel,html[data-d=term] .btn.ghost[style*=outline]{background:var(--acc);color:#120b00;text-shadow:none}
-html[data-d=term] .card,html[data-d=term] .fcard,html[data-d=term] .rk,html[data-d=term] .chip,html[data-d=term] .pl input,html[data-d=term] .bk{border:2px solid var(--acc)!important;box-shadow:none;background:transparent}
+html[data-d=term] .card,html[data-d=term] .rk{border:2px solid var(--dim)!important;box-shadow:none;background:transparent}
+html[data-d=term] .fcard,html[data-d=term] .chip,html[data-d=term] .fchip,html[data-d=term] .bk{border:2px solid var(--acc)!important;box-shadow:0 0 8px #ffb00066;background:#241600}
+html[data-d=term] .pl input{border:2px solid var(--acc)!important;background:transparent}
 html[data-d=term] .dp,html[data-d=term] .ar{background:transparent!important;border-color:var(--acc)!important;box-shadow:none!important}
 html[data-d=term] .rk.w{background:var(--acc);color:#120b00;text-shadow:none}
 html[data-d=term] .pl input{font:400 22px var(--bd)}
@@ -2197,7 +2213,7 @@ function errSend(msg,src){try{if(ERRN>=3||!DB.sb||!DB.sb.url||!/^https?:/.test(l
 addEventListener('error',e=>errSend(e.message,(e.filename||'')+':'+(e.lineno||0)+':'+(e.colno||0)));
 addEventListener('unhandledrejection',e=>{const r=e.reason;if(r&&(r.auth||r.status||r.nf||r.full||r.dup))return;errSend('Promise: '+(r&&r.message||r),'')});
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-11-47';const BVN='2.19.1';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-11-48';const BVN='2.19.2';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--ink);font-weight:800;text-align:center';
