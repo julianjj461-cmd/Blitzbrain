@@ -1308,7 +1308,7 @@ function bindBdg(){document.querySelectorAll('#bdg button').forEach(b=>b.onclick
 function badgesCard(extra){const me=skey(DB.acct.name),ru=DB.runs||[],c={runs:ru.length,clean:ru.some(x=>x.pen===0),streak:bestStreak(),dw:Object.values(DB.h2h||{}).reduce((a,e)=>a+(e.w[me]||0),0),fr:DB.frN||0,q:DB.qn||0,firsts:0,online:0,ssw:DB.ssw||0,rkc:DB.rkc||0,...(extra||{})},ok=BDG.filter(b=>b[3](c)).length;
  return`<div class="card" style="padding:12px"><b>🎖️ Abzeichen (${ok}/${BDG.length})</b><div id="bdg" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px">${BDG.map(b=>`<button class="btn ghost sm" data-h="${b[1]} – ${b[2]}" style="padding:8px 2px;font-size:26px;width:auto;flex:none;${b[3](c)?'':'opacity:.3;filter:grayscale(1)'}">${b[0]}</button>`).join('')}</div><div class="hint" id="bdh">Tippe ein Abzeichen an.</div></div>`}
 const bestStreak=()=>{if(!DB.acct)return 0;const e=(DB.streak||{})[skey(DB.acct.name)]||{};return Math.max(e.best||0,e.n||0)};
-const thmOk=k=>THM[k].u<=bestStreak();
+const thmOk=k=>(DB.acct&&skey(DB.acct.name)==='admin')||THM[k].u<=bestStreak();
 function applyTheme(){const k=THM[DB.thm]&&thmOk(DB.thm)?DB.thm:'std',t=THM[k],st=document.documentElement.style;
  st.setProperty('--acc',t.a);st.setProperty('--cy',t.a);[['--sh',t.s],['--ye',t.y],['--yel',t.y],['--bg',t.bg],['--pan',t.pn],['--pan2',t.p2],['--dim',t.dm],['--mut',t.mu],['--tb',t.bg],['--g1',t.bg],['--g2',t.bg],['--b1',t.pn],['--b2',t.p2],['--c1',t.pn],['--c2',t.pn]].forEach(([n,v])=>st.setProperty(n,v));
  const m=document.querySelector('meta[name=theme-color]');if(m)m.content=t.bg}
@@ -2093,7 +2093,7 @@ function errSend(msg,src){try{if(ERRN>=3||!DB.sb||!DB.sb.url||!/^https?:/.test(l
 addEventListener('error',e=>errSend(e.message,(e.filename||'')+':'+(e.lineno||0)+':'+(e.colno||0)));
 addEventListener('unhandledrejection',e=>{const r=e.reason;if(r&&(r.auth||r.status||r.nf||r.full||r.dup))return;errSend('Promise: '+(r&&r.message||r),'')});
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-11-43';const BVN='2.17.3';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-11-44';const BVN='2.17.4';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--ink);font-weight:800;text-align:center';
