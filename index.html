@@ -331,6 +331,8 @@ html[data-d=term] .hud #tm{font-size:46px}html[data-d=term] .hud>span:first-chil
 #stg .grid:has(>:nth-child(4):last-child){grid-template-columns:repeat(2,minmax(0,1fr))}
 .tile.txt{padding-left:12px;padding-right:12px}
 html[data-d=term] #stg .tile[style*=background]:not(.pad){filter:sepia(1) saturate(2.4) hue-rotate(-18deg) brightness(.85)}
+html:not([data-d=term]) #vb .btn{font-size:8px!important;letter-spacing:0;min-width:0}
+html[data-d=term] .scr .mid .big[style*="clamp(20px,6.5vw"]{font-size:44px!important}
 </style></head><body>
 <div id="bgf" aria-hidden="true"><span style="left:6%;top:12%;animation-delay:-0s;font-size:38px">🧠</span><span style="left:82%;top:8%;animation-delay:-4s;font-size:34px">⚡</span><span style="left:14%;top:48%;animation-delay:-8s;font-size:30px">🎯</span><span style="left:88%;top:42%;animation-delay:-2s;font-size:40px">🍾</span><span style="left:46%;top:6%;animation-delay:-11s;font-size:28px">🔎</span><span style="left:72%;top:70%;animation-delay:-6s;font-size:36px">🎲</span><span style="left:10%;top:82%;animation-delay:-13s;font-size:32px">⭐</span><span style="left:52%;top:88%;animation-delay:-9s;font-size:34px">🧩</span><span style="left:90%;top:90%;animation-delay:-5s;font-size:28px">🔥</span></div><div id="app"></div><div id="fl"></div><canvas id="fx"></canvas>
 <script>
@@ -1577,7 +1579,7 @@ function arcade(){
 const LVS=[{n:'😌 Leicht',pen:750,runs:1,d:'Fehler +0,75 s'},{n:'😐 Normal',pen:1500,runs:1,d:'Fehler +1,5 s'},{n:'🔥 Hart',pen:2500,runs:3,d:'Fehler +2,5 s · 3 Durchgänge'}];
 const arcKey=(k,lv)=>k+(lv==null||lv==1?'':'#'+lv),fmtPen=ms=>'+'+String(+(ms/1000).toFixed(2)).replace('.',',')+' s';
 function arcIntro(k){const lv=DB.lv==null?1:DB.lv,L=LVS[lv],bk=DB.arc&&DB.arc[arcKey(k,lv)];
- app.innerHTML=`<div class="scr"><div class="mid"><div class="big" style="font-size:90px">${STG[k].emoji}</div><div class="big" style="font-size:clamp(34px,11vw,50px);color:var(--cyan)">${STG[k].name}</div>
+ app.innerHTML=`<div class="scr"><div class="mid"><div class="big" style="font-size:90px">${STG[k].emoji}</div><div class="big" style="font-size:clamp(20px,6.5vw,30px);color:var(--cyan)">${STG[k].name}</div>
  <div class="card c">${STG[k].hint}<div class="mut" style="margin-top:6px">${L.d}${bk?' · Bestzeit: '+f3(bk):''}</div></div>
  <div class="row" id="lvr">${LVS.map((x,i)=>`<button class="btn ghost sm" data-l="${i}" style="padding:10px 2px;font-size:14px${i==lv?';outline:3px solid #fff':''}">${x.n}</button>`).join('')}</div></div>
  <button class="btn pink" id="rdy">BEREIT! 🔥</button>${bar('⬅ Andere Spiele')}</div>`;
@@ -2239,7 +2241,7 @@ function errSend(msg,src){try{if(ERRN>=3||!DB.sb||!DB.sb.url||!/^https?:/.test(l
 addEventListener('error',e=>errSend(e.message,(e.filename||'')+':'+(e.lineno||0)+':'+(e.colno||0)));
 addEventListener('unhandledrejection',e=>{const r=e.reason;if(r&&(r.auth||r.status||r.nf||r.full||r.dup))return;errSend('Promise: '+(r&&r.message||r),'')});
 /* ===== Auto-Update: neue Version erkennen und von selbst neu laden (nur im Hauptmenü, nie mitten im Spiel) ===== */
-const BBV='2026-11-11-56';const BVN='2.21.0';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-11-57';const BVN='2.21.1';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--ink);font-weight:800;text-align:center';
