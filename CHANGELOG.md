@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.25 – 2.26 – Gehirn-Maskottchen & Design-Feinschliff
+- Neues Maskottchen (Gehirn mit Blitz) statt gelbem Blitzkopf
+- Terminal: Bernstein-Kacheln und -Konfetti, lesbare Icons auf gefüllten Knöpfen, engerer Zeilenabstand
+- Synthwave: kräftigere Icons, Neon-Konfetti
+- Hauptmenü: Pixel-Icons für Duell/Challenge/Party/Arcade, Tipp-Zeile mit Maskottchen
+
 ## 2.23 – Maskottchen & Design-Icons
 - Maskottchen Blitzkopf, Strafzeit-Uhr, Schwierigkeits-Blitze
 - Icons passen sich Synthwave (Neon) und Terminal (Bernstein) an
