@@ -1,7 +1,7 @@
-"""Erzeugt den Icon-Block fuer index.html: python3 tools/export.py  (schreibt in index.html zwischen den Markern)"""
+"""Erzeugt den Icon-Block fuer index.html: python3 tools/export.py  (läuft von überall; schreibt in index.html zwischen den Markern)"""
 import json,re,sys
-sys.path.insert(0,'.')
-import icons_a,icons_b,icons_c
+import os;H=os.path.dirname(os.path.abspath(__file__));sys.path.insert(0,H)
+import icons_a,icons_b,icons_c,icons_d
 from icolib import *
 def enc(img):
     pal=[];flat=[];last=None;cnt=0
@@ -25,7 +25,7 @@ js="""/*PIXICON-START*/
 const PIX=%s,PEM=%s,PXC={};
 function pxsvg(n){if(PXC[n])return PXC[n];const d=PIX[n],pal=d[0],f=d[1];let o='',p=0;for(let i=0;i<f.length;i+=2){let k=f[i],c=f[i+1];while(c>0){const x=p%%32,y=p/32|0,l=Math.min(c,32-x);if(k>=0)o+='<rect x="'+x+'" y="'+y+'" width="'+l+'" height="1" fill="#'+pal[k]+'"/>';p+=l;c-=l}}return PXC[n]='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges">'+o+'</svg>'}
 {const re=new RegExp('('+Object.keys(PEM).join('|')+')\\\\uFE0F?','g');
- const st=document.createElement('style');st.textContent='.pi{display:inline-block;width:1.15em;height:1.15em;vertical-align:-.22em;font-style:normal;line-height:1}.pi svg{width:100%%;height:100%%;display:block}.pi .pe{display:none}html[data-d] .pi svg{display:none}html[data-d] .pi .pe{display:inline;font-size:1em}';document.head.appendChild(st);
+ const st=document.createElement('style');st.textContent='.pi{display:inline-block;width:max(1.25em,18px);height:max(1.25em,18px);vertical-align:-.22em;font-style:normal;line-height:1}.pi svg{width:100%%;height:100%%;display:block}.pi .pe{display:none}html[data-d] .pi svg{display:none}html[data-d] .pi .pe{display:inline;font-size:1em}';document.head.appendChild(st);
  const skip=p=>!p||/^(SCRIPT|STYLE|TEXTAREA|INPUT|OPTION|TITLE)$/.test(p.nodeName)||(p.closest&&p.closest('.pi,#stg'));
  function pix(n){if(n.nodeType===3){const s=n.nodeValue;re.lastIndex=0;if(!re.test(s)){re.lastIndex=0;return}re.lastIndex=0;const p=n.parentNode;if(skip(p))return;
    const f=document.createDocumentFragment();let last=0,m;
@@ -36,10 +36,9 @@ function pxsvg(n){if(PXC[n])return PXC[n];const d=PIX[n],pal=d[0],f=d[1];let o='
  pix(document.body)}
 /*PIXICON-END*/
 """%(json.dumps(S,ensure_ascii=False,separators=(',',':')),json.dumps(M,ensure_ascii=False,separators=(',',':')))
-t=open('../index.html').read()
+t=open(H+'/../index.html').read()
 if '/*PIXICON-START*/' not in t: a=t.index('/* Pixel-Icons (Test)');b=t.index("const BBV=")
 else: a=t.index('/*PIXICON-START*/');b=t.index('/*PIXICON-END*/')+len('/*PIXICON-END*/\n')
 t=t[:a]+js+t[b:]
-t=t.replace("const BVN='2.22.0-test'","const BVN='2.22.1-test'").replace("const BBV='2026-11-12-58'","const BBV='2026-11-12-59'")
-open('../index.html','w').write(t)
+open(H+'/../index.html','w').write(t)
 print(len(S),'Icons',len(M),'Emojis',len(js)//1024,'KB')
