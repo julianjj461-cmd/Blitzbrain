@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.27 – Design-Paket
+- Spiel-Feedback: Kacheln reagieren auf Tipp, Strafzeit fliegt in den Timer
+- Ergebnis: Maskottchen jubelt bei Bestzeit mit Strahlenkranz
+- Schriften sind eingebettet (keine Verbindung zu Google Fonts mehr)
+- Ligen-Wappen für Ranked, Serien-Flamme in 4 Stufen
+- Übergänge und Countdown je Design, Maskottchen in Leer- und Wartezuständen
+- Neues App-Icon und Vorschaubild mit Gehirn-Maskottchen
+
 ## 2.25 – 2.26 – Gehirn-Maskottchen & Design-Feinschliff
 - Neues Maskottchen (Gehirn mit Blitz) statt gelbem Blitzkopf
 - Terminal: Bernstein-Kacheln und -Konfetti, lesbare Icons auf gefüllten Knöpfen, engerer Zeilenabstand

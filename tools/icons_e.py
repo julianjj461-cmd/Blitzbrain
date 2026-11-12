@@ -27,3 +27,24 @@ def _(): return _diff(1,'#3DFF8B')
 def _(): return _diff(2,'#FFD23F')
 @icon('d3')
 def _(): return _diff(3,'#FF4D4D')
+# Ligen-Wappen (Ranked) und Serien-Flamme in Stufen
+def _shield(c,emb):
+    sh=P((4,2),(27,2),(27,17),(16,30),(15,30),(4,17))
+    return [(sh,c),(P((7,5),(24,5),(24,16),(16,26),(15,26),(7,16)),K,'f')]+emb
+def _chev(y,c): return (P((9,y+4),(16,y),(22,y+4),(22,y+7),(16,y+3),(9,y+7)),c,'f')
+@icon('lg1')
+def _(): return _shield('#C97B3D',[_chev(11,'#E8A268')])
+@icon('lg2')
+def _(): return _shield('#C4CEE4',[_chev(8,'#F2F5FF'),_chev(14,'#F2F5FF')])
+@icon('lg3')
+def _(): return _shield('#FFC83D',[(STAR(15.5,14,7,3),'#FFE9A0','f')])
+@icon('lg4')
+def _(): return [(P((0,8),(5,6),(5,16)),'#B8F4FF'),(P((31,8),(26,6),(26,16)),'#B8F4FF')]+_shield('#5EE6FF',[(P((10,10),(21,10),(24,14),(15.5,23),(7,14)),'#B8F4FF','f'),(P((12,12),(15,12),(13,15)),'#FFFFFF','f')])
+@icon('fl0')
+def _(): return [(E(9,16,22,30)|P((15,9),(20,19),(11,19)),'#8E86A8'),(E(12,22,19,30),'#C9C3DB')]
+@icon('fl1')
+def _(): return [(E(8,14,23,30)|P((15,6),(21,17),(10,17)),'#FF6A2B'),(E(12,20,19,30),'#FFC93C')]
+@icon('fl2')
+def _(): return [(E(5,10,27,31)|P((16,1),(23,14),(9,14)),'#FF6A2B'),(E(10,17,22,31),'#FFC93C'),(E(13,23,19,31),'#FFF1A8')]
+@icon('fl3')
+def _(): return [(E(4,9,27,31)|P((15,0),(23,13),(8,13))|P((24,4),(28,14),(22,14)),'#3B8BEB'),(E(9,16,22,31),'#5EE6FF'),(E(12,22,19,31),'#FFFFFF'),(STAR(4,5,2.5,1),'#FFFFFF','f'),(STAR(28,22,2,.8),'#FFFFFF','f')]

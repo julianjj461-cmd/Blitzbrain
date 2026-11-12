@@ -20,7 +20,7 @@ def enc(img):
     return [pal,flat]
 S={n:enc(render(sh)) for n,sh in ICONS.items()}
 M={e.replace('️',''):n for e,n in EMAP.items()}
-FB={'mascot':'⚡','mascot_win':'👑','mascot_sad':'😢','pen':'⏱','d1':'😌','d2':'😐','d3':'🔥'}
+FB={'mascot':'🧠','mascot_win':'🧠','mascot_sad':'😢','pen':'⏱','d1':'😌','d2':'😐','d3':'🔥','lg1':'🥉','lg2':'🥈','lg3':'🥇','lg4':'💎','fl0':'🔥','fl1':'🔥','fl2':'🔥','fl3':'🔥'}
 js="""/*PIXICON-START*/
 /* Pixel-Icons: ersetzt bekannte Emojis in Texten durch eigene SVG-Icons (Automat: bunt, Synthwave: Neon-Linien, Terminal: Amber; zur Laufzeit aus denselben Pixeln berechnet). Quelle: tools/icons_*.py, Export: tools/export.py. Spielfeld (#stg) bleibt unberuehrt. */
 const PIX=%s,PEM=%s,PFB=%s,PXC={};
