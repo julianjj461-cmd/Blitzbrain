@@ -1,7 +1,7 @@
 """Erzeugt den Icon-Block fuer index.html: python3 tools/export.py  (läuft von überall; schreibt in index.html zwischen den Markern)"""
 import json,re,sys
 import os;H=os.path.dirname(os.path.abspath(__file__));sys.path.insert(0,H)
-import icons_a,icons_b,icons_c,icons_d,icons_e
+import icons_a,icons_b,icons_c,icons_d,icons_e,icons_f
 from icolib import *
 def enc(img):
     pal=[];flat=[];last=None;cnt=0
