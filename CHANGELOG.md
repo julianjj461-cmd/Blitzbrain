@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.23 – Maskottchen & Design-Icons
+- Maskottchen Blitzkopf, Strafzeit-Uhr, Schwierigkeits-Blitze
+- Icons passen sich Synthwave (Neon) und Terminal (Bernstein) an
+
 ## 2.22 – Eigene Pixel-Icons
 - 101 selbst gezeichnete Pixel-Icons (alle Spiele + häufige Menü-Symbole) ersetzen im Automat-Design die Emojis; Synthwave und Terminal zeigen weiter Emojis
 - Quellcode der Icons in `tools/` (Export mit `python3 tools/export.py`)
