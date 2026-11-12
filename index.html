@@ -2256,7 +2256,7 @@ function pxsvg(n){if(PXC[n])return PXC[n];const d=PIX[n],pal=d[0],f=d[1];let o='
  new MutationObserver(ms=>{for(const m of ms){if(m.type==='characterData')pix(m.target);else m.addedNodes.forEach(pix)}}).observe(document.body,{childList:true,subtree:true,characterData:true});
  pix(document.body)}
 /*PIXICON-END*/
-const BBV='2026-11-12-59';const BVN='2.22.1-test';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-12-60';const BVN='2.22.1';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--ink);font-weight:800;text-align:center';

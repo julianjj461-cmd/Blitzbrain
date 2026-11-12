@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.22 – Eigene Pixel-Icons
+- 101 selbst gezeichnete Pixel-Icons (alle Spiele + häufige Menü-Symbole) ersetzen im Automat-Design die Emojis; Synthwave und Terminal zeigen weiter Emojis
+- Quellcode der Icons in `tools/` (Export mit `python3 tools/export.py`)
+
 ## 2.21.x – Designs & Showcase
 - Drei wählbare Designs: **Automat** (Standard), **Synthwave** (5 Tage Serie), **Terminal** (14 Tage Serie); Admin hat alle frei
 - Admin-Showcase: zeigt alle 50 Spiele und alle Bildschirme in allen Designs automatisch (Optionen → Admin)
