@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.28 – Neue Avatare
+- 24 eigene Themenfiguren (Detektiv, Zauberer, Astronaut …) statt Tier-Emojis; bestehende Avatare werden automatisch zugeordnet
+
 ## 2.27 – Design-Paket
 - Spiel-Feedback: Kacheln reagieren auf Tipp, Strafzeit fliegt in den Timer
 - Ergebnis: Maskottchen jubelt bei Bestzeit mit Strahlenkranz

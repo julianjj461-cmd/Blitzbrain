@@ -1,7 +1,7 @@
 """Erzeugt den Icon-Block fuer index.html: python3 tools/export.py  (läuft von überall; schreibt in index.html zwischen den Markern)"""
 import json,re,sys
 import os;H=os.path.dirname(os.path.abspath(__file__));sys.path.insert(0,H)
-import icons_a,icons_b,icons_c,icons_d,icons_e
+import icons_a,icons_b,icons_c,icons_d,icons_e,icons_f
 from icolib import *
 def enc(img):
     pal=[];flat=[];last=None;cnt=0
@@ -34,7 +34,7 @@ function pxcol(n,ds){const d=PIX[n],pal=d[0],f=d[1],g=[];for(let i=0;i<f.length;
  return cl.map((c,i)=>{if(!c)return null;const x=i%%32,y=i/32|0,nb=[at(x-1,y),at(x+1,y),at(x,y-1),at(x,y+1)];
   if(ds==='term'){if(nb.some(v=>!v))return'#ffb000';const L=info[g[i]].lum;return L<.25?'#3a2600':L<.5?'#8a5a00':L<.75?'#ffb000':'#ffe9a6'}
   return nb.some(v=>v!==c)?SY[c]:hex(mx(rgb(SY[c].slice(1)),[18,0,43],.66))})}
-function pxsvg(n,ds){ds=ds===undefined?(document.documentElement.dataset.d||''):ds;const key=n+'|'+ds;if(PXC[key])return PXC[key];const col=pxcol(n,ds);let o='';for(let y=0;y<32;y++){let x=0;while(x<32){const c=col[y*32+x];if(!c){x++;continue}let x2=x;while(x2+1<32&&col[y*32+x2+1]===c)x2++;o+='<rect x="'+x+'" y="'+y+'" width="'+(x2-x+1)+'" height="1" fill="'+c+'"/>';x=x2+1}}return PXC[key]='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges">'+o+'</svg>'}
+function pxsvg(n,ds){ds=ds===undefined?(document.documentElement.dataset.d||''):ds;if(ds==='synth'&&n.slice(0,3)==='av_')ds='';const key=n+'|'+ds;if(PXC[key])return PXC[key];const col=pxcol(n,ds);let o='';for(let y=0;y<32;y++){let x=0;while(x<32){const c=col[y*32+x];if(!c){x++;continue}let x2=x;while(x2+1<32&&col[y*32+x2+1]===c)x2++;o+='<rect x="'+x+'" y="'+y+'" width="'+(x2-x+1)+'" height="1" fill="'+c+'"/>';x=x2+1}}return PXC[key]='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges">'+o+'</svg>'}
 function pixSkin(){document.querySelectorAll('.pi').forEach(e=>{const n=e.dataset.n;if(n)e.innerHTML='<i class="pe">'+(e.dataset.e||'')+'</i>'+pxsvg(n)})}
 {const re=new RegExp('(⟦[a-z0-9_]+⟧|'+Object.keys(PEM).join('|')+')\\\\uFE0F?','g');
  const st=document.createElement('style');st.textContent='.pi{display:inline-block;width:max(1.25em,18px);height:max(1.25em,18px);vertical-align:-.22em;font-style:normal;line-height:1}.pi svg{width:100%%;height:100%%;display:block}.pi .pe{display:none}html[data-d=synth] .pi svg{filter:drop-shadow(0 0 2px rgba(255,43,214,.65))}html[data-d=term] .pi svg{filter:drop-shadow(0 0 2px rgba(255,176,0,.5))}';document.head.appendChild(st);
