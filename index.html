@@ -1609,15 +1609,20 @@ function menu(){NBK=null;S.fi=false;S.bots=null;applyTheme();avLoad();ibLoad();S
  fpFloat();
  {const b=document.getElementById('ac');if(b)b.onclick=()=>{ac();loginScreen(menu)}}
  $('#dly').onclick=()=>{ac();daily()};
- $('#m1').onclick=()=>{ac();partyHub()};$('#m2').onclick=()=>{ac();arcade()};$('#m3').onclick=()=>{ac();fernChallenge()};$('#m4').onclick=()=>{ac();duelHub()};$('#mr').onclick=()=>{ac();rankedHub()};
+ $('#m1').onclick=()=>{ac();partyHub()};$('#m2').onclick=()=>{ac();arcLevel()};$('#m3').onclick=()=>{ac();fernChallenge()};$('#m4').onclick=()=>{ac();duelHub()};$('#mr').onclick=()=>{ac();rankedHub()};
 }
+function arcLevel(){
+ const cnt=i=>Object.keys(DB.arc||{}).filter(x=>i==1?!x.includes('#'):x.endsWith('#'+i)).length;
+ app.innerHTML=`<div class="scr"><div class="hd"><button class="bk" id="bt" aria-label="Zurück">‹</button><h2 class="ar" style="margin:6px 0 0;--ac:#ffd23f">🕹️ Arcade</h2></div><div class="mut">Wähle zuerst die Schwierigkeit – jede Stufe hat ihre eigenen Bestzeiten.</div>
+ <div class="mid" style="justify-content:flex-start;padding-top:6px;gap:12px">${LVS.map((x,i)=>`<button class="btn${i==1?' pink':' ghost'}" data-l="${i}" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:16px 10px"><span style="font-size:20px">${lvh(i)}</span><small style="font-size:12px;opacity:.85">${x.d}</small><small style="font-size:12px;opacity:.85">${cnt(i)?cnt(i)+(cnt(i)==1?' Bestzeit':' Bestzeiten'):'noch keine Bestzeiten'}</small></button>`).join('')}</div>${tabBar('play')}</div>`;
+ app.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{DB.lv=+b.dataset.l;save();sfx('ok');arcade()});$('#bt').onclick=menu}
 function arcade(){
- if(!DB.arc)DB.arc={};
- app.innerHTML=`<div class="scr"><div class="hd"><button class="bk" id="bt" aria-label="Zurück">‹</button><h2 class="ar" style="margin:6px 0 0;--ac:#ffd23f">🕹️ Arcade</h2></div><div class="mut">Tippe ein Spiel an und teste es solo. Die Bestzeit pro Spiel wird gespeichert.</div><button class="btn" id="arz">🎲 Zufälliges Spiel</button>
+ if(!DB.arc)DB.arc={};if(DB.lv==null)DB.lv=1;
+ app.innerHTML=`<div class="scr"><div class="hd"><button class="bk" id="bt" aria-label="Zurück">‹</button><h2 class="ar" style="margin:6px 0 0;--ac:#ffd23f">🕹️ Arcade</h2></div><div class="row" style="align-items:center"><div style="flex:1;font-weight:800">Stufe: ${lvh(DB.lv)}</div><button class="btn ghost sm" id="arl" style="width:auto;flex:none;padding:8px 12px">Stufe wechseln</button></div><button class="btn" id="arz">🎲 Zufälliges Spiel</button>
  <div class="grid g2" style="gap:10px;padding-bottom:12px">${POOL().map(k=>`<button class="card ar" data-k="${k}" style="border:0;color:var(--ink);text-align:center;padding:12px 6px;font:inherit;background:linear-gradient(180deg,var(--b2),var(--b1));box-shadow:0 4px 0 rgba(0,0,0,.3)"><div style="font-size:34px">${STG[k].emoji}</div><b>${STG[k].name}</b><div class="mut${DB.arc[arcKey(k,DB.lv==null?1:DB.lv)]?' abt':''}" style="font-size:12px;margin-top:2px">${DB.arc[arcKey(k,DB.lv==null?1:DB.lv)]?'🏅 '+f3(DB.arc[arcKey(k,DB.lv==null?1:DB.lv)]):'noch nicht gespielt'}</div></button>`).join('')}</div>
  ${tabBar('play')}</div>`;
- const t0=performance.now();app.querySelectorAll('.ar').forEach(b=>b.onclick=e=>{const r=$('.tb').getBoundingClientRect();if(performance.now()-t0<400||(e.clientY&&e.clientY>=r.top-6))return;sfx('ok');arcIntro(b.dataset.k)});$('#arz').onclick=()=>{sfx('ok');arcIntro(arcRnd())};
- $('#bt').onclick=menu;
+ const t0=performance.now();app.querySelectorAll('.ar').forEach(b=>b.onclick=e=>{const r=$('.tb').getBoundingClientRect();if(performance.now()-t0<400||(e.clientY&&e.clientY>=r.top-6))return;sfx('ok');arcIntro(b.dataset.k)});$('#arz').onclick=()=>{sfx('ok');arcIntro(arcRnd())};$('#arl').onclick=arcLevel;
+ $('#bt').onclick=arcLevel;
 }
 const LVS=[{k:'d1',n:'😌 Leicht',pen:750,runs:1,d:'Fehler +0,75 s (schnell hintereinander ×2, ×3)'},{k:'d2',n:'😐 Normal',pen:1500,runs:1,d:'Fehler +1,5 s (schnell hintereinander ×2, ×3)'},{k:'d3',n:'🔥 Hart',pen:2500,runs:3,d:'Fehler +2,5 s (×2, ×3 in Folge) · 3 Durchgänge'}];
 const lvh=i=>'⟦'+LVS[i].k+'⟧ '+LVS[i].n.replace(/^\S+\s/,'');
@@ -1647,10 +1652,9 @@ function beatCheck(){const m=/[#&]b=([A-Za-z0-9_-]+)/.exec(location.hash||'');if
 const arcKey=(k,lv)=>k+(lv==null||lv==1?'':'#'+lv),fmtPen=ms=>'+'+String(+(ms/1000).toFixed(2)).replace('.',',')+' s';
 function arcIntro(k){BEAT=null;const lv=DB.lv==null?1:DB.lv,L=LVS[lv],bk=DB.arc&&DB.arc[arcKey(k,lv)];
  app.innerHTML=`<div class="scr"><div class="mid"><div class="big" style="font-size:90px">${STG[k].emoji}</div><div class="big" style="font-size:clamp(20px,6.5vw,30px);color:var(--cyan)">${STG[k].name}</div>
- <div class="card c">${STG[k].hint}<div class="mut" style="margin-top:6px">${L.d}${bk?' · Bestzeit: '+f3(bk):''}</div></div>
- <div class="row" id="lvr">${LVS.map((x,i)=>`<button class="btn ghost sm" data-l="${i}" style="padding:10px 2px;font-size:14px${i==lv?';outline:3px solid #fff':''}">${lvh(i)}</button>`).join('')}</div></div>
+ <div class="card c">${STG[k].hint}<div style="margin-top:8px;font-weight:800">${lvh(lv)}</div><div class="mut" style="margin-top:4px">${L.d}${bk?' · Bestzeit: '+f3(bk):''}</div></div></div>
  <button class="btn pink" id="rdy">BEREIT! 🔥</button>${bar('⬅ Andere Spiele')}</div>`;
- $('#bt').onclick=arcade;$('#lvr').onclick=e=>{const l=e.target.dataset.l;if(l!=null){DB.lv=+l;save();sfx('ok');arcIntro(k)}};
+ $('#bt').onclick=()=>arcade();
  $('#rdy').onclick=()=>{ac();const seed=(Math.random()*1e9)|0;let n=3;
   const t=()=>{if(n==0){sfx('go');arcRun(k,seed);return}app.innerHTML=`<div class="scr"><div class="mid">${cdr(n)}</div></div>`;sfx('cd');n--;setTimeout(t,800)};t()};
 }
@@ -2336,7 +2340,7 @@ function pixSkin(){document.querySelectorAll('.pi').forEach(e=>{const n=e.datase
  new MutationObserver(()=>pixSkin()).observe(document.documentElement,{attributes:true,attributeFilter:['data-d']});
  pix(document.body)}
 /*PIXICON-END*/
-const BBV='2026-11-13-81';const BVN='2.30.1';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-13-82';const BVN='2.31.0';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--ink);font-weight:800;text-align:center';
