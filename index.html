@@ -342,7 +342,7 @@ html[data-d=term] .tabs button{font-size:15px!important}
 html[data-d=synth] .mtip{border-radius:14px;border-color:#7a3cff88}html[data-d=term] .mtip{font-size:19px;border-color:var(--dim)}
 html[data-d=synth] #dly .pi img{filter:brightness(1.9) saturate(.7) drop-shadow(0 0 2px #fff8)}
 /* Design-Paket 2.27 */
-.tile.hit:not(.shake),.pad.hit:not(.shake){animation:hit .15s}@keyframes hit{50%{opacity:.7}}
+.tile.tfx:not(.shake),.pad.tfx:not(.shake){animation:tfx .15s}@keyframes tfx{50%{opacity:.7}}
 .pen{animation:pfly .8s cubic-bezier(.5,0,.8,.4) forwards;z-index:9999;white-space:nowrap}@keyframes pfly{0%{transform:translateX(-50%) scale(1.25)}25%{transform:translateX(-50%) scale(1)}100%{transform:translate(calc(-50% + 28vw),-36vh) scale(.45);opacity:.2}}
 #tm{display:inline-block;transform-origin:right center}#tm.tp{animation:tp .55s}@keyframes tp{35%{transform:scale(1.22);color:var(--pk)}}
 .mw{position:relative;animation:mjump 1.1s cubic-bezier(.3,1.6,.5,1) 2 both;z-index:0}.mw::before{content:'';position:absolute;left:50%;top:50%;width:190px;height:190px;margin:-95px 0 0 -95px;border-radius:50%;z-index:-1;background:repeating-conic-gradient(color-mix(in srgb,var(--ye) 55%,transparent) 0 12deg,transparent 12deg 30deg);-webkit-mask:radial-gradient(circle,#000 30%,transparent 70%);mask:radial-gradient(circle,#000 30%,transparent 70%);animation:mrays 6s linear 1 forwards}
@@ -355,7 +355,7 @@ html[data-d=synth] .cdr .cd{animation:cdS .9s ease-out}@keyframes cdS{0%{transfo
 html[data-d=synth] .cdr circle{stroke:#00f0ff;filter:drop-shadow(0 0 6px #00f0ff)}html[data-d=synth] .cdr.last circle{stroke:#ff4fd8;filter:drop-shadow(0 0 6px #ff4fd8)}
 html[data-d=term] .cdr svg{display:none}html[data-d=term] .cdr .cd{animation:none}html[data-d=term] .cdr .cd{white-space:nowrap}html[data-d=term] .cdr .cd::after{content:'_';animation:blk .5s steps(1) infinite}@keyframes blk{50%{opacity:0}}
 html:not([data-d]) .cdr .cd{animation:cdA .5s steps(4)}@keyframes cdA{0%{transform:translate(-10px,-10px) scale(1.4);opacity:0}100%{transform:none}}
-@media (prefers-reduced-motion:reduce){.mw,.mw::before,.tile.hit,.pad.hit,#tm.tp,.scr,.cdr .cd{animation:none!important}}
+@media (prefers-reduced-motion:reduce){.mw,.mw::before,.tile.tfx,.pad.tfx,#tm.tp,.scr,.cdr .cd{animation:none!important}}
 .scr:not(:has(.tabs)){padding-bottom:env(safe-area-inset-bottom,0px)}
 </style></head><body>
 <div id="bgf" aria-hidden="true"><span style="left:6%;top:12%;animation-delay:-0s;font-size:38px">🧠</span><span style="left:82%;top:8%;animation-delay:-4s;font-size:34px">⚡</span><span style="left:14%;top:48%;animation-delay:-8s;font-size:30px">🎯</span><span style="left:88%;top:42%;animation-delay:-2s;font-size:40px">🍾</span><span style="left:46%;top:6%;animation-delay:-11s;font-size:28px">🔎</span><span style="left:72%;top:70%;animation-delay:-6s;font-size:36px">🎲</span><span style="left:10%;top:82%;animation-delay:-13s;font-size:32px">⭐</span><span style="left:52%;top:88%;animation-delay:-9s;font-size:34px">🧩</span><span style="left:90%;top:90%;animation-delay:-5s;font-size:28px">🔥</span></div><div id="app"></div><div id="fl"></div><canvas id="fx"></canvas>
@@ -387,7 +387,7 @@ let AC;
 function ac(){if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();return AC}
 function tone(f,d,type='square',v=.07,t=0,sl){try{const c=ac(),o=c.createOscillator(),g=c.createGain(),s=c.currentTime+t;o.type=type;o.frequency.setValueAtTime(f,s);if(sl)o.frequency.exponentialRampToValueAtTime(sl,s+d);g.gain.setValueAtTime(v,s);g.gain.exponentialRampToValueAtTime(.001,s+d);o.connect(g).connect(c.destination);o.start(s);o.stop(s+d+.02)}catch(e){}}
 function vib(k){try{if(DB.vib===false||!navigator.vibrate)return;const m={bad:[70],go:[30],win:[40,50,90],rec:[60,40,60,40,140],lose:[140],tap2:[25]}[k];if(m)navigator.vibrate(m)}catch(e){}}
-document.addEventListener('pointerdown',e=>{try{const t=e.target.closest&&e.target.closest('#stg .tile,#stg .pad');if(t){t.classList.remove('hit');void t.offsetWidth;t.classList.add('hit')}}catch(_){}},{passive:true});
+document.addEventListener('pointerdown',e=>{try{const t=e.target.closest&&e.target.closest('#stg .tile,#stg .pad');if(t){t.classList.remove('tfx');void t.offsetWidth;t.classList.add('tfx');setTimeout(()=>t.classList.remove('tfx'),200)}}catch(_){}},{passive:true});
 function flash(k){try{if(k!=='bad'&&k!=='ok')return;const f=document.getElementById('fl'),a=document.getElementById('app');if(!f)return;f.className='';void f.offsetWidth;f.className=k;if(k==='bad'&&a){a.classList.remove('shk');void a.offsetWidth;a.classList.add('shk')}}catch(e){}}
 function sfx(k,n=0){vib(k);flash(k);if(!DB.snd)return;
  if(k=='tap')tone(420+n*45,.09,'square',.06);
@@ -1650,7 +1650,7 @@ function arcRun(k,seed,i=0,acc){acc=acc||{t:0,pen:0};const lv=DB.lv==null?1:DB.l
   if(i+1<L.runs){app.innerHTML=`<div class="scr"><div class="mid"><div class="big pop" style="font-size:60px">✔</div><div class="big" style="font-size:34px">Durchgang ${i+1} geschafft</div><div class="c mut">Weiter in 1 Sekunde …</div></div></div>`;sfx('ok');setTimeout(()=>arcRun(k,seed,i+1,acc),1000)}
   else arcDone(k,acc.t,acc.pen)},err);
 }
-function arcDone(k,t,pen){const lv=DB.lv==null?1:DB.lv,key=arcKey(k,lv);
+function arcDone(k,t,pen){const lv=DB.lv==null?1:DB.lv,key=arcKey(k,lv);if(!DB.arc)DB.arc={};
  qAdd('runs3');if(!pen)qAdd('clean');qAdd('arc3',k);
  const prev=DB.arc[key],rec=!prev||t<prev;if(rec){DB.arc[key]=Math.round(t);save()}
  sfx(rec?'rec':'win');if(rec)confetti(150);
@@ -2302,7 +2302,7 @@ function pixSkin(){document.querySelectorAll('.pi').forEach(e=>{const n=e.datase
  new MutationObserver(()=>pixSkin()).observe(document.documentElement,{attributes:true,attributeFilter:['data-d']});
  pix(document.body)}
 /*PIXICON-END*/
-const BBV='2026-11-13-77';const BVN='2.29.1';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-13-78';const BVN='2.29.2';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--ink);font-weight:800;text-align:center';
