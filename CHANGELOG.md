@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.28.1 – Schneller, Vollbild
+- Icons als kleine Bilder statt hunderter SVG-Elemente: Arcade/Profil bauen sich wieder so schnell auf wie vor den Pixel-Icons
+- Teure Effekte entschärft (Weichzeichner beim Bildschirmwechsel, Dauer-Animation im Ergebnis)
+- Arcade-Liste zeigt die Bestzeit der gewählten Stufe; Warnung, falls der Browser nicht speichern kann
+- App startet im Vollbild, „Als App installieren“ entfernt
+
 ## 2.28 – Neue Avatare
 - 24 eigene Themenfiguren (Detektiv, Zauberer, Astronaut …) statt Tier-Emojis; bestehende Avatare werden automatisch zugeordnet
 
