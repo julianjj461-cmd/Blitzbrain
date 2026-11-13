@@ -1658,7 +1658,7 @@ function arcDone(k,t,pen){const lv=DB.lv==null?1:DB.lv,key=arcKey(k,lv);if(!DB.a
  <div class="c mut">${pen?`davon ${f3(pen)} Strafzeit`:'✨ Fehlerfrei!'}</div>
  <div class="banner${rec?' pop glow':''}">${rec?'🏅 Neue Bestzeit!':'Bestzeit: '+f3(prev)}</div>${rateBox([k])}</div>
  <div class="row"><button class="btn ghost" id="arz">🎲 Zufall</button><button class="btn ghost" id="arn">⏭️ Nächstes</button></div><div class="row"><button class="btn pink" id="again" style="flex:2">🔁 Nochmal</button><button class="btn ghost" id="shi" aria-label="Als Bild teilen">🖼️ Bild</button></div>${bar('📋 Andere Spiele')}</div>`;
- countUp();bindRate();$('#again').onclick=()=>arcIntro(k);$('#arz').onclick=()=>arcIntro(arcRnd(k));$('#arn').onclick=()=>{const P=POOL();arcIntro(P[(P.indexOf(k)+1)%P.length])};$('#bt').onclick=arcade;
+ countUp();bindRate();{const sc=app.firstElementChild;if(sc){sc.style.pointerEvents='none';setTimeout(()=>{sc.style.pointerEvents=''},700)}}$('#again').onclick=()=>arcIntro(k);$('#arz').onclick=()=>arcIntro(arcRnd(k));$('#arn').onclick=()=>{const P=POOL();arcIntro(P[(P.indexOf(k)+1)%P.length])};$('#bt').onclick=arcade;
  $('#shi').onclick=()=>shareImg({name:DB.acct?DB.acct.name:'',sub:STG[k].emoji+' '+STG[k].name+' · '+LVS[lv].n,big:f3(t),lines:[pen?'davon '+f3(pen)+' Strafzeit':'✨ Fehlerfrei!',rec?'🏅 Neue Bestzeit!':'Bestzeit: '+f3(prev)]});
 }
 /* ===== Ergebnis als Bild teilen ===== */
@@ -2302,7 +2302,7 @@ function pixSkin(){document.querySelectorAll('.pi').forEach(e=>{const n=e.datase
  new MutationObserver(()=>pixSkin()).observe(document.documentElement,{attributes:true,attributeFilter:['data-d']});
  pix(document.body)}
 /*PIXICON-END*/
-const BBV='2026-11-13-78';const BVN='2.29.2';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-13-79';const BVN='2.29.3';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--ink);font-weight:800;text-align:center';
