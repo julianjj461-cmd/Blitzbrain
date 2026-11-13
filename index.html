@@ -1424,10 +1424,6 @@ function qAdd(id,key){try{const{q,st}=qToday();if(q[0]!==id||st.done)return;if(k
 function qLine(){const{q,st}=qToday();return st.done?'✔ Quest geschafft: '+q[1].slice(2):q[1]+(q[2]>1?' · '+st.n+'/'+q[2]:'')}
 function qToast(t){try{const o=document.getElementById('qtn');if(o)o.remove();const d=document.createElement('div');d.id='qtn';d.style.cssText='position:fixed;left:10px;right:10px;top:calc(10px + env(safe-area-inset-top,0px));max-width:460px;margin:0 auto;z-index:1001;background:linear-gradient(180deg,#1f9d55,#127a3d);border:2px solid #fff;border-radius:18px;padding:12px 14px;box-shadow:0 8px 24px #000a;animation:in .3s;font-weight:800;text-align:center';
  d.innerHTML='🎯 Tages-Quest geschafft!<br><span style="font-weight:600">'+esc(t.slice(2))+'</span>';document.body.append(d);sfx('rec');vib('tap2');setTimeout(()=>d.remove(),3500)}catch(e){}}
-/* Vollbild auf dem Handy: beim ersten Tippen (Android/Chrome; iOS-App läuft über das Manifest ohne Leiste) */
-{const mob=/Android|iPhone|iPad|iPod|Mobile/.test(navigator.userAgent);let tried=0;
- const go=()=>{if(tried||!mob)return;tried=1;const d=document.documentElement,f=d.requestFullscreen||d.webkitRequestFullscreen;if(f&&!document.fullscreenElement){try{const r=f.call(d,{navigationUI:'hide'});r&&r.catch&&r.catch(()=>{})}catch(e){}}};
- addEventListener('pointerup',go,{passive:true});document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!document.fullscreenElement)tried=0})}
 /* ===== Mitteilungen ===== */
 let DIP=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();DIP=e});
 const isStandalone=()=>{try{return matchMedia('(display-mode: standalone)').matches||navigator.standalone===true}catch(e){return false}};
@@ -2304,7 +2300,7 @@ function pixSkin(){document.querySelectorAll('.pi').forEach(e=>{const n=e.datase
  new MutationObserver(()=>pixSkin()).observe(document.documentElement,{attributes:true,attributeFilter:['data-d']});
  pix(document.body)}
 /*PIXICON-END*/
-const BBV='2026-11-13-73';const BVN='2.28.1';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-13-74';const BVN='2.28.2';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--ink);font-weight:800;text-align:center';
