@@ -1310,10 +1310,7 @@ function gboard(back){
  const champs=()=>{$('#gc').innerHTML=`<div class="card" id="ssn" style="padding:12px;margin-top:8px"></div><h3 style="margin:12px 0 2px">🏆 Wochen-Champion</h3><div class="mut">Meiste Bestzeiten der letzten 7 Tage</div>
   ${wk.length?pod(wk.slice(0,3))+wk.slice(3,5).map(([n,c],i)=>row(i+3,n+(TM[n]?' · '+TM[n]:''),0,c+' 🏅')).join(''):'<div class="mut" style="margin-top:6px">Diese Woche noch keine Zeiten – wer holt sich die Krone?</div>'}
   <h3 style="margin:16px 0 2px">👑 Gesamt-Rekordhalter</h3><div class="mut">Meiste Spiele mit Bestzeit aller Zeiten</div>
-  ${champ.length?champ.map(([n,c],i)=>row(i,n+(TM[n]?' · '+TM[n]:''),0,c+' 🏅')).join(''):'<div class="mut" style="margin-top:6px">Noch keine Rekorde – sie entstehen in Ranked-Partien!</div>'}
-  <h3 style="margin:16px 0 2px">🏢 Team-Wertung</h3><div class="mut">Welches Team hält die meisten Spiel-Rekorde?</div>
-  ${tmAll.length?tmAll.map(([n,c],i)=>row(i,n,0,c+' 🏅')).join(''):'<div class="mut" style="margin-top:6px">Noch keine Teams – trag dein Team unter 👤 Profil ein.</div>'}
-  ${tmWk.length?'<div class="mut" style="margin-top:10px">Diese Woche:</div>'+tmWk.slice(0,3).map(([n,c],i)=>row(i,n,0,c+' 🏅')).join(''):''}`};
+  ${champ.length?champ.map(([n,c],i)=>row(i,n,0,c+' 🏅')).join(''):'<div class="mut" style="margin-top:6px">Noch keine Rekorde – sie entstehen in Ranked-Partien!</div>'}`};
  const games=q=>{q=(q||'').trim().toLowerCase();const el=document.getElementById('gc');if(!el)return;
   const DK=new Set(dayInfo().idx.map(i=>Object.keys(STG)[i]));
   const items=all.map(g=>{const nm=STG[g.k].name.toLowerCase().includes(q),L=g.b.map((x,i)=>({...x,i})),sel=q&&!nm?L.filter(x=>x.n.toLowerCase().includes(q)):L;return{g,sel,show:!q||nm||sel.length}}).filter(x=>x.show).sort((a,b)=>DK.has(b.g.k)-DK.has(a.g.k));
@@ -1396,7 +1393,6 @@ async function profile(){if(!DB.acct){loginScreen(profile);return}await Promise.
  app.innerHTML=`<div class="scr"><h2 style="margin:6px 0 0"><span style="border-radius:50%;display:inline-block${ring(nm)}">${avTok(DB.av)||'👤'}</span> ${esc(nm)}</h2>${(()=>{const r=ELM[skey(nm)];if(r==null)return'';const lg=league(r);return`<div class="chips"><span class="chip">${lg.e} ${lg.n} · ${r} Elo</span></div>`})()}
  <div class="card" style="padding:12px"><b>🔥 Tagesserie</b><div style="margin-top:4px">${streakTxt(sk)}${sk.n?(sk.today?' ✔ heute gespielt':' – heute noch spielen!'):''}</div><div class="mut" style="margin-top:4px">🛡️ Serien-Schutz: ${sk.save?'<b style="color:var(--ye)">rettet gerade deine Serie – spiel heute!</b>':sk.fz?'diese Woche schon benutzt':'bereit – 1× pro Woche darfst du einen Tag verpassen'}</div><div class="mut" style="margin-top:2px">Rekord: ${best} Tage · 🥉 ab 3 · 🥈 ab 7 · 🥇 ab 30</div></div>
  <div class="card" style="padding:12px"><b>🙂 Avatar</b><div id="avg" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:8px">${AVS.map(a=>`<button class="btn ghost sm vb${DB.av===a?' sel':''}" data-a="${a}" style="padding:6px 0;font-size:26px;width:auto;flex:none">${avTok(a)}</button>`).join('')}</div><div class="hint" id="avh"></div></div>
- <div class="card" style="padding:12px"><b>🏢 Team</b> <span class="mut" style="font-size:13px">(leer = kein Team)</span><div class="pl" style="margin-top:6px"><input id="tm" maxlength="12" list="tml" placeholder="z. B. Drachen" value="${esc(DB.team||'')}" autocomplete="off"><datalist id="tml"></datalist></div><button class="btn sm" id="tms" style="margin-top:8px">💾 Team speichern</button><div class="hint" id="tmh"></div></div>
  <div class="card" id="ffs" style="padding:12px"><b>🎪 Free-for-All</b><div class="mut" style="margin-top:6px">Lade …</div></div>${CRN[skey(nm)]?`<div class="card" style="padding:12px"><b>🏅 Saison-Medaille</b><div style="margin-top:4px">${['','🥇 Platz 1','🥈 Platz 2','🥉 Platz 3'][CRN[skey(nm)]]} in einer vergangenen Ranked-Saison – du trägst die Medaille hinter deinem Namen und einen goldenen Glanz um den Avatar.</div></div>`:''}
  <div id="bwrap">${badgesCard()}</div>
  ${statsCard()}
@@ -1407,11 +1403,6 @@ async function profile(){if(!DB.acct){loginScreen(profile);return}await Promise.
  document.querySelectorAll('#avg button').forEach(b=>b.onclick=async()=>{const a=b.dataset.a,nw=DB.av===a?'':a,h=document.getElementById('avh');h.textContent='Speichere …';
   try{const r=await rpc('set_avatar',{p_name:DB.acct.name,p_pin:DB.acct.pin,p_avatar:nw});if(r==='ok'){DB.av=nw;AV[skey(DB.acct.name)]=nw;save();document.querySelectorAll('#avg button').forEach(x=>x.classList.toggle('sel',x.dataset.a===nw));h.textContent=nw?'✔ Avatar gespeichert':'✔ Avatar entfernt';const t=document.querySelector('h2');if(t)t.textContent=(avTok(nw)||'👤')+' '+DB.acct.name}else h.textContent='❌ Anmeldung prüfen (PIN).'}
   catch(e){h.textContent=e.status==404?'⚠️ Avatar-Funktion fehlt noch in Supabase (SQL einrichten).':'⚠️ Server nicht erreichbar.'}});
- $('#tms').onclick=async()=>{const v=$('#tm').value.trim(),h=$('#tmh');h.textContent='Speichere …';
-  try{const r=String(await rpc('set_team',{p_name:DB.acct.name,p_pin:DB.acct.pin,p_team:v}));
-   if(r.startsWith('ok:')){DB.team=r.slice(3);save();$('#tm').value=DB.team;h.textContent=DB.team?'✔ Du bist jetzt im Team „'+DB.team+'“.':'✔ Team entfernt.'}
-   else h.textContent=r==='blocked'?'🚫 Dieser Teamname ist nicht erlaubt.':r==='invalid'?'❌ Teamname: höchstens 12 Zeichen.':'❌ Anmeldung prüfen (PIN).'}
-  catch(e){h.textContent=e.status==404?'⚠️ Team-Funktion fehlt noch in Supabase (SQL einrichten).':'⚠️ Server nicht erreichbar.'}};
  const[pb,tm,rows]=await Promise.allSettled([rpc('player_bests',{p_name:nm}),rpc('get_team',{p_name:nm}),sbBest(null)]);
  if(!document.getElementById('pb'))return;
  await avLoad(true);if(AV[skey(nm)]!==undefined&&AV[skey(nm)]!==DB.av){DB.av=AV[skey(nm)];save()}
@@ -2345,7 +2336,7 @@ function pixSkin(){document.querySelectorAll('.pi').forEach(e=>{const n=e.datase
  new MutationObserver(()=>pixSkin()).observe(document.documentElement,{attributes:true,attributeFilter:['data-d']});
  pix(document.body)}
 /*PIXICON-END*/
-const BBV='2026-11-13-80';const BVN='2.30.0';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-13-81';const BVN='2.30.1';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--ink);font-weight:800;text-align:center';
