@@ -349,14 +349,15 @@ html[data-d=synth] #dly .pi img{filter:brightness(1.9) saturate(.7) drop-shadow(
 @keyframes mjump{0%{transform:translateY(14px) scale(.6) rotate(-10deg)}45%{transform:translateY(-16px) scale(1.08) rotate(6deg)}100%{transform:none}}@keyframes mrays{to{transform:rotate(360deg)}}
 .emp{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;color:var(--mut);padding:18px 10px}.emp .pi{width:56px;height:56px;opacity:.9}
 .ar:has(.abt){border-bottom:4px solid var(--ye)!important}.abt{color:var(--ye)!important}
-html[data-d=synth] .scr:not(.play):not(:has(.cdr)){animation:inS .25s ease-out}@keyframes inS{from{opacity:0;transform:scale(.98)}}
-html[data-d=term] .scr:not(.play):not(:has(.cdr)){animation:inT .38s steps(9) both}@keyframes inT{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0 0 0 0)}}
+
+
 html[data-d=synth] .cdr .cd{animation:cdS .9s ease-out}@keyframes cdS{0%{transform:scale(2.2);opacity:0}60%{transform:scale(.95);opacity:1}100%{transform:none}}
 html[data-d=synth] .cdr circle{stroke:#00f0ff;filter:drop-shadow(0 0 6px #00f0ff)}html[data-d=synth] .cdr.last circle{stroke:#ff4fd8;filter:drop-shadow(0 0 6px #ff4fd8)}
 html[data-d=term] .cdr svg{display:none}html[data-d=term] .cdr .cd{animation:none}html[data-d=term] .cdr .cd{white-space:nowrap}html[data-d=term] .cdr .cd::after{content:'_';animation:blk .5s steps(1) infinite}@keyframes blk{50%{opacity:0}}
 html:not([data-d]) .cdr .cd{animation:cdA .5s steps(4)}@keyframes cdA{0%{transform:translate(-10px,-10px) scale(1.4);opacity:0}100%{transform:none}}
 @media (prefers-reduced-motion:reduce){.mw,.mw::before,.tile.tfx,.pad.tfx,#tm.tp,.scr,.cdr .cd{animation:none!important}}
 .scr:not(:has(.tabs)){padding-bottom:env(safe-area-inset-bottom,0px)}
+.scr.noan{animation:none!important}
 </style></head><body>
 <div id="bgf" aria-hidden="true"><span style="left:6%;top:12%;animation-delay:-0s;font-size:38px">🧠</span><span style="left:82%;top:8%;animation-delay:-4s;font-size:34px">⚡</span><span style="left:14%;top:48%;animation-delay:-8s;font-size:30px">🎯</span><span style="left:88%;top:42%;animation-delay:-2s;font-size:40px">🍾</span><span style="left:46%;top:6%;animation-delay:-11s;font-size:28px">🔎</span><span style="left:72%;top:70%;animation-delay:-6s;font-size:36px">🎲</span><span style="left:10%;top:82%;animation-delay:-13s;font-size:32px">⭐</span><span style="left:52%;top:88%;animation-delay:-9s;font-size:34px">🧩</span><span style="left:90%;top:90%;animation-delay:-5s;font-size:28px">🔥</span></div><div id="app"></div><div id="fl"></div><canvas id="fx"></canvas>
 <script>
@@ -1433,6 +1434,8 @@ function progMerge(r){if(!r||typeof r!=='object'||r.err)return;const me=skey(DB.
 async function progPull(){if(!DB.acct)return;try{const r=await rpc('get_progress',{p_name:DB.acct.name,p_pin:DB.acct.pin});progMerge(r);svRaw();PRS='';progPush(1)}catch(e){}}
 async function progPush(now){if(!DB.acct||PRB)return;clearTimeout(PRT);if(!now){PRT=setTimeout(()=>progPush(1),4000);return}const o=progPack(),j=JSON.stringify(o);if(!o||j===PRS)return;PRB=1;try{const r=await rpc('set_progress',{p_name:DB.acct.name,p_pin:DB.acct.pin,p_data:o});if(r==='ok')PRS=j}catch(e){}PRB=0}
 document.addEventListener('visibilitychange',()=>{if(document.hidden)progPush(1)});
+/* Bildschirm-Einblendung nur bei echtem Wechsel – nicht, wenn derselbe Bildschirm neu gezeichnet wird (sonst Flackern) */
+{let lastSig='';new MutationObserver(()=>{const sc=app.firstElementChild;if(!sc||!sc.classList||!sc.classList.contains('scr'))return;const h=sc.querySelector('h1,h2,.big'),tb=sc.querySelector('.tabs .on');const sig=(tb?tb.dataset.tab:'')+'|'+(h?h.textContent.slice(0,24):'')+'|'+(sc.querySelector('#stg')?'g':'');if(sig===lastSig)sc.classList.add('noan');lastSig=sig}).observe(app,{childList:true})}
 /* ===== Mitteilungen ===== */
 let DIP=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();DIP=e});
 const isStandalone=()=>{try{return matchMedia('(display-mode: standalone)').matches||navigator.standalone===true}catch(e){return false}};
@@ -2340,7 +2343,7 @@ function pixSkin(){document.querySelectorAll('.pi').forEach(e=>{const n=e.datase
  new MutationObserver(()=>pixSkin()).observe(document.documentElement,{attributes:true,attributeFilter:['data-d']});
  pix(document.body)}
 /*PIXICON-END*/
-const BBV='2026-11-13-82';const BVN='2.31.0';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
+const BBV='2026-11-13-83';const BVN='2.31.1';/* BVN = Anzeige-Versionsnummer (bei Updates hochzählen), BBV = interne Update-Kennung (immer ändern) */{const e=document.getElementById('ver');if(e)e.textContent='v'+BVN}let updPend=null,updT=0;
 function updTry(){if(!updPend)return;
  if(document.getElementById('m1')){clearInterval(updT);try{sessionStorage.setItem('bbu',updPend)}catch(e){}
   const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#1a0b4bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--ink);font-weight:800;text-align:center';
